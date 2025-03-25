@@ -8,13 +8,10 @@ assignees: ''
 ---
 
 ## Description
-<hr>
 
 ## Todo
-<hr>
-- [] todo
-- [] todo
+- [ ] todo
+- [ ] todo
 
 ## ETC
-<hr>
 기타사항
