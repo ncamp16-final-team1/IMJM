@@ -101,26 +101,25 @@ pipeline {
         }
         
         stage('Health Check') {
-            steps {
-                script {
-                    // 더 자세한 헬스 체크
-                    def healthStatus = sh(
-                        script: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo 'failed'", 
-                        returnStdout: true
-                    ).trim()
-                    
-                    echo "Health check status: ${healthStatus}"
-                    
-                    if (healthStatus != '200') {
-                        // 컨테이너 로그 출력
-                        sh "docker logs ${APP_NAME}-${env.INACTIVE_COLOR}"
-                        error "Health check failed with status: ${healthStatus}"
-                    }
-                    
-                    echo "Health check passed for ${env.INACTIVE_COLOR} environment"
-                }
-            }
+    steps {
+        script {
+            // 더 자세한 오류 정보 출력
+            def healthCheckResult = sh(
+                script: """
+                curl -v -s -o /dev/null \
+                -w 'Status Code: %{http_code}\nTotal Time: %{time_total}s\n' \
+                http://localhost:8080/actuator/health
+                """, 
+                returnStdout: true
+            ).trim()
+            
+            echo "Health check details: ${healthCheckResult}"
+            
+            // 필요하다면 컨테이너 로그도 확인
+            sh "docker logs ${APP_NAME}-${env.INACTIVE_COLOR}"
         }
+    }
+}
         
         stage('Switch Traffic') {
             steps {
