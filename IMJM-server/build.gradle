@@ -41,21 +41,8 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     
-    // 테스트 결과 상세 로깅
-    testLogging {
-        events 'passed', 'skipped', 'failed'
-        exceptionFormat 'full'
-    }
-    
-    // 테스트 결과 리포트 설정
     reports {
-        junitXml {
-            enabled = true
-            destination = layout.buildDirectory.dir('test-results')
-        }
-        html {
-            enabled = true
-            destination = layout.buildDirectory.dir('reports/tests')
-        }
+        junitXml.required.set(true)
+        html.required.set(true)
     }
 }
