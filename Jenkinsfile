@@ -124,44 +124,30 @@ pipeline {
         stage('Switch Traffic') {
             steps {
                 script {
-                    // Nginx 설정 파일 생성
                     sh """
-                    sudo cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
-server {
-    listen ${NGINX_PORT};
-    server_name _;
-    
-    location / {
-        proxy_pass http://${NCP_SERVER_IP}:${env.INACTIVE_PORT};
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
-    }
-}
-EOF
-                    """
-                    
-                    // Nginx 설정 갱신
-                    sh "sudo nginx -s reload || sudo systemctl restart nginx || sudo service nginx restart"
-                    
-                    echo "Traffic switched to ${env.INACTIVE_COLOR} environment"
-                    
-                    // 이전 환경이 있었다면 잠시 대기 후 종료
-                    if (env.ACTIVE_COLOR != 'none') {
-                        sh "sleep 30" // 이전 요청이 처리될 시간 확보
-                        sh "docker stop ${APP_NAME}-${env.ACTIVE_COLOR} || true"
-                    }
-                }
+                    sudo tee /etc/nginx/conf.d/${APP_NAME}.conf > /dev/null << EOF
+        server {
+            listen 80;
+            server_name localhost;
+            
+            location / {
+                proxy_pass http://localhost:${env.INACTIVE_PORT};
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto \$scheme;
             }
         }
-        
-        stage('Cleanup') {
-            steps {
-                script {
-                    // 오래된 이미지 정리 (최근 5개만 유지)
-                    sh "docker image prune -af --filter 'until=24h'"
+        EOF
                     
-                    // 사용하지 않는 컨테이너 정리
-                    sh "docker container prune -f"
+                    # Nginx 설정 테스트
+                    sudo nginx -t
+                    
+                    # Nginx 리로드 또는 재시작
+                    sudo nginx -s reload || sudo systemctl restart nginx
+                    """
+                    
+                    echo "Traffic switched to ${env.INACTIVE_COLOR} environment"
                 }
             }
         }
