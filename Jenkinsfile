@@ -122,35 +122,30 @@ pipeline {
 }
         
         stage('Switch Traffic') {
-            steps {
-                script {
-                    sh """
-                    sudo tee /etc/nginx/conf.d/${APP_NAME}.conf > /dev/null << EOF
-        server {
-            listen 80;
-            server_name localhost;
+    steps {
+        script {
+            sh """
+            apt-get update && apt-get install -y nginx
             
-            location / {
-                proxy_pass http://localhost:${env.INACTIVE_PORT};
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto \$scheme;
-            }
+            cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+server {
+    listen 80;
+    server_name localhost;
+    
+    location / {
+        proxy_pass http://localhost:${env.INACTIVE_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+            
+            nginx -t
+            nginx -s reload || systemctl restart nginx
+            """
         }
-        EOF
-                    
-                    # Nginx 설정 테스트
-                    sudo nginx -t
-                    
-                    # Nginx 리로드 또는 재시작
-                    sudo nginx -s reload || sudo systemctl restart nginx
-                    """
-                    
-                    echo "Traffic switched to ${env.INACTIVE_COLOR} environment"
-                }
-            }
-        }
+    }
+}
     }
     
     post {
