@@ -95,7 +95,7 @@ pipeline {
                     sh "docker run -d -p ${env.INACTIVE_PORT}:8080 --name ${APP_NAME}-${env.INACTIVE_COLOR} -e SPRING_PROFILES_ACTIVE=prod ${APP_NAME}:${env.IMAGE_TAG}"
                     
                     // 컨테이너 시작 대기
-                    sh "sleep 20"
+                    sh "sleep 80"
                 }
             }
         }
