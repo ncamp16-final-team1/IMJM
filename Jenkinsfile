@@ -125,36 +125,40 @@ pipeline {
             steps {
                 script {
                     sh """
-                    # root 권한으로 Docker 소스 리스트 삭제
-                    sudo rm -f /etc/apt/sources.list.d/docker.list
-                    
-                    # Nginx 설정 디렉토리 생성
-                    sudo mkdir -p /etc/nginx/conf.d
-                    
-                    # Nginx 설치
-                    sudo apt-get clean
-                    sudo apt-get update
-                    sudo apt-get install -y nginx
-                    
-                    # Nginx 설정 파일 생성
-                    sudo bash -c "cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
-        server {
-            listen 80;
-            server_name localhost;
-            
-            location / {
-                proxy_pass http://localhost:${env.INACTIVE_PORT};
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
+                    # Nginx 설정 파일 생성 - 절대경로 사용
+                    cat > /etc/nginx/nginx.conf << EOF
+        user nginx;
+        worker_processes auto;
+        pid /run/nginx.pid;
+        
+        events {
+            worker_connections 1024;
+        }
+        
+        http {
+            include /etc/nginx/mime.types;
+            default_type application/octet-stream;
+        
+            server {
+                listen 80;
+                server_name localhost;
+        
+                location / {
+                    proxy_pass http://localhost:${env.INACTIVE_PORT};
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                }
             }
         }
-        EOF"
-                    
+        EOF
+        
                     # Nginx 설정 테스트
-                    sudo nginx -t
-                    
+                    nginx -t
+        
                     # Nginx 재시작
-                    sudo systemctl restart nginx
+                    nginx -s reload
                     """
                 }
             }
