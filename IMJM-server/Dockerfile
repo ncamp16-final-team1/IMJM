@@ -6,7 +6,7 @@ ENV TZ=Asia/Seoul
 WORKDIR /app
 
 # JAR 파일 복사 - 빌드된 JAR 파일명이 일정하지 않을 수 있으므로 app.jar로 복사
-COPY build/libs/*.jar app.jar
+COPY build/libs/your-specific-jar-name.jar app.jar
 
 # 애플리케이션 포트 노출
 EXPOSE 8080
