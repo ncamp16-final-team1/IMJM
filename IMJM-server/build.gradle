@@ -39,5 +39,10 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
+    
+    reports {
+        junitXml.required.set(true)
+        html.required.set(true)
+    }
 }
