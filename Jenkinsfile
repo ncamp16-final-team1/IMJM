@@ -125,19 +125,19 @@ pipeline {
             steps {
                 script {
                     sh """
-                    # APT 소스 리스트 문제 해결
-                    rm -f /etc/apt/sources.list.d/docker.list
+                    # root 권한으로 Docker 소스 리스트 삭제
+                    sudo rm -f /etc/apt/sources.list.d/docker.list
                     
                     # Nginx 설정 디렉토리 생성
-                    mkdir -p /etc/nginx/conf.d
+                    sudo mkdir -p /etc/nginx/conf.d
                     
                     # Nginx 설치
-                    apt-get clean
-                    apt-get update
-                    apt-get install -y nginx
+                    sudo apt-get clean
+                    sudo apt-get update
+                    sudo apt-get install -y nginx
                     
                     # Nginx 설정 파일 생성
-                    cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+                    sudo bash -c "cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
         server {
             listen 80;
             server_name localhost;
@@ -148,13 +148,13 @@ pipeline {
                 proxy_set_header X-Real-IP \$remote_addr;
             }
         }
-        EOF
+        EOF"
                     
                     # Nginx 설정 테스트
-                    nginx -t
+                    sudo nginx -t
                     
                     # Nginx 재시작
-                    systemctl restart nginx
+                    sudo systemctl restart nginx
                     """
                 }
             }
