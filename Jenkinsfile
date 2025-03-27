@@ -122,30 +122,43 @@ pipeline {
 }
         
         stage('Switch Traffic') {
-    steps {
-        script {
-            sh """
-            apt-get update && apt-get install -y nginx
+            steps {
+                script {
+                    sh """
+                    # APT 소스 리스트 문제 해결
+                    rm -f /etc/apt/sources.list.d/docker.list
+                    
+                    # Nginx 설정 디렉토리 생성
+                    mkdir -p /etc/nginx/conf.d
+                    
+                    # Nginx 설치
+                    apt-get clean
+                    apt-get update
+                    apt-get install -y nginx
+                    
+                    # Nginx 설정 파일 생성
+                    cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+        server {
+            listen 80;
+            server_name localhost;
             
-            cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
-server {
-    listen 80;
-    server_name localhost;
-    
-    location / {
-        proxy_pass http://localhost:${env.INACTIVE_PORT};
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-    }
-}
-EOF
-            
-            nginx -t
-            nginx -s reload || systemctl restart nginx
-            """
+            location / {
+                proxy_pass http://localhost:${env.INACTIVE_PORT};
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+            }
         }
-    }
-}
+        EOF
+                    
+                    # Nginx 설정 테스트
+                    nginx -t
+                    
+                    # Nginx 재시작
+                    systemctl restart nginx
+                    """
+                }
+            }
+        }
     }
     
     post {
