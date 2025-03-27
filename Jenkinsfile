@@ -103,17 +103,21 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    // 자세한 curl 출력과 함께 검사
-                    def healthCheckResult = sh(
-                        script: "curl -v http://${NCP_SERVER_IP}:${env.INACTIVE_PORT}/actuator/health",
-                        returnStatus: true
-                    )
+                    // 더 자세한 헬스 체크
+                    def healthStatus = sh(
+                        script: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo 'failed'", 
+                        returnStdout: true
+                    ).trim()
                     
-                    if (healthCheckResult != 0) {
-                        // 도커 로그 출력
+                    echo "Health check status: ${healthStatus}"
+                    
+                    if (healthStatus != '200') {
+                        // 컨테이너 로그 출력
                         sh "docker logs ${APP_NAME}-${env.INACTIVE_COLOR}"
-                        error "Health check failed"
+                        error "Health check failed with status: ${healthStatus}"
                     }
+                    
+                    echo "Health check passed for ${env.INACTIVE_COLOR} environment"
                 }
             }
         }
