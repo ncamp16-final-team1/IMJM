@@ -39,21 +39,6 @@ pipeline {
             }
         }
         
-        stage('Docker Build') {
-            steps {
-                dir('IMJM-server') {
-                    // 고유한 태그 생성 (빌드 번호 + Git 해시)
-                    script {
-                        def gitCommitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                        env.IMAGE_TAG = "${env.BUILD_NUMBER}-${gitCommitHash}"
-                        
-                        // Docker 이미지 빌드
-                        sh "docker build -t ${APP_NAME}:${env.IMAGE_TAG} -t ${APP_NAME}:latest ."
-                    }
-                }
-            }
-        }
-        
         stage('Determine Active Environment') {
             steps {
                 script {
@@ -80,6 +65,21 @@ pipeline {
                     
                     echo "Active environment: ${env.ACTIVE_COLOR} (Port: ${env.ACTIVE_PORT})"
                     echo "Target environment: ${env.INACTIVE_COLOR} (Port: ${env.INACTIVE_PORT})"
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                dir('IMJM-server') {
+                    script {
+                        // 고유한 태그 생성 (빌드 번호 + Git 해시)
+                        def gitCommitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                        env.IMAGE_TAG = "${env.BUILD_NUMBER}-${gitCommitHash}"
+                        
+                        // Docker 이미지 빌드
+                        sh "docker build -t ${APP_NAME}:${env.IMAGE_TAG} ."
+                    }
                 }
             }
         }
@@ -120,8 +120,7 @@ pipeline {
                 script {
                     // Nginx 설정 파일 생성
                     sh """
-                    mkdir -p /etc/nginx/conf.d
-                    cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+                    sudo cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
 server {
     listen ${NGINX_PORT};
     server_name _;
@@ -136,7 +135,7 @@ EOF
                     """
                     
                     // Nginx 설정 갱신
-                    sh "nginx -s reload || systemctl restart nginx || service nginx restart"
+                    sh "sudo nginx -s reload || sudo systemctl restart nginx || sudo service nginx restart"
                     
                     echo "Traffic switched to ${env.INACTIVE_COLOR} environment"
                     
@@ -152,7 +151,7 @@ EOF
         stage('Cleanup') {
             steps {
                 script {
-                    // 오래된 이미지 정리 (최근 5개 빌드 이미지 유지)
+                    // 오래된 이미지 정리 (최근 5개만 유지)
                     sh "docker image prune -af --filter 'until=24h'"
                     
                     // 사용하지 않는 컨테이너 정리
@@ -174,7 +173,7 @@ EOF
                 // 실패 시 이전 환경으로 롤백 (롤백 가능한 경우)
                 if (env.ACTIVE_COLOR != 'none') {
                     sh """
-                    cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+                    sudo cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
 server {
     listen ${NGINX_PORT};
     server_name _;
@@ -188,7 +187,7 @@ server {
 EOF
                     """
                     
-                    sh "nginx -s reload || systemctl restart nginx || service nginx restart"
+                    sh "sudo nginx -s reload || sudo systemctl restart nginx || sudo service nginx restart"
                     echo "Rolled back to ${env.ACTIVE_COLOR} environment"
                 }
             }
