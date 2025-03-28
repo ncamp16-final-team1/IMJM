@@ -101,64 +101,43 @@ pipeline {
         }
         
         stage('Health Check') {
-    steps {
-        script {
-            // 더 자세한 오류 정보 출력
-            def healthCheckResult = sh(
-                script: """
-                curl -v -s -o /dev/null \
-                -w 'Status Code: %{http_code}\nTotal Time: %{time_total}s\n' \
-                http://localhost:8080/actuator/health
-                """, 
-                returnStdout: true
-            ).trim()
-            
-            echo "Health check details: ${healthCheckResult}"
-            
-            // 필요하다면 컨테이너 로그도 확인
-            sh "docker logs ${APP_NAME}-${env.INACTIVE_COLOR}"
-        }
-    }
-}
-        
-        stage('Switch Traffic') {
             steps {
                 script {
-                    sh """
-                    # Nginx 설정 파일 생성 - 절대경로 사용
-                    cat > /etc/nginx/nginx.conf << EOF
-        user nginx;
-        worker_processes auto;
-        pid /run/nginx.pid;
-        
-        events {
-            worker_connections 1024;
-        }
-        
-        http {
-            include /etc/nginx/mime.types;
-            default_type application/octet-stream;
-        
-            server {
-                listen 80;
-                server_name localhost;
-        
-                location / {
-                    proxy_pass http://localhost:${env.INACTIVE_PORT};
-                    proxy_set_header Host \$host;
-                    proxy_set_header X-Real-IP \$remote_addr;
-                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    // 더 자세한 오류 정보 출력
+                    def healthCheckResult = sh(
+                        script: """
+                        curl -v -s -o /dev/null \
+                        -w 'Status Code: %{http_code}\nTotal Time: %{time_total}s\n' \
+                        http://localhost:8080/actuator/health
+                        """, 
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "Health check details: ${healthCheckResult}"
+                    
+                    // 필요하다면 컨테이너 로그도 확인
+                    sh "docker logs ${APP_NAME}-${env.INACTIVE_COLOR}"
                 }
             }
         }
+                
+                stage('Switch Traffic') {
+            steps {
+                script {
+                    sh """
+                    # 디렉토리가 없는 경우 생성
+                    sudo mkdir -p /etc/nginx
+                    
+                    # Nginx 설정 파일 생성 - 절대경로 사용
+                    sudo cat > /etc/nginx/nginx.conf << EOF
+        // 기존 설정 내용
         EOF
         
                     # Nginx 설정 테스트
-                    nginx -t
+                    sudo nginx -t
         
                     # Nginx 재시작
-                    nginx -s reload
+                    sudo nginx -s reload
                     """
                 }
             }
