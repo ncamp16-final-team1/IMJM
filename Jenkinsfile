@@ -120,24 +120,27 @@ pipeline {
                 }
             }
         }
-                
-                stage('Switch Traffic') {
+        
+        stage('Switch Traffic') {
             steps {
                 script {
                     sh """
-                    # 디렉토리가 없는 경우 생성
-                    sudo mkdir -p /etc/nginx
-                    
-                    # Nginx 설정 파일 생성 - 절대경로 사용
-                    sudo cat > /etc/nginx/nginx.conf << EOF
-        // 기존 설정 내용
-        EOF
-        
-                    # Nginx 설정 테스트
-                    sudo nginx -t
-        
-                    # Nginx 재시작
-                    sudo nginx -s reload
+                    cat > /etc/nginx/conf.d/default.conf << EOF
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://localhost:${env.INACTIVE_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+                    nginx -t && nginx -s reload
                     """
                 }
             }
@@ -156,21 +159,21 @@ pipeline {
                 // 실패 시 이전 환경으로 롤백 (롤백 가능한 경우)
                 if (env.ACTIVE_COLOR != 'none') {
                     sh """
-                    sudo cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+                    cat > /etc/nginx/conf.d/default.conf << EOF
 server {
     listen ${NGINX_PORT};
     server_name _;
     
     location / {
         proxy_pass http://${NCP_SERVER_IP}:${env.ACTIVE_PORT};
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
     }
 }
 EOF
                     """
                     
-                    sh "sudo nginx -s reload || sudo systemctl restart nginx || sudo service nginx restart"
+                    sh "nginx -s reload || systemctl restart nginx || service nginx restart"
                     echo "Rolled back to ${env.ACTIVE_COLOR} environment"
                 }
             }
