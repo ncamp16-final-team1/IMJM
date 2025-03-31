@@ -103,14 +103,20 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    // 헬스 체크 수행
-                    def healthStatus = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://${NCP_SERVER_IP}:${env.INACTIVE_PORT}/actuator/health || echo 'failed'", returnStdout: true).trim()
+                    // 더 자세한 오류 정보 출력
+                    def healthCheckResult = sh(
+                        script: """
+                        curl -v -s -o /dev/null \
+                        -w 'Status Code: %{http_code}\nTotal Time: %{time_total}s\n' \
+                        http://localhost:8080/actuator/health
+                        """, 
+                        returnStdout: true
+                    ).trim()
                     
-                    if (healthStatus != '200') {
-                        error "Health check failed with status: ${healthStatus}"
-                    }
+                    echo "Health check details: ${healthCheckResult}"
                     
-                    echo "Health check passed for ${env.INACTIVE_COLOR} environment"
+                    // 필요하다면 컨테이너 로그도 확인
+                    sh "docker logs ${APP_NAME}-${env.INACTIVE_COLOR}"
                 }
             }
         }
@@ -118,44 +124,24 @@ pipeline {
         stage('Switch Traffic') {
             steps {
                 script {
-                    // Nginx 설정 파일 생성
                     sh """
-                    sudo cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+                    cat > /etc/nginx/conf.d/default.conf << EOF
 server {
-    listen ${NGINX_PORT};
-    server_name _;
-    
+    listen 80;
+    server_name localhost;
+
     location / {
-        proxy_pass http://${NCP_SERVER_IP}:${env.INACTIVE_PORT};
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
+        proxy_pass http://localhost:${env.INACTIVE_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 EOF
+
+                    nginx -t && nginx -s reload
                     """
-                    
-                    // Nginx 설정 갱신
-                    sh "sudo nginx -s reload || sudo systemctl restart nginx || sudo service nginx restart"
-                    
-                    echo "Traffic switched to ${env.INACTIVE_COLOR} environment"
-                    
-                    // 이전 환경이 있었다면 잠시 대기 후 종료
-                    if (env.ACTIVE_COLOR != 'none') {
-                        sh "sleep 30" // 이전 요청이 처리될 시간 확보
-                        sh "docker stop ${APP_NAME}-${env.ACTIVE_COLOR} || true"
-                    }
-                }
-            }
-        }
-        
-        stage('Cleanup') {
-            steps {
-                script {
-                    // 오래된 이미지 정리 (최근 5개만 유지)
-                    sh "docker image prune -af --filter 'until=24h'"
-                    
-                    // 사용하지 않는 컨테이너 정리
-                    sh "docker container prune -f"
                 }
             }
         }
@@ -173,21 +159,21 @@ EOF
                 // 실패 시 이전 환경으로 롤백 (롤백 가능한 경우)
                 if (env.ACTIVE_COLOR != 'none') {
                     sh """
-                    sudo cat > /etc/nginx/conf.d/${APP_NAME}.conf << EOF
+                    cat > /etc/nginx/conf.d/default.conf << EOF
 server {
     listen ${NGINX_PORT};
     server_name _;
     
     location / {
         proxy_pass http://${NCP_SERVER_IP}:${env.ACTIVE_PORT};
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
     }
 }
 EOF
                     """
                     
-                    sh "sudo nginx -s reload || sudo systemctl restart nginx || sudo service nginx restart"
+                    sh "nginx -s reload || systemctl restart nginx || service nginx restart"
                     echo "Rolled back to ${env.ACTIVE_COLOR} environment"
                 }
             }
