@@ -19,7 +19,7 @@ public class StylistController {
     private final StylistService stylistService;
 
     // 특정 살롱의 스타일리스트 조회
-    @GetMapping("/{salonId}")
+    @GetMapping("/stylists/{salonId}")
     public ResponseEntity<List<StylistDto>> getStylistsBySalon(@PathVariable String salonId) {
         List<StylistDto> stylists = stylistService.getStylistsBySalon(salonId);
         return stylists.isEmpty()
