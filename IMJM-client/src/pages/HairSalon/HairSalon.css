@@ -1,0 +1,94 @@
+.hair-salon-container {
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.loading, .error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+}
+
+.error {
+    color: #e53935;
+}
+
+.salon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.salon-card {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.salon-card:hover {
+    transform: translateY(-3px);
+}
+
+.salon-info {
+    padding: 16px;
+    flex: 1;
+}
+
+.salon-info h2 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.salon-address, .salon-phone {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.salon-intro {
+    margin: 12px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.salon-business-hours {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.salon-rating {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.score-text {
+    margin-left: 6px;
+    font-weight: bold;
+    color: #333;
+}
+
+.salon-photo {
+    width: 100%;
+    height: 200px;
+    position: relative;
+}
+
+.salon-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
