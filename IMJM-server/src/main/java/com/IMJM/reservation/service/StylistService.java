@@ -3,7 +3,6 @@ package com.IMJM.reservation.service;
 import com.IMJM.reservation.dto.StylistDto;
 import com.IMJM.reservation.repository.StylistRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,7 +11,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ReservationService {
+public class StylistService {
     private final StylistRepository stylistRepository;
 
     // 특정 살롱의 스타일리스트 조회
