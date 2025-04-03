@@ -1,0 +1,46 @@
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: var(--primary-color);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    z-index: 100;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    color: rgba(0, 0, 0, 0.6);
+    transition: color 0.2s;
+}
+
+.nav-item.active {
+    color: #333;
+    font-weight: bold;
+}
+
+.nav-icon {
+    font-size: 20px;
+    margin-bottom: 1px;
+}
+
+.nav-label {
+    font-size: 0.7rem;
+    text-transform: capitalize;
+}
