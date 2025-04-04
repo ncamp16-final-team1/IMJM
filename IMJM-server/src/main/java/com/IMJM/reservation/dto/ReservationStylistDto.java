@@ -5,11 +5,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalTime;
-
 @Getter
 @NoArgsConstructor
-public class StylistDto {
+public class ReservationStylistDto {
     private String salonId;
     private String stylistId;
     private String name;
@@ -18,9 +16,9 @@ public class StylistDto {
     private String profile;
 
     @Builder
-    public StylistDto(String salonId, String stylistId, String name,
-                      short holidayMask,
-                      String introduction, String profile) {
+    public ReservationStylistDto(String salonId, String stylistId, String name,
+                                 short holidayMask,
+                                 String introduction, String profile) {
         this.salonId = salonId;
         this.stylistId = stylistId;
         this.name = name;
@@ -32,8 +30,8 @@ public class StylistDto {
 
 
     // 엔티티를 DTO로 변환하는 정적 메서드
-    public static StylistDto fromEntity(Stylist stylist) {
-        return StylistDto.builder()
+    public static ReservationStylistDto fromEntity(Stylist stylist) {
+        return ReservationStylistDto.builder()
                 .salonId(stylist.getHairSalon().getId())
                 .stylistId(stylist.getStylistId().getStylistId())
                 .name(stylist.getName())
