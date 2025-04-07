@@ -34,7 +34,6 @@ public class HairSalon {
     @Column(name = "corp_reg_number", length = 20)
     private String corpRegNumber;
 
-    @Column(length = 255)
     private String address;
 
     @Column(name = "call_number", length = 20)
@@ -68,13 +67,12 @@ public class HairSalon {
      * 이 살롱에 소속된 스타일리스트 목록
      */
     @OneToMany(mappedBy = "hairSalon", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Stylist> stylist = new ArrayList<>();
+    private List<AdminStylist> stylist = new ArrayList<>();
 
     /**
      * 이 살롱의 사진 목록
      */
     @OneToMany(mappedBy = "hairSalon", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("photoOrder ASC")
     private List<HairSalonPhotos> photos = new ArrayList<>();
 
     /**
@@ -100,6 +98,5 @@ public class HairSalon {
         this.score = score;                 // 평점
         this.latitude = latitude;           // 위도 좌표
         this.longitude = longitude;         // 경도 좌표
-
     }
 }
