@@ -1,0 +1,54 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #FDC7BF;
+    --secondary-color: #FDF6F3;
+    --bg-color: #f2f2f2;
+    --border-color: #e0e0e0;
+    --text-color: #333333;
+    --nav-height: 60px;
+    --header-height: 60px;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 600px; /* 모바일 앱 느낌을 위한 최대 너비 설정 */
+    margin: 0 auto;
+    position: relative;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    padding-bottom: calc(var(--nav-height) + 1rem);
+    padding-top: calc(var(--header-height) + 0.5rem);
+}
+
+@media (min-width: 481px) {
+    /* 모바일 이상의 화면 크기에서는 테두리와 그림자 효과 추가 */
+    body {
+        background-color: #e6e6e6;
+        padding: 1rem 0;
+    }
+
+    .app-container {
+        height: calc(100vh - 2rem);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+}
