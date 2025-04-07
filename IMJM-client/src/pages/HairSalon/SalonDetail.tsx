@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 // import axios from 'axios';
 import StarIcon from '@mui/icons-material/Star';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PhoneIcon from '@mui/icons-material/Phone';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -10,28 +9,74 @@ import InfoIcon from '@mui/icons-material/Info';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import PersonIcon from '@mui/icons-material/Person'; // 스타일리스트 아이콘 추가
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'; // 화살표 아이콘 추가
+import PersonIcon from '@mui/icons-material/Person';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import salon1Image from "../../assets/images/salon1.jpeg";
 import salon2Image from "../../assets/images/salon2.png";
 import salon3Image from "../../assets/images/salon3.png";
-import salon4Image from "../../assets/images/salon4.png";
 import salonData from "../../data/salon.json";
-import stylistData from "../../data/stylist.json"; // 스타일리스트 데이터 import
+import stylistData from "../../data/stylist.json";
 
 import './SalonDetail.css';
 
-function SalonDetail() {
-    const [salon, setSalon] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const { id } = useParams();
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [showAllHours, setShowAllHours] = useState(false);
-    const [showMapModal, setShowMapModal] = useState(false);
-    const [stylists, setStylists] = useState([]); // 스타일리스트 상태 추가
+// 네이버 맵 타입 정의
+declare global {
+    interface Window {
+        naver: any;
+    }
+}
 
-    const isDayOff = (dayIndex, holidayMask) => {
+// 인터페이스 정의
+interface SalonPhoto {
+    photoId: number;
+    photoUrl: string;
+    photoOrder: number;
+}
+
+interface BusinessHour {
+    day: string;
+    open: string;
+    close: string;
+}
+
+interface Salon {
+    id: string;
+    name: string;
+    address: string;
+    call_number: string;
+    introduction: string;
+    holiday_mask: number;
+    start_time: string;
+    end_time: string;
+    score: number;
+    latitude: number;
+    longitude: number;
+    photoUrl: string;
+    // 추가로 사용하는 속성
+    likes?: number;
+    photos: SalonPhoto[];
+    businessHours?: BusinessHour[];
+    distance?: number;
+}
+
+interface Stylist {
+    stylist_id: number;
+    name: string;
+    salon_id: number | string;
+    introduction?: string;
+}
+
+function SalonDetail() {
+    const [salon, setSalon] = useState<Salon | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const { id } = useParams<{ id: string }>();
+    const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+    const [showAllHours, setShowAllHours] = useState<boolean>(false);
+    const [showMapModal, setShowMapModal] = useState<boolean>(false);
+    const [stylists, setStylists] = useState<Stylist[]>([]); // 스타일리스트 상태 추가
+
+    const isDayOff = (dayIndex: number, holidayMask: number) => {
         const bitValue = 1 << dayIndex;
         return (holidayMask & bitValue) !== 0;
     };
@@ -52,7 +97,7 @@ function SalonDetail() {
                 setLoading(true);
 
                 // 이미지 매핑
-                const imageMap = {
+                const imageMap: Record<string, string> = {
                     'salon1.jpeg': salon1Image,
                     'salon2.png': salon2Image,
                     'salon3.png': salon3Image
@@ -62,23 +107,13 @@ function SalonDetail() {
                 const foundSalon = salonData.find(salon => salon.id === id);
 
                 if (foundSalon) {
-                    const salonWithDetails = {
+                    const salonWithDetails: Salon = {
                         ...foundSalon,
-                        likes: foundSalon.likes || 1200, // salon.json에 likes가 없으면 기본값 사용
                         photos: [
                             {photoId: 1, photoUrl: imageMap[foundSalon.photoUrl] || salon1Image, photoOrder: 1},
                             {photoId: 2, photoUrl: salon2Image, photoOrder: 2},
                             {photoId: 3, photoUrl: salon3Image, photoOrder: 3}
                         ],
-                        businessHours: [
-                            { day: "월", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "화", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "수", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "목", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "금", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "토", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "일", open: foundSalon.start_time, close: foundSalon.end_time }
-                        ]
                     };
 
                     setSalon(salonWithDetails);
@@ -139,7 +174,7 @@ function SalonDetail() {
                 const infoWindow = new window.naver.maps.InfoWindow({
                     content: `<div style="padding:10px;width:200px;text-align:center;">
                    <strong>${salon.name}</strong><br>
-                   ${salon.address}
+                   ${salon.address || ''}
                  </div>`
                 });
 
@@ -152,8 +187,8 @@ function SalonDetail() {
 
             return () => {
                 const existingScript = document.querySelector(`script[src^="https://openapi.map.naver.com"]`);
-                if (existingScript) {
-                    document.head.removeChild(existingScript);
+                if (existingScript && existingScript.parentNode) {
+                    existingScript.parentNode.removeChild(existingScript);
                 }
             };
         }
@@ -187,7 +222,7 @@ function SalonDetail() {
         return <div className="error-container">살롱 정보를 찾을 수 없습니다.</div>;
     }
 
-    const dayToIndex = {
+    const dayToIndex: Record<string, number> = {
         '월': 0,
         '화': 1,
         '수': 2,
@@ -249,7 +284,7 @@ function SalonDetail() {
                             <div key={index} className="hour-row">
                                 <span className="day">{hour.day}</span>
                                 {isDayOff(dayToIndex[hour.day], salon.holiday_mask) ? (
-                                    <span className="holiday">정기휴무입니다</span>
+                                    <span className="holiday">휴무</span>
                                 ) : (
                                     <span className="time">{hour.open} ~ {hour.close}</span>
                                 )}
@@ -270,10 +305,6 @@ function SalonDetail() {
                 </div>
             </div>
             <div className="information-nav">
-                <div className="nav-item">
-                    <FavoriteIcon/>
-                    <span>{salon.likes && salon.likes.toLocaleString()}</span>
-                </div>
                 <div className="nav-item" onClick={showMap}>
                     <LocationOnIcon/>
                     <span>location</span>
