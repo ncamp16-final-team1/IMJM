@@ -160,7 +160,7 @@
     white-space: pre-line;
 }
 
-.bottom-nav {
+.information-nav {
     display: flex;
     background-color: white;
     border-top: 1px solid #eee;
@@ -244,4 +244,90 @@
 .map-address p {
     margin: 0;
     color: #666;
+}
+
+/* 스타일리스트 섹션 추가 CSS - 기존 SalonDetail.css 파일에 추가하세요 */
+
+.stylists-section {
+    margin-bottom: 20px;
+}
+
+.stylists-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stylists-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.view-all-link {
+    display: flex;
+    align-items: center;
+    color: #f5989d;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.stylists-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px 0;
+}
+
+.stylist-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.stylist-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 15px;
+    border: 1px solid #eee;
+}
+
+.stylist-profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stylist-info {
+    flex: 1;
+}
+
+.stylist-name {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.stylist-position {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+
+.no-stylists {
+    text-align: center;
+    color: #999;
+    padding: 20px 0;
 }
