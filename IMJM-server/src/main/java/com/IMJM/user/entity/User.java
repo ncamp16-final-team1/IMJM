@@ -1,17 +1,17 @@
 package com.IMJM.user.entity;
 
+import com.IMJM.user.dto.UserDto;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
 
 @Entity
-@Table(name = "user")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "user")
 public class User {
 
     @Id
@@ -60,8 +60,16 @@ public class User {
     @Builder.Default
     private boolean isNotification = true;
 
-    // Enum 타입 정의
     public enum UserType { MEMBER, STYLIST }
     public enum Language { KO, EN }
     public enum Gender { MALE, FEMALE }
+
+    public void updateName(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class UserDto {
     private String userType;
+    private String id;
     private String firstName;
     private String lastName;
     private String language;
@@ -23,6 +24,7 @@ public class UserDto {
 
     public UserDto() {
         this.userType = getUserType();
+        this.id = getId();
         this.firstName = getFirstName();
         this.lastName = getLastName();
         this.language = getLanguage();

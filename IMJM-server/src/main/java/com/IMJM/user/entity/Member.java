@@ -6,18 +6,17 @@ import lombok.*;
 @Entity
 @Table(name = "member")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Member {
 
     @Id
-    @Column(length = 100, nullable = false)
-    private String id;
+    private String id;  // 기본 키로 사용되는 필드
 
     @OneToOne
-    @JoinColumn(name = "id")
+    @MapsId  // User 엔티티의 ID를 사용함
+    @JoinColumn(name = "id")  // 외래 키와 기본 키를 같은 값으로 설정
     private User user;
 
     @Column(length = 50)

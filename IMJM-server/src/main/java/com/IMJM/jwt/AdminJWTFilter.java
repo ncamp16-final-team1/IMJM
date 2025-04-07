@@ -1,9 +1,10 @@
-package com.IMJM.admin.jwt;
+package com.IMJM.jwt;
 
 import com.IMJM.admin.dto.CustomHairSalonDetails;
 import com.IMJM.admin.entity.HairSalon;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,30 +14,41 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-public class JWTFilter extends OncePerRequestFilter {
+public class AdminJWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
 
-    public JWTFilter(JWTUtil jwtUtil) {
+    public AdminJWTFilter(JWTUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String authorization = request.getHeader("Authorization");
+        String token = null;
 
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        String requestUri = request.getRequestURI();
+
+        if (requestUri.matches("^\\/login(?:\\/.*)?$")) {
+
             filterChain.doFilter(request, response);
-
             return;
         }
 
-        String token = authorization.split(" ")[1];
+        Cookie[] cookies = request.getCookies();
 
-        if (jwtUtil.isExpired(token)) {
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                // 예: Admin용 JWT는 "AdminToken" 쿠키에 저장된다고 가정
+                if (cookie.getName().equals("AdminToken")) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || jwtUtil.isExpired(token)) {
             filterChain.doFilter(request, response);
-
             return;
         }
 

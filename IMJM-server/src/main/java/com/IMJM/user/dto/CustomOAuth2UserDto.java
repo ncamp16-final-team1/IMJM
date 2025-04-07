@@ -5,15 +5,14 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 public class CustomOAuth2UserDto implements OAuth2User {
 
-    private final UserResisterDto userResisterDto;
+    private final UserResponseDto userResponseDto;
 
-    public CustomOAuth2UserDto(UserResisterDto userResisterDto) {
-        this.userResisterDto = userResisterDto;
+    public CustomOAuth2UserDto(UserResponseDto userResponseDto) {
+        this.userResponseDto = userResponseDto;
     }
 
     @Override
@@ -29,7 +28,7 @@ public class CustomOAuth2UserDto implements OAuth2User {
         collection.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return userResisterDto.getUserType();
+                return userResponseDto.getUserType();
             }
         });
 
@@ -42,18 +41,18 @@ public class CustomOAuth2UserDto implements OAuth2User {
     }
 
     public String getId(){
-        return userResisterDto.getId();
+        return userResponseDto.getId();
     }
 
     public String getEmail(){
-        return userResisterDto.getEmail();
+        return userResponseDto.getEmail();
     }
 
     public String getLastName(){
-        return userResisterDto.getLastName();
+        return userResponseDto.getLastName();
     }
 
     public String getFirstName(){
-        return userResisterDto.getFirstName();
+        return userResponseDto.getFirstName();
     }
 }

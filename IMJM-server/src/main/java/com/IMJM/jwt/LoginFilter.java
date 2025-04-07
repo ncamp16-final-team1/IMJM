@@ -1,7 +1,8 @@
-package com.IMJM.admin.jwt;
+package com.IMJM.jwt;
 
 import com.IMJM.admin.dto.CustomHairSalonDetails;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,8 +30,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String username = request.getParameter("id");
         String password = obtainPassword(request);
 
-        System.out.println(username);
-
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
         return authenticationManager.authenticate(authToken);
     }
@@ -45,16 +44,27 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
-
         String role = auth.getAuthority();
 
         String token = jwtUtil.createJwt(username, role, 60*60*24L);
 
-        response.addHeader("Authorization", "Bearer " + token);
+        response.addCookie(createCookie("Authorization", token));
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
         response.setStatus(401);
+    }
+
+    private Cookie createCookie(String key, String token) {
+
+        Cookie cookie = new Cookie(key, token);
+        cookie.setMaxAge(60*60*24);
+        cookie.setHttpOnly(true);
+        //cookie.setSecure(true);  // https 만 허용 할 경우
+        cookie.setPath("/");
+
+        return cookie;
     }
 }

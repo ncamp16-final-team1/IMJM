@@ -1,38 +1,43 @@
 package com.IMJM.config;
 
-import com.IMJM.admin.jwt.JWTFilter;
-import com.IMJM.admin.jwt.JWTUtil;
-import com.IMJM.admin.jwt.LoginFilter;
+import com.IMJM.jwt.AdminJWTFilter;
+import com.IMJM.jwt.JWTUtil;
+import com.IMJM.jwt.LoginFilter;
+import com.IMJM.jwt.UserJWTFilter;
+import com.IMJM.jwt.CustomSuccessHandler;
 import com.IMJM.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
     private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration,
+                          CustomSuccessHandler customSuccessHandler,
                           JWTUtil jwtUtil,
                           CustomOAuth2UserService customOAuth2UserService) {
         this.authenticationConfiguration = authenticationConfiguration;
+        this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
         this.customOAuth2UserService = customOAuth2UserService;
     }
@@ -61,13 +66,12 @@ public class SecurityConfig {
 
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                                configuration.setAllowedMethods(Collections.singletonList("*"));
+                                configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3030"));
+                                configuration.setAllowedMethods(List.of("*"));
+                                configuration.setAllowedHeaders(List.of("*"));
+                                configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
                                 configuration.setAllowCredentials(true);
-                                configuration.setAllowedHeaders(Collections.singletonList("*"));
                                 configuration.setMaxAge(3600L);
-
-                                configuration.setExposedHeaders(Collections.singletonList("Authorization"));
 
                                 return configuration;
                             }
@@ -88,8 +92,10 @@ public class SecurityConfig {
         //oauth2
         http
                 .oauth2Login((oauth2)-> oauth2
-                        .userInfoEndpoint((userInfoEndpointConfig -> userInfoEndpointConfig
-                                .userService(customOAuth2UserService))));
+                        .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
+                                .userService(customOAuth2UserService))
+                        .successHandler(customSuccessHandler)
+                );
 
         //경로별 인가 작업
         http
@@ -99,12 +105,17 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
 
         http
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+                .addFilterBefore(new AdminJWTFilter(jwtUtil), LoginFilter.class);
+
+        http
+                .addFilterBefore(new UserJWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+
+        http
+                .addFilterAfter(new UserJWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
-        //세션 설정: STATELESS
         http
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

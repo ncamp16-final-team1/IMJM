@@ -1,4 +1,4 @@
-package com.IMJM.admin.jwt;
+package com.IMJM.jwt;
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,14 +37,17 @@ public class JWTUtil {
     }
 
     public Boolean isExpired(String token) {
-
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration()
-                .before(new Date());
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration()
+                    .before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     public String createJwt(String id, String role, Long expiredMs) {
