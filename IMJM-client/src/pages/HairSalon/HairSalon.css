@@ -92,3 +92,82 @@
     object-fit: cover;
     display: block;
 }
+
+/* 지도 관련 스타일 */
+.map-container {
+    margin-bottom: 30px;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    padding-bottom: 15px;
+}
+
+.map-container h2 {
+    padding: 15px;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+}
+
+.map {
+    width: 100%;
+    height: 350px;
+}
+
+.nearby-salons {
+    padding: 0 15px;
+}
+
+.nearby-salons h3 {
+    font-size: 18px;
+    margin: 15px 0 10px 0;
+}
+
+.nearby-salon-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 10px;
+}
+
+.nearby-salon-item {
+    min-width: 200px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.nearby-salon-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nearby-salon-info h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+}
+
+.nearby-salon-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.nearby-salon-rating {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.no-nearby {
+    padding: 20px 15px;
+    text-align: center;
+    color: #888;
+}
+
+.user-marker {
+    position: relative;
+}
