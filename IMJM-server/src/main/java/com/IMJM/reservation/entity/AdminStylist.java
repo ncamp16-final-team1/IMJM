@@ -9,14 +9,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "admin_Stylist")
+@Table(name = "admin_stylist")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)  // jpa에 필요한 기본 생성자를 protected 로 생성.
-public class Stylist {
+public class AdminStylist {
 
-    // 복합키
-    @EmbeddedId
-    private  StylistId stylistId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "stylist_id")
+    private Integer stylistId;
 
     @Column(nullable = false, length = 10)
     private String name;
@@ -39,16 +40,15 @@ public class Stylist {
     @Column(length = 255)
     private String profile;
 
-    @MapsId("salonId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "salon_id")
     private HairSalon hairSalon;
 
 
     @Builder
-    public Stylist(StylistId stylistId, String name, String callNumber,
-                   LocalTime startTime, LocalTime endTime, short holidayMask,
-                   String introduction, String profile, HairSalon hairSalon) {
+    public AdminStylist(Integer stylistId, String name, String callNumber,
+                        LocalTime startTime, LocalTime endTime, short holidayMask,
+                        String introduction, String profile, HairSalon hairSalon) {
         this.stylistId = stylistId;
         this.name = name;
         this.callNumber = callNumber;
