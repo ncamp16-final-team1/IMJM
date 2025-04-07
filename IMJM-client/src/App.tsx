@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Header from './components/layout/Header.jsx'
-import Footer from './components/layout/Footer.jsx'
-import Home from './pages/Home/Home'
-import SalonDetail from "./pages/HairSalon/SalonDetail.jsx";
-import HairSalon from "./pages/HairSalon/HairSalon.jsx";
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+import Home from './pages/Home/Home';
+import SalonDetail from "./pages/HairSalon/SalonDetail";
+import HairSalon from "./pages/HairSalon/HairSalon";
 
 function App() {
     return (
@@ -25,7 +25,5 @@ function App() {
         </BrowserRouter>
     );
 }
-
-
 
 export default App;

@@ -2,22 +2,25 @@ import React, { useState } from 'react';
 import './Header.css';
 import logo from '../../assets/images/logo.png';
 import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 import ChatIcon from '@mui/icons-material/Chat';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
-function Header() {
-    const [language, setLanguage] = useState('ko'); // 기본값을 한글(ko)로 설정
+// 언어 타입 정의
+type Language = 'ko' | 'en';
 
-    const handleLanguageChange = (event) => {
-        setLanguage(event.target.value);
+function Header(): React.ReactElement {
+    const [language, setLanguage] = useState<Language>('ko'); // 기본값을 한글(ko)로 설정
+
+    const handleLanguageChange = (event: SelectChangeEvent<Language>): void => {
+        setLanguage(event.target.value as Language);
     };
 
     return (
         <header className="header">
             <div className="logoimage">
-                <img src={logo} className="logo"/>
+                <img src={logo} className="logo" alt="로고" />
             </div>
             <div className="header-actions">
                 <Select
@@ -46,10 +49,10 @@ function Header() {
                 </Select>
                 <div className="header-icons">
                     <button className="icon-button">
-                        <ChatIcon/>
+                        <ChatIcon />
                     </button>
                     <button className="icon-button">
-                        <NotificationsIcon/>
+                        <NotificationsIcon />
                         <span className="notification-badge">1</span>
                     </button>
                 </div>

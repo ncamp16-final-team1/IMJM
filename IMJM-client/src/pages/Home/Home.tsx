@@ -1,7 +1,7 @@
 import React from 'react';
 import './Home.css';
 
-function Home() {
+function Home(): React.ReactElement {
     return (
         <div className="home-page">
             {/* 여기에 홈 페이지 컨텐츠를 추가하세요 */}

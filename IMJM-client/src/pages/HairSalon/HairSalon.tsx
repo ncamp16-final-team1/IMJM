@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import StarIcon from '@mui/icons-material/Star';
 import StarHalfIcon from '@mui/icons-material/StarHalf';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import salon1Image from "../../assets/images/salon1.jpeg";
 import salon2Image from "../../assets/images/salon2.png";
 import salon3Image from "../../assets/images/salon3.png";
@@ -15,22 +14,67 @@ import userData from "../../data/user.json"; // 사용자 데이터 불러오기
 
 import './HairSalon.css';
 
+// 네이버 맵 타입 정의
+declare global {
+    interface Window {
+        naver: any;
+    }
+}
+
+// 인터페이스 정의
+interface SalonPhoto {
+    photoId: number;
+    photoUrl: string;
+    photoOrder: number;
+}
+
+interface Salon {
+    id: string;
+    name: string;
+    address: string;
+    call_number: string;
+    introduction: string;
+    holiday_mask: number;
+    start_time: string;
+    end_time: string;
+    score: number;
+    latitude: number;
+    longitude: number;
+    photoUrl: string;
+    // 추가로 사용하는 속성
+    photos?: SalonPhoto[];
+    distance?: number;
+}
+
+interface UserLocation {
+    latitude: number;
+    longitude: number;
+}
+
+interface User {
+    id: string;
+    name?: string;
+    latitude: number;
+    longitude: number;
+    // 필요한 경우 더 많은 사용자 속성 추가
+}
+
 function HairSalon() {
-    const [salons, setSalons] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [currentUser, setCurrentUser] = useState(null);
-    const [nearbySalons, setNearbySalons] = useState([]);
-    const [mapLoaded, setMapLoaded] = useState(false);
-    const mapRef = useRef(null);
+    const [salons, setSalons] = useState<Salon[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [nearbySalons, setNearbySalons] = useState<Salon[]>([]);
+    const [mapLoaded, setMapLoaded] = useState<boolean>(false);
+    const mapRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
-    const handleSalonClick = (salonId) => {
+    const handleSalonClick = (salonId: string): void => {
         navigate(`/salon/${salonId}`);
     };
 
-    const renderStars = (score) => {
-        const stars = [];
+    const renderStars = (score: number) => {
+        const stars: React.ReactNode[] = [];
         const fullStars = Math.floor(score);
         const hasHalfStar = score - fullStars >= 0.5;
 
@@ -51,7 +95,7 @@ function HairSalon() {
     };
 
     // 두 좌표 간의 거리 계산 (하버사인 공식)
-    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
         const R = 6371; // 지구 반경 (km)
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -65,7 +109,7 @@ function HairSalon() {
     };
 
     // 가까운 미용실 찾기
-    const findNearbySalons = (userLocation, salons) => {
+    const findNearbySalons = (userLocation: UserLocation, salons: Salon[]): Salon[] => {
         const maxDistance = 10; // 10km 이내의 미용실만 표시
 
         return salons.filter(salon => {
@@ -75,14 +119,13 @@ function HairSalon() {
                 salon.latitude,
                 salon.longitude
             );
-            salon.distance = distance; // 거리 정보 추가
+            salon.distance = distance;
             return distance <= maxDistance;
-        }).sort((a, b) => a.distance - b.distance); // 거리 기준 정렬
+        }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
     };
 
-    // 네이버 지도 초기화
-    const initMap = (userLocation, salonsWithPhotos) => {
-        if (!window.naver) return;
+    const initMap = (userLocation: UserLocation, salonsWithPhotos: Salon[]): void => {
+        if (!window.naver || !mapRef.current) return;
 
         const mapOptions = {
             center: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
@@ -95,7 +138,6 @@ function HairSalon() {
 
         const map = new window.naver.maps.Map(mapRef.current, mapOptions);
 
-        // 사용자 위치 마커
         new window.naver.maps.Marker({
             position: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
             map: map,
@@ -118,13 +160,12 @@ function HairSalon() {
                 title: salon.name
             });
 
-            // 정보창 생성
             const infoContent = `
                 <div style="padding: 10px; width: 200px;">
                     <h3 style="margin-top: 0;">${salon.name}</h3>
                     <p>${salon.address || '주소 정보 없음'}</p>
                     <p>평점: ${salon.score || 'N/A'}</p>
-                    <p>거리: ${salon.distance.toFixed(1)}km</p>
+                    <p>거리: ${salon.distance?.toFixed(1)}km</p>
                 </div>
             `;
 
@@ -150,22 +191,31 @@ function HairSalon() {
     };
 
     useEffect(() => {
-        const fetchData = async () => {
+        const script = document.createElement('script');
+        script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=cv8i9hdmhu`;
+        script.async = true;
+        script.onload = () => setMapLoaded(true);
+        document.head.appendChild(script);
+        const fetchData = async (): Promise<void> => {
             try {
                 // 현재 사용자 설정 (첫 번째 사용자로 가정)
-                const user = userData[0]; // 또는 로그인된 사용자 ID 기반으로 선택
+                const user: User = {
+                    id: userData[0].id,
+                    name: userData[0].first_name + ' ' + userData[0].last_name,
+                    latitude: userData[0].latitude,
+                    longitude: userData[0].longitude
+                };
                 setCurrentUser(user);
 
                 // 이미지 매핑
-                const imageMap = {
+                const imageMap: Record<string, string> = {
                     'salon1.jpeg': salon1Image,
                     'salon2.png': salon2Image,
                     'salon3.png': salon3Image,
                     'salon4.png': salon4Image
                 };
 
-                // JSON 데이터에 photos 배열 추가
-                const salonsWithPhotos = salonData.map(salon => ({
+                const salonsWithPhotos = salonData.map((salon: any) => ({
                     ...salon,
                     photos: [
                         {
@@ -176,23 +226,19 @@ function HairSalon() {
                     ]
                 }));
 
-                // 데이터 설정
                 setSalons(salonsWithPhotos);
 
-                // 네이버 지도 API 로드
-                const script = document.createElement('script');
-                script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=cv8i9hdmhu`;
-                script.async = true;
-                script.onload = () => setMapLoaded(true);
-                document.head.appendChild(script);
+                // 실제 API 호출 코드 (주석 처리)
+                /*
+                const response = await axios.get(`http://localhost:8080/api/salons/${id}/with-photos`);
+                setSalon(response.data);
+                setLoading(false);
+                */
+
+
 
                 setLoading(false);
 
-                return () => {
-                    if (script.parentNode) {
-                        document.head.removeChild(script);
-                    }
-                };
             } catch (err) {
                 setError('데이터를 불러오는데 실패했습니다.');
                 console.error('데이터 불러오기 오류:', err);
@@ -201,6 +247,12 @@ function HairSalon() {
         };
 
         fetchData();
+
+        return () => {
+            if (script.parentNode) {
+                document.head.removeChild(script);
+            }
+        };
     }, []);
 
     // 지도 초기화 (API 로드 후)
@@ -237,7 +289,7 @@ function HairSalon() {
                                 >
                                     <div className="nearby-salon-info">
                                         <h4>{salon.name}</h4>
-                                        <p>{salon.distance.toFixed(1)}km</p>
+                                        <p>{salon.distance?.toFixed(1)}km</p>
                                     </div>
                                     {salon.score && (
                                         <div className="nearby-salon-rating">

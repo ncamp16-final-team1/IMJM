@@ -8,12 +8,20 @@ import HomeIcon from '@mui/icons-material/Home';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import PersonIcon from '@mui/icons-material/Person';
 
-function Footer() {
+// 네비게이션 아이템 타입 정의
+interface NavItem {
+    id: string;
+    path: string;
+    icon: React.ReactNode;
+    label: string;
+}
+
+function Footer(): React.ReactElement {
     const navigate = useNavigate();
     const location = useLocation();
     const currentPath = location.pathname;
 
-    const navItems = [
+    const navItems: NavItem[] = [
         { id: 'archive', path: '/archive', icon: <PhotoCamera />, label: 'archive' },
         { id: 'community', path: '/community', icon: <PeopleIcon />, label: 'community' },
         { id: 'home', path: '/', icon: <HomeIcon />, label: 'home' },
