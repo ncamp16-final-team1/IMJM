@@ -11,7 +11,7 @@ import java.time.LocalTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class HairSalonDto {
+public class SalonDto {
 
     private String id;
     private String password;
@@ -28,7 +28,7 @@ public class HairSalonDto {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    public HairSalonDto(Salon salon) {
+    public SalonDto(Salon salon) {
         this.id = salon.getId();
         this.password = salon.getPassword();
         this.name = salon.getName();

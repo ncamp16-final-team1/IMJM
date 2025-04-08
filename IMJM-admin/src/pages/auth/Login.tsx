@@ -21,11 +21,32 @@ function Login({ onLoginSuccess }: LoginProps) {
     const [password, setPassword] = useState<string>('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // 여기에 실제 로그인 로직 구현
-        onLoginSuccess();
-        navigate('/');
+
+        try {
+            const response = await fetch('http://localhost:8080/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    id: username, // 백엔드에서는 'id' 로 받음
+                    password: password,
+                }),
+                credentials: 'include', // 쿠키 저장을 위해 꼭 필요!
+            });
+
+            if (response.ok) {
+                onLoginSuccess(); // 로그인 성공 후 처리
+                navigate('/');
+            } else {
+                alert('로그인 실패: 아이디나 비밀번호를 확인하세요.');
+            }
+        } catch (error) {
+            console.error('로그인 요청 중 오류:', error);
+            alert('서버 오류가 발생했습니다.');
+        }
     };
 
     return (
@@ -85,8 +106,10 @@ function Login({ onLoginSuccess }: LoginProps) {
                             mb: 2,
                             py: 1.5,
                             bgcolor: '#ff6f61',
+                            boxShadow: 'none',
                             '&:hover': {
                                 bgcolor: '#FF9080',
+                                boxShadow: 'none',
                             }
                         }}
                     >

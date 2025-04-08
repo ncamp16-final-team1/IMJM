@@ -1,6 +1,6 @@
 package com.IMJM.jwt;
 
-import com.IMJM.admin.dto.CustomHairSalonDetails;
+import com.IMJM.admin.dto.CustomSalonDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +30,9 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         String username = request.getParameter("id");
         String password = obtainPassword(request);
 
+        System.out.println(username);
+        System.out.println(password);
+
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
         return authenticationManager.authenticate(authToken);
     }
@@ -37,9 +40,9 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
-        CustomHairSalonDetails customHairSalonDetails = (CustomHairSalonDetails) authentication.getPrincipal();
+        CustomSalonDetails customSalonDetails = (CustomSalonDetails) authentication.getPrincipal();
 
-        String username = customHairSalonDetails.getUsername();
+        String username = customSalonDetails.getUsername();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();

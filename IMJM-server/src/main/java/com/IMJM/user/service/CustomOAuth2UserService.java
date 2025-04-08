@@ -25,8 +25,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        System.out.println(oAuth2User);
-
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
         OAuth2ResponseDto oAuth2ResponseDto = null;
@@ -47,7 +45,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (existData.isEmpty()) {
             Users newUsers = Users.builder()
                     .id(id)
-                    .userType("MEMBER")
                     .firstName(oAuth2ResponseDto.getFirstName())
                     .lastName(oAuth2ResponseDto.getLastName())
                     .email(oAuth2ResponseDto.getEmail())
@@ -57,10 +54,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             UserResponseDto userResponseDto = UserResponseDto.builder()
                     .id(id)
-                    .userType("MEMBER")
                     .firstName(oAuth2ResponseDto.getFirstName())
                     .lastName(oAuth2ResponseDto.getLastName())
                     .email(oAuth2ResponseDto.getEmail())
+                    .termsAgreed(false)
                     .build();
 
             return new CustomOAuth2UserDto(userResponseDto);
@@ -75,6 +72,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .userType(users.getUserType())
                     .firstName(oAuth2ResponseDto.getFirstName())
                     .lastName(oAuth2ResponseDto.getLastName())
+                    .termsAgreed(users.isTermsAgreed())
                     .build();
 
             return new CustomOAuth2UserDto(userResponseDto);

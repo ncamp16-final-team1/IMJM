@@ -1,6 +1,6 @@
 package com.IMJM.admin.controller;
 
-import com.IMJM.admin.dto.HairSalonDto;
+import com.IMJM.admin.dto.SalonDto;
 import com.IMJM.admin.service.JoinService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ public class JoinController {
     }
 
     @PostMapping("/join")
-    public String joinProcess(HairSalonDto joinDTO) {
+    public String joinProcess(SalonDto joinDTO) {
         joinService.joinProcess(joinDTO);
         return "ok";
     }

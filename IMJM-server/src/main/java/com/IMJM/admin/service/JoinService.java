@@ -1,34 +1,36 @@
 package com.IMJM.admin.service;
 
-import com.IMJM.admin.dto.HairSalonDto;
+import com.IMJM.admin.dto.SalonDto;
 import com.IMJM.common.entity.Salon;
-import com.IMJM.admin.repository.HairSalonRepository;
+import com.IMJM.admin.repository.SalonRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JoinService {
 
-    private final HairSalonRepository hairSalonRepository;
+    private final SalonRepository salonRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public JoinService(HairSalonRepository hairSalonRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public JoinService(SalonRepository salonRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
 
-        this.hairSalonRepository = hairSalonRepository;
+        this.salonRepository = salonRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-    public void joinProcess(HairSalonDto joinDTO) {
+    public void joinProcess(SalonDto joinDTO) {
 
         String id = joinDTO.getId();
         String password = joinDTO.getPassword();
 
-        boolean isExist = hairSalonRepository.existsById(id);
+        boolean isExist = salonRepository.existsById(id);
 
         if (isExist) {
 
             return;
         }
+
+        System.out.println(22222);
 
         Salon data = Salon.builder()
                 .id(id)
@@ -37,6 +39,6 @@ public class JoinService {
                 .holidayMask(joinDTO.getHolidayMask())
                 .build();
 
-        hairSalonRepository.save(data);
+        salonRepository.save(data);
     }
 }

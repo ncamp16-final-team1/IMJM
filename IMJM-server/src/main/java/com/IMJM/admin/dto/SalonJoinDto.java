@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class HairSalonJoinDto {
+public class SalonJoinDto {
     private String id;
     private String password;
 }
