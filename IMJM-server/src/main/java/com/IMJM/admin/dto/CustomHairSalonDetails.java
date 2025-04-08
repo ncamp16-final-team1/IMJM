@@ -1,6 +1,6 @@
 package com.IMJM.admin.dto;
 
-import com.IMJM.admin.entity.HairSalon;
+import com.IMJM.common.entity.Salon;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,10 +9,10 @@ import java.util.Collection;
 
 public class CustomHairSalonDetails implements UserDetails {
 
-    private final HairSalon hairSalon;
+    private final Salon salon;
 
-    public CustomHairSalonDetails(HairSalon hairSalon) {
-        this.hairSalon = hairSalon;
+    public CustomHairSalonDetails(Salon salon) {
+        this.salon = salon;
     }
 
     @Override
@@ -32,12 +32,12 @@ public class CustomHairSalonDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return hairSalon.getPassword();
+        return salon.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return hairSalon.getId();
+        return salon.getId();
     }
 
     @Override

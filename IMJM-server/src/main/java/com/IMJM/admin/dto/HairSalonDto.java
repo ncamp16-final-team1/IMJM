@@ -1,6 +1,6 @@
 package com.IMJM.admin.dto;
 
-import com.IMJM.admin.entity.HairSalon;
+import com.IMJM.common.entity.Salon;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -28,20 +28,20 @@ public class HairSalonDto {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    public HairSalonDto(HairSalon hairSalon) {
-        this.id = hairSalon.getId();
-        this.password = hairSalon.getPassword();
-        this.name = hairSalon.getName();
-        this.corpRegNumber = hairSalon.getCorpRegNumber();
-        this.address = hairSalon.getAddress();
-        this.callNumber = hairSalon.getCallNumber();
-        this.introduction = hairSalon.getIntroduction();
-        this.holidayMask = hairSalon.getHolidayMask();
-        this.startTime = hairSalon.getStartTime();
-        this.endTime = hairSalon.getEndTime();
-        this.timeUnit = hairSalon.getTimeUnit();
-        this.score = hairSalon.getScore();
-        this.latitude = hairSalon.getLatitude();
-        this.longitude = hairSalon.getLongitude();
+    public HairSalonDto(Salon salon) {
+        this.id = salon.getId();
+        this.password = salon.getPassword();
+        this.name = salon.getName();
+        this.corpRegNumber = salon.getCorpRegNumber();
+        this.address = salon.getAddress();
+        this.callNumber = salon.getCallNumber();
+        this.introduction = salon.getIntroduction();
+        this.holidayMask = salon.getHolidayMask();
+        this.startTime = salon.getStartTime();
+        this.endTime = salon.getEndTime();
+        this.timeUnit = salon.getTimeUnit();
+        this.score = salon.getScore();
+        this.latitude = salon.getLatitude();
+        this.longitude = salon.getLongitude();
     }
 }

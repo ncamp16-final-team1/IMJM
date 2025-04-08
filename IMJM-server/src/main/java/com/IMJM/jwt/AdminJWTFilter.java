@@ -1,7 +1,7 @@
 package com.IMJM.jwt;
 
 import com.IMJM.admin.dto.CustomHairSalonDetails;
-import com.IMJM.admin.entity.HairSalon;
+import com.IMJM.common.entity.Salon;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -39,7 +39,6 @@ public class AdminJWTFilter extends OncePerRequestFilter {
 
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                // 예: Admin용 JWT는 "AdminToken" 쿠키에 저장된다고 가정
                 if (cookie.getName().equals("AdminToken")) {
                     token = cookie.getValue();
                     break;
@@ -52,7 +51,7 @@ public class AdminJWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        HairSalon data = HairSalon.builder()
+        Salon data = Salon.builder()
                 .id(jwtUtil.getUserName(token))
                 .password("temppassword")
                 .build();

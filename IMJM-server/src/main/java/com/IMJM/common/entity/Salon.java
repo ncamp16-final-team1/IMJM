@@ -1,25 +1,22 @@
-package com.IMJM.admin.entity;
+package com.IMJM.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
 
+@Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "hair_salon")
-public class HairSalon {
+@Table(name = "salon")
+public class Salon {
 
     @Id
     @Column(length = 20, nullable = false)
@@ -28,7 +25,7 @@ public class HairSalon {
     @Column(length = 100, nullable = false)
     private String password;
 
-    @Column(length = 30, nullable = false)
+    @Column(length = 50, nullable = false)
     private String name;
 
     @Column(name = "corp_reg_number", length = 20)

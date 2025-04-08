@@ -1,7 +1,7 @@
 package com.IMJM.user.service;
 
 import com.IMJM.user.dto.*;
-import com.IMJM.user.entity.User;
+import com.IMJM.common.entity.Users;
 import com.IMJM.user.repository.UserRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -42,18 +42,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         String id = oAuth2ResponseDto.getProvider() + " " + oAuth2ResponseDto.getProviderId();
-        Optional<User> existData = userRepository.findById(id);
+        Optional<Users> existData = userRepository.findById(id);
 
         if (existData.isEmpty()) {
-            User newUser = User.builder()
+            Users newUsers = Users.builder()
                     .id(id)
-                    .userType(User.UserType.MEMBER)
+                    .userType("MEMBER")
                     .firstName(oAuth2ResponseDto.getFirstName())
                     .lastName(oAuth2ResponseDto.getLastName())
                     .email(oAuth2ResponseDto.getEmail())
                     .build();
 
-            userRepository.save(newUser);
+            userRepository.save(newUsers);
 
             UserResponseDto userResponseDto = UserResponseDto.builder()
                     .id(id)
@@ -66,13 +66,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             return new CustomOAuth2UserDto(userResponseDto);
         }
         else {
-            User user = new User();
-            user.updateEmail(existData.get().getEmail());
-            user.updateName(existData.get().getFirstName(), existData.get().getLastName());
+            Users users = existData.get();
+            users.updateEmail(users.getEmail());
+            users.updateName(users.getFirstName(), users.getLastName());
 
             UserResponseDto userResponseDto = UserResponseDto.builder()
-                    .id(existData.get().getId())
-                    .userType(existData.get().getUserType().toString())
+                    .id(users.getId())
+                    .userType(users.getUserType())
                     .firstName(oAuth2ResponseDto.getFirstName())
                     .lastName(oAuth2ResponseDto.getLastName())
                     .build();

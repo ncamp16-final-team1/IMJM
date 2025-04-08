@@ -2,9 +2,9 @@ package com.IMJM.config;
 
 import com.IMJM.jwt.AdminJWTFilter;
 import com.IMJM.jwt.JWTUtil;
-import com.IMJM.jwt.LoginFilter;
+import com.IMJM.jwt.AdminLoginFilter;
 import com.IMJM.jwt.UserJWTFilter;
-import com.IMJM.jwt.CustomSuccessHandler;
+import com.IMJM.jwt.UserSuccessHandler;
 import com.IMJM.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
@@ -28,16 +28,16 @@ import java.util.List;
 public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
-    private final CustomSuccessHandler customSuccessHandler;
+    private final UserSuccessHandler userSuccessHandler;
     private final JWTUtil jwtUtil;
     private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration,
-                          CustomSuccessHandler customSuccessHandler,
+                          UserSuccessHandler userSuccessHandler,
                           JWTUtil jwtUtil,
                           CustomOAuth2UserService customOAuth2UserService) {
         this.authenticationConfiguration = authenticationConfiguration;
-        this.customSuccessHandler = customSuccessHandler;
+        this.userSuccessHandler = userSuccessHandler;
         this.jwtUtil = jwtUtil;
         this.customOAuth2UserService = customOAuth2UserService;
     }
@@ -66,7 +66,7 @@ public class SecurityConfig {
 
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3030"));
+                                configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173", "http://localhost:5174"));
                                 configuration.setAllowedMethods(List.of("*"));
                                 configuration.setAllowedHeaders(List.of("*"));
                                 configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
@@ -77,16 +77,10 @@ public class SecurityConfig {
                             }
                         }));
 
-        //csrf disable
         http
-                .csrf((auth) -> auth.disable());
-
-        //From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
-
-        //http basic 인증 방식 disable
-        http
+                .csrf((auth) -> auth.disable())
+                .formLogin((auth) -> auth.disable())
+                .logout(logout -> logout.disable())
                 .httpBasic((auth) -> auth.disable());
 
         //oauth2
@@ -94,7 +88,7 @@ public class SecurityConfig {
                 .oauth2Login((oauth2)-> oauth2
                         .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService))
-                        .successHandler(customSuccessHandler)
+                        .successHandler(userSuccessHandler)
                 );
 
         //경로별 인가 작업
@@ -102,19 +96,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/login", "/", "/join", "/user").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/check-login").authenticated()
                         .anyRequest().authenticated());
 
         http
-                .addFilterBefore(new AdminJWTFilter(jwtUtil), LoginFilter.class);
-
-        http
-                .addFilterBefore(new UserJWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
-
-        http
-                .addFilterAfter(new UserJWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
-
-        http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new AdminJWTFilter(jwtUtil), AdminLoginFilter.class)
+                .addFilterBefore(new UserJWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new UserJWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class)
+                .addFilterAt(new AdminLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         http
                 .sessionManagement((session) -> session

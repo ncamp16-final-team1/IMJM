@@ -15,12 +15,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.util.Collection;
 import java.util.Iterator;
 
-public class LoginFilter extends UsernamePasswordAuthenticationFilter {
+public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+    public AdminLoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
     }
@@ -46,9 +46,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(username, role, 60*60*24L);
+        String token = jwtUtil.createJwt(username, role, 60 * 60 * 24 * 1000L);
 
-        response.addCookie(createCookie("Authorization", token));
+        response.addCookie(createCookie("AdminToken", token));
         response.setStatus(HttpServletResponse.SC_OK);
     }
 

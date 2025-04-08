@@ -1,8 +1,8 @@
 package com.IMJM.user.repository;
 
-import com.IMJM.user.entity.User;
+import com.IMJM.common.entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, String> {
+public interface UserRepository extends JpaRepository<Users, String> {
 
 }

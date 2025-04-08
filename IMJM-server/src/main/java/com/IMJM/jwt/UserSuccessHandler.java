@@ -15,11 +15,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Component
-public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
 
-    public CustomSuccessHandler(JWTUtil jwtUtil) {
+    public UserSuccessHandler(JWTUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 
@@ -35,10 +35,10 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(userId, role, 60*60*24L);
+        String token = jwtUtil.createJwt(userId, role, 60 * 60 * 24 * 1000L);
 
         response.addCookie(createCookie("Authorization", token));
-        response.sendRedirect("http://localhost:3000/user/login");
+        response.sendRedirect("http://localhost:5174/");
     }
 
     private Cookie createCookie(String key, String token) {
