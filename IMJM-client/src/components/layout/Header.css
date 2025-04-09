@@ -67,3 +67,29 @@
 .MuiSelect-select {
     padding: 4px 12px !important;
 }
+
+.login-button {
+    background-color: #f39c91;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #e57c70;
+}
+
+/* 필요한 경우 추가 스타일링 */
+.header-actions {
+    display: flex;
+    align-items: center;
+}
