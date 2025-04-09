@@ -4,6 +4,7 @@ import Footer from './components/layout/Footer';
 import Home from './pages/Home/Home';
 import SalonDetail from "./pages/HairSalon/SalonDetail";
 import HairSalon from "./pages/HairSalon/HairSalon";
+import Login from "./pages/User/Login"
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                         <Route path="/community" element={<div>Community Page (준비 중)</div>} />
                         <Route path="/myPage" element={<div>My Page (준비 중)</div>} />
                         <Route path="/salon/:id" element={<SalonDetail />} />
+                        <Route path="/login" element={<Login />} />
                     </Routes>
                 </main>
                 <Footer />
