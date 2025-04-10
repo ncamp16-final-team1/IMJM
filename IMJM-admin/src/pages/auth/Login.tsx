@@ -7,7 +7,6 @@ import {
     TextField,
     Button,
     Typography,
-    Link,
     Paper
 } from '@mui/material';
 
@@ -25,20 +24,20 @@ function Login({ onLoginSuccess }: LoginProps) {
         e.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:8080/login', {
+            const response = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
-                    id: username, // 백엔드에서는 'id' 로 받음
+                    id: username, 
                     password: password,
                 }),
-                credentials: 'include', // 쿠키 저장을 위해 꼭 필요!
+                credentials: 'include', 
             });
 
             if (response.ok) {
-                onLoginSuccess(); // 로그인 성공 후 처리
+                onLoginSuccess(); 
                 navigate('/');
             } else {
                 alert('로그인 실패: 아이디나 비밀번호를 확인하세요.');
@@ -49,10 +48,13 @@ function Login({ onLoginSuccess }: LoginProps) {
         }
     };
 
+    const handleNavigateToRegister = () => {
+        navigate('/admin/register');
+    };
+
     return (
         <Container component="main" maxWidth="sm" sx={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
             <Paper elevation={0} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                {/* IMJM 로고 이미지 */}
                 <Box>
                     <img
                         src={logoImage}
@@ -120,9 +122,13 @@ function Login({ onLoginSuccess }: LoginProps) {
                         <Typography variant="body2" sx={{ mr: 1 }}>
                             Create an account
                         </Typography>
-                        <Link href="#" variant="body2" color="#ff6f61">
+                        <Typography
+                            variant="body2"
+                            sx={{ color: '#ff6f61', cursor: 'pointer' }}
+                            onClick={handleNavigateToRegister}
+                        >
                             Sign Up
-                        </Link>
+                        </Typography>
                     </Box>
                 </Box>
             </Paper>

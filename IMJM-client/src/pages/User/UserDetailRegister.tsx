@@ -29,7 +29,7 @@ const UserDetailRegister: React.FC = () => {
     const fullData = { userType, ...form };
   
     try {
-      const response = await axios.post('http://localhost:8080/user/register', fullData, {
+      const response = await axios.post('/api/user/register', fullData, {
         withCredentials: true, // 쿠키 전송 필요 시 사용
         headers: {
           'Content-Type': 'application/json',

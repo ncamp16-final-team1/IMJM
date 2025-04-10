@@ -10,15 +10,20 @@ import Customer from './pages/customer/Customer';
 import Chat from './pages/chat/Chat';
 import Review from './pages/review/Review';
 import Event from './pages/event/Event';
+import Register from './pages/auth/Register';
 
 function AppRouter() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
+        if (window.location.pathname === '/admin/register') {
+            return;
+        }
+
         const checkLogin = async () => {
             try {
-                const response = await fetch('http://localhost:8080/check-login', {
+                const response = await fetch('/api/check-login', {
                     credentials: 'include',
                 });
 
@@ -47,6 +52,7 @@ function AppRouter() {
             <Route path="/login" element={
                 <Login onLoginSuccess={() => setIsAuthenticated(true)} />
             } />
+            <Route path="/admin/register" element={<Register />} />
 
             <Route path="/" element={
                 isAuthenticated ? <Layout /> : <Navigate to="/login" />
