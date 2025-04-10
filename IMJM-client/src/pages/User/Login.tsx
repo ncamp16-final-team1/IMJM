@@ -4,7 +4,7 @@ const Login = () => {
 
     const handleGoogleLogin = () => {
         // 실제 구글 로그인 URL로 리다이렉트
-        window.location.href = '/api/oauth2/authorization/google';
+        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
     };
 
     const handleAppleLogin = () => {
@@ -17,7 +17,7 @@ const Login = () => {
         }
 
         // 실제 애플 로그인 URL로 리다이렉트
-        window.location.href = '/api/oauth2/authorization/apple';
+        window.location.href = 'http://localhost:8080/oauth2/authorization/apple';
     };
 
     return (

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import logo from '../../assets/images/logo.png';
 import MenuItem from '@mui/material/MenuItem';
@@ -11,10 +12,17 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 type Language = 'ko' | 'en';
 
 function Header(): React.ReactElement {
-    const [language, setLanguage] = useState<Language>('ko'); // 기본값을 한글(ko)로 설정
+    const [language, setLanguage] = useState<Language>('ko');
+    const [isLoggedIn] = useState<boolean>(false); // 로그인 상태 추적
+    const navigate = useNavigate();
 
     const handleLanguageChange = (event: SelectChangeEvent<Language>): void => {
         setLanguage(event.target.value as Language);
+    };
+
+    // 로그인 페이지로 이동
+    const navigateToLogin = (): void => {
+        navigate('/login');
     };
 
     return (
@@ -47,15 +55,26 @@ function Header(): React.ReactElement {
                     <MenuItem value={'ko'}>한국어</MenuItem>
                     <MenuItem value={'en'}>English</MenuItem>
                 </Select>
-                <div className="header-icons">
-                    <button className="icon-button">
-                        <ChatIcon />
+
+                {isLoggedIn ? (
+                    // 로그인되어 있을 때 채팅과 알림 아이콘 표시
+                    <div className="header-icons">
+                        <button className="icon-button">
+                            <ChatIcon />
+                        </button>
+                        <button className="icon-button">
+                            <NotificationsIcon />
+                            <span className="notification-badge">1</span>
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        className="login-button"
+                        onClick={navigateToLogin}
+                    >
+                        {language === 'ko' ? '로그인' : 'Login'}
                     </button>
-                    <button className="icon-button">
-                        <NotificationsIcon />
-                        <span className="notification-badge">1</span>
-                    </button>
-                </div>
+                )}
             </div>
         </header>
     );
