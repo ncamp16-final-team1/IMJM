@@ -23,6 +23,7 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
     public AdminLoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        setFilterProcessesUrl("/api/admin/login");
     }
 
     @Override

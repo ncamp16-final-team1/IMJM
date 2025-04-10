@@ -5,6 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Collection;
@@ -12,6 +13,7 @@ import java.util.Iterator;
 
 @Controller
 @ResponseBody
+@RequestMapping("/api")
 public class MainController {
 
     @GetMapping("/")

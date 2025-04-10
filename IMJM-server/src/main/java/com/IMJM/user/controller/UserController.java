@@ -20,9 +20,9 @@ public class UserController {
 
     @PostMapping("/user/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto dto) {
-//        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-//        dto.setId(userId);
-        userService.completeRegistration(dto);
+        if(dto.getUserType().equals("MEMBER")) {
+            userService.completeRegistration(dto);
+        }
         return ResponseEntity.ok("회원가입 완료");
     }
 
