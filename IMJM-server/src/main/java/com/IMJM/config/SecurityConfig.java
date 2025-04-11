@@ -95,6 +95,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/login", "/", "/join", "/user").permitAll()
+                        .requestMatchers("/**").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/check-login").authenticated()
                         .anyRequest().authenticated());
