@@ -18,4 +18,6 @@ public interface AdminStylistRepository extends JpaRepository<AdminStylist, Long
     Optional<AdminStylist> findByStylistId(Long stylistId);
 
 
+
+
 }

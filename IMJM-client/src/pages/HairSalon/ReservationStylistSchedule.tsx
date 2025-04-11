@@ -26,11 +26,10 @@ const StylistSchedulePage = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   
   // 휴무일 체크 함수 (비트마스크 사용)
-  // 0은 월요일, 1은 화요일, ... 6은 일요일
   const shouldDisableDate = (date: Dayjs) => {
     if (!stylistSchedule) return false;
     
-    const dayOfWeek = (date.day() + 6) % 7; // dayjs는 일요일 0, 월요일 1 ... → 월요일을 0으로 맞추기 위해 보정
+    const dayOfWeek = (date.day() + 6) % 7; 
     
     // 매장 휴무일 또는 스타일리스트 휴무일 체크
     const isSalonHoliday = (stylistSchedule.salonHolidayMask & (1 << dayOfWeek)) !== 0;
@@ -126,9 +125,9 @@ const StylistSchedulePage = () => {
                 displayStaticWrapperAs="desktop"
                 value={selectedDate}
                 onChange={(newValue) => setSelectedDate(newValue)}
-                minDate={dayjs()} // 오늘부터 가능
-                maxDate={dayjs().add(1, 'month')} // 한 달 뒤까지만 가능
-                shouldDisableDate={shouldDisableDate} // 휴무일 비활성화
+                minDate={dayjs()} 
+                maxDate={dayjs().add(1, 'month')} 
+                shouldDisableDate={shouldDisableDate} 
                 dayOfWeekFormatter={(day) => ['S', 'M', 'T', 'W', 'T', 'F', 'S'][day.day()]}
                 slotProps={{
                   actionBar: { hidden: true },
@@ -203,5 +202,7 @@ const StylistSchedulePage = () => {
     </Container>
   );
 };
+
+
 
 export default StylistSchedulePage;
