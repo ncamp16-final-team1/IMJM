@@ -54,9 +54,8 @@ public class Users {
     @Builder.Default
     private int point = 0;
 
-    @Column(name = "is_notification", nullable = false)
-    @Builder.Default
-    private boolean isNotification = true;
+    @Column(name = "is_notification")
+    private boolean isNotification;
 
     @Column(length = 255)
     private String address;
@@ -67,6 +66,9 @@ public class Users {
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
 
+    @Column(name = "terms_agreed")
+    private boolean termsAgreed;
+
     public void updateName(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -74,5 +76,21 @@ public class Users {
 
     public void updateEmail(String email) {
         this.email = email;
+    }
+
+    public void updateUserType(String userType) {
+        this.userType = userType;
+    }
+
+    public void updateDetailInfo(String language, String gender, String nickname, String profile,
+                                 LocalDate birthday, String region, boolean isNotification) {
+        this.language = language;
+        this.gender = gender;
+        this.nickname = nickname;
+        this.profile = profile;
+        this.birthday = birthday;
+        this.region = region;
+        this.isNotification = isNotification;
+        this.termsAgreed = true; // 가입 완료로 간주
     }
 }

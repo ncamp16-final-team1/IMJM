@@ -16,6 +16,7 @@ public class UserResponseDto {
     private String email;
     private String firstName;
     private String lastName;
+    private boolean termsAgreed ;
 
     public UserResponseDto() {
         this.userType = getUserType();
@@ -23,5 +24,6 @@ public class UserResponseDto {
         this.email = getEmail();
         this.firstName = getFirstName();
         this.lastName = getLastName();
+        this.termsAgreed = isTermsAgreed();
     }
 }

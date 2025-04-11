@@ -1,7 +1,6 @@
 package com.IMJM.jwt;
 
 import com.IMJM.user.dto.CustomOAuth2UserDto;
-import com.IMJM.user.dto.UserDto;
 import com.IMJM.user.dto.UserResponseDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

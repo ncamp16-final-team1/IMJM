@@ -167,7 +167,7 @@ const StylistSchedulePage = () => {
                     display: 'grid',
                     gridTemplateColumns: 'repeat(7, 1fr)',
                     justifyItems: 'center',
-                    margin: '0',
+                    margin: '1',
                   },
                   '& .MuiPickersDay-root': {
                     width: '36px',

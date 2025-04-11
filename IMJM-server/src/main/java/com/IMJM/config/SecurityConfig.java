@@ -66,7 +66,7 @@ public class SecurityConfig {
 
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173", "http://localhost:5174"));
+                                configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3030"));
                                 configuration.setAllowedMethods(List.of("*"));
                                 configuration.setAllowedHeaders(List.of("*"));
                                 configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
@@ -94,7 +94,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join", "/user").permitAll()
+                        .requestMatchers("/**").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/check-login").authenticated()
                         .anyRequest().authenticated());

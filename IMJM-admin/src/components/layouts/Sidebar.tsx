@@ -1,10 +1,26 @@
 import { Box, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import logoImage from "../../assets/images/IMJM-logo.png";
 
 
 function Sidebar() {
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await fetch('http://localhost:8080/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            navigate('/login');
+            console.log('로그아웃 성공');
+        } catch (error) {
+            console.error('로그아웃 실패:', error);
+        }
+    };
 
     const menuItems = [
         { title: '대시보드', path: '/' },
@@ -14,7 +30,8 @@ function Sidebar() {
         { title: '고객 관리', path: '/Customer' },
         { title: '채팅', path: '/Chat' },
         { title: '리뷰 관리', path: '/Review' },
-        { title: '이벤트 관리', path: '/Event' }
+        { title: '이벤트 관리', path: '/Event' },
+        { title: '로그아웃', path: '/logout' }
     ];
 
     return (
@@ -44,37 +61,54 @@ function Sidebar() {
             <List sx={{ padding: '0 1.5rem' }}>
                 {menuItems.map((item) => (
                     <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
-                        <ListItemButton
-                            component={Link}
-                            to={item.path}
-                            selected={location.pathname === item.path}
-                            sx={{
-                                borderRadius: '6px',
-                                color: location.pathname === item.path ? '#FDF6F3' : '#FF9080',
-                                bgcolor: location.pathname === item.path ? '#FF9080' : 'transparent',
-                                fontWeight: location.pathname === item.path ? 600 : 500,
-                                position: 'relative',
-                                '&:hover': {
-                                    color: '#FDF6F3',
-                                    bgcolor: '#FF9080'
-                                },
-                                '&.Mui-selected:before': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    left: '-1.5rem',
-                                    top: 0,
-                                    height: '100%',
-                                    width: '4px',
-                                    bgcolor: '#FF9080'
-                                },
-                                '&.Mui-selected': {
-                                    bgcolor: '#FF9080 !important',
-                                    color: '#FDF6F3 !important',
-                                },
-                            }}
-                        >
-                            <ListItemText primary={item.title} />
-                        </ListItemButton>
+                        {item.title === '로그아웃' ? (
+                            <ListItemButton
+                                onClick={handleLogout}
+                                sx={{
+                                    borderRadius: '6px',
+                                    color: '#FF9080',
+                                    fontWeight: 500,
+                                    '&:hover': {
+                                        color: '#FDF6F3',
+                                        bgcolor: '#FF9080'
+                                    }
+                                }}
+                            >
+                                <ListItemText primary={item.title} />
+                            </ListItemButton>
+                        ) : (
+                            <ListItemButton
+                                component={Link}
+                                to={item.path}
+                                selected={location.pathname === item.path}
+                                sx={{
+                                    borderRadius: '6px',
+                                    color: location.pathname === item.path ? '#FDF6F3' : '#FF9080',
+                                    bgcolor: location.pathname === item.path ? '#FF9080' : 'transparent',
+                                    fontWeight: location.pathname === item.path ? 600 : 500,
+                                    position: 'relative',
+                                    '&:hover': {
+                                        color: '#FDF6F3',
+                                        bgcolor: '#FF9080'
+                                    },
+                                    '&.Mui-selected:before': {
+                                        content: '""',
+                                        position: 'absolute',
+                                        left: '-1.5rem',
+                                        top: 0,
+                                        height: '100%',
+                                        width: '4px',
+                                        bgcolor: '#FF9080'
+                                    },
+                                    '&.Mui-selected': {
+                                        bgcolor: '#FF9080 !important',
+                                        color: '#FDF6F3 !important',
+                                    },
+                                }}
+                            >
+                                <ListItemText primary={item.title} />
+                            </ListItemButton>
+                        )}
                     </ListItem>
                 ))}
             </List>
