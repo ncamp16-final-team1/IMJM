@@ -37,7 +37,7 @@ public class CustomOAuth2UserDto implements OAuth2User {
 
     @Override
     public String getName() {
-        return "";
+        return userResponseDto.getId();
     }
 
     public String getId(){
@@ -54,5 +54,9 @@ public class CustomOAuth2UserDto implements OAuth2User {
 
     public String getFirstName(){
         return userResponseDto.getFirstName();
+    }
+
+    public Boolean isTermsAgreed(){
+        return userResponseDto.isTermsAgreed();
     }
 }

@@ -34,6 +34,9 @@ public class Salon {
     @Column(length = 255)
     private String address;
 
+    @Column(name = "detail_address")
+    private String detailAddress;
+
     @Column(name = "call_number", length = 20)
     private String callNumber;
 

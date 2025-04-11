@@ -21,6 +21,7 @@ public class UserDto {
     private String washingHair;
     private String hairSalon;
     private String license;
+    private boolean termsAgreed;
 
     public UserDto() {
         this.userType = getUserType();
@@ -40,5 +41,10 @@ public class UserDto {
         this.washingHair = getWashingHair();
         this.hairSalon = getHairSalon();
         this.license = getLicense();
+        this.termsAgreed = isTermsAgreed();
+    }
+
+    public boolean isIs_notification() {
+        return isNotification();
     }
 }

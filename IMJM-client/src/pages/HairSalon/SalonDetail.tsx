@@ -320,7 +320,7 @@ function SalonDetail() {
                 <div className="info-header stylists-header">
                     <PersonIcon/>
                     <h2>스타일리스트</h2>
-                    <Link to="/hairsalon/stylists/SALON001" className="view-all-link">
+                    <Link to="/stylists" className="view-all-link">
                         모두보기 <KeyboardArrowRightIcon/>
                     </Link>
                 </div>
