@@ -53,6 +53,10 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-web'
 
 	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
+
+//
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.470'
+	implementation 'javax.annotation:javax.annotation-api:1.3.2'
 }
 
 tasks.named('test') {
