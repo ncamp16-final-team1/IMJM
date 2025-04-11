@@ -7,6 +7,8 @@ import HairSalon from "./pages/HairSalon/HairSalon";
 import Login from './pages/User/Login';
 import UserDetailRegister from './pages/User/UserDetailRegister';
 import UserTypeSelect from './pages/User/UserTypeSelect';
+import Stylists from './pages/HairSalon/Stylists';
+import StylistSchedule from './pages/HairSalon/ReservationStylistSchedule';
 
 function App() {
     return (
@@ -25,6 +27,8 @@ function App() {
                         <Route path="/user/login" element={<Login />} />
                         <Route path="/user/register" element={<UserTypeSelect />} />
                         <Route path="/user/register/step1" element={<UserDetailRegister />} />
+                        <Route path="/hairSalon/stylists/:salonId" element={<Stylists />} />
+                        <Route path="/hairSalon/reservation/:stylistId" element={<StylistSchedule />} />
                     </Routes>
                 </main>
                 <Footer />
@@ -32,5 +36,6 @@ function App() {
         </BrowserRouter>
     );
 }
+
 
 export default App;
