@@ -1,6 +1,6 @@
 package com.IMJM.jwt;
 
-import com.IMJM.admin.dto.CustomHairSalonDetails;
+import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.common.entity.Salon;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -56,9 +56,9 @@ public class AdminJWTFilter extends OncePerRequestFilter {
                 .password("temppassword")
                 .build();
 
-        CustomHairSalonDetails customHairSalonDetails = new CustomHairSalonDetails(data);
+        CustomSalonDetails customSalonDetails = new CustomSalonDetails(data);
 
-        Authentication authToken = new UsernamePasswordAuthenticationToken(customHairSalonDetails, null, customHairSalonDetails.getAuthorities());
+        Authentication authToken = new UsernamePasswordAuthenticationToken(customSalonDetails, null, customSalonDetails.getAuthorities());
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
 

@@ -11,13 +11,15 @@ import java.time.LocalTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class HairSalonDto {
+public class SalonDto {
 
     private String id;
     private String password;
+    private String confirmPassword;
     private String name;
     private String corpRegNumber;
     private String address;
+    private String detailAddress;
     private String callNumber;
     private String introduction;
     private Short holidayMask;
@@ -28,12 +30,14 @@ public class HairSalonDto {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    public HairSalonDto(Salon salon) {
+    @Builder
+    public SalonDto(Salon salon) {
         this.id = salon.getId();
         this.password = salon.getPassword();
         this.name = salon.getName();
         this.corpRegNumber = salon.getCorpRegNumber();
         this.address = salon.getAddress();
+        this.detailAddress = salon.getDetailAddress();
         this.callNumber = salon.getCallNumber();
         this.introduction = salon.getIntroduction();
         this.holidayMask = salon.getHolidayMask();

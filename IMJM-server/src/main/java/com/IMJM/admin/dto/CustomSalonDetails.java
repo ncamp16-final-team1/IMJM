@@ -7,11 +7,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class CustomHairSalonDetails implements UserDetails {
+public class CustomSalonDetails implements UserDetails {
 
     private final Salon salon;
 
-    public CustomHairSalonDetails(Salon salon) {
+    public CustomSalonDetails(Salon salon) {
         this.salon = salon;
     }
 
@@ -28,6 +28,10 @@ public class CustomHairSalonDetails implements UserDetails {
         });
 
         return collection;
+    }
+
+    public Salon getSalon() {
+        return salon;
     }
 
     @Override

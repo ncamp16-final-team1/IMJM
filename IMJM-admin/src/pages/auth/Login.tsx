@@ -7,7 +7,6 @@ import {
     TextField,
     Button,
     Typography,
-    Link,
     Paper
 } from '@mui/material';
 
@@ -21,17 +20,41 @@ function Login({ onLoginSuccess }: LoginProps) {
     const [password, setPassword] = useState<string>('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // 여기에 실제 로그인 로직 구현
-        onLoginSuccess();
-        navigate('/');
+
+        try {
+            const response = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    id: username, 
+                    password: password,
+                }),
+                credentials: 'include', 
+            });
+
+            if (response.ok) {
+                onLoginSuccess(); 
+                navigate('/');
+            } else {
+                alert('로그인 실패: 아이디나 비밀번호를 확인하세요.');
+            }
+        } catch (error) {
+            console.error('로그인 요청 중 오류:', error);
+            alert('서버 오류가 발생했습니다.');
+        }
+    };
+
+    const handleNavigateToRegister = () => {
+        navigate('/admin/register');
     };
 
     return (
         <Container component="main" maxWidth="sm" sx={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
             <Paper elevation={0} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                {/* IMJM 로고 이미지 */}
                 <Box>
                     <img
                         src={logoImage}
@@ -85,8 +108,10 @@ function Login({ onLoginSuccess }: LoginProps) {
                             mb: 2,
                             py: 1.5,
                             bgcolor: '#ff6f61',
+                            boxShadow: 'none',
                             '&:hover': {
                                 bgcolor: '#FF9080',
+                                boxShadow: 'none',
                             }
                         }}
                     >
@@ -97,9 +122,13 @@ function Login({ onLoginSuccess }: LoginProps) {
                         <Typography variant="body2" sx={{ mr: 1 }}>
                             Create an account
                         </Typography>
-                        <Link href="#" variant="body2" color="#ff6f61">
+                        <Typography
+                            variant="body2"
+                            sx={{ color: '#ff6f61', cursor: 'pointer' }}
+                            onClick={handleNavigateToRegister}
+                        >
                             Sign Up
-                        </Link>
+                        </Typography>
                     </Box>
                 </Box>
             </Paper>

@@ -26,6 +26,7 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
+        System.out.println("onAuthenticationSuccess");
         CustomOAuth2UserDto customUserDetails = (CustomOAuth2UserDto) authentication.getPrincipal();
 
         String userId = customUserDetails.getId();
@@ -38,7 +39,12 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         String token = jwtUtil.createJwt(userId, role, 60 * 60 * 24 * 1000L);
 
         response.addCookie(createCookie("Authorization", token));
-        response.sendRedirect("http://localhost:5174/");
+
+        if (!customUserDetails.isTermsAgreed()) {
+            response.sendRedirect("http://localhost:3000/user/register");
+        } else {
+            response.sendRedirect("http://localhost:3000/");
+        }
     }
 
     private Cookie createCookie(String key, String token) {

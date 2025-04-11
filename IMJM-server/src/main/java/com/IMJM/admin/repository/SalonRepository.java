@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface HairSalonRepository extends JpaRepository<Salon, String> {
+public interface SalonRepository extends JpaRepository<Salon, String> {
 
    boolean existsById(String id);
 
