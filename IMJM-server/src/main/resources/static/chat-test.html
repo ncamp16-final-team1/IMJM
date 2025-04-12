@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>채팅 테스트</title>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-window {
+            height: 400px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message-form {
+            display: flex;
+        }
+        .message-input {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        .user-message {
+            background-color: #e1ffc7;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            max-width: 70%;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .salon-message {
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            max-width: 70%;
+        }
+        button {
+            padding: 8px 15px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>이모저모 채팅 테스트</h2>
+
+    <div>
+        <label for="user-id">사용자 ID:</label>
+        <input type="text" id="user-id" value="user1">
+
+        <label for="salon-id">미용실 ID:</label>
+        <input type="text" id="salon-id" value="salon1">
+
+        <label for="sender-type">보내는 사람 타입:</label>
+        <select id="sender-type">
+            <option value="USER">사용자</option>
+            <option value="SALON">미용실</option>
+        </select>
+
+        <button onclick="connect()">연결</button>
+        <button onclick="disconnect()">연결 해제</button>
+    </div>
+
+    <div>
+        <label for="chat-room-id">채팅방 ID:</label>
+        <input type="text" id="chat-room-id">
+        <button onclick="createChatRoom()">채팅방 생성/조회</button>
+    </div>
+
+    <div class="chat-window" id="chat-messages"></div>
+
+    <div class="message-form">
+        <input type="text" id="message" class="message-input" placeholder="메시지 입력...">
+        <button onclick="sendMessage()">전송</button>
+    </div>
+</div>
+
+<script>
+    let stompClient = null;
+    let currentUserId = null;
+    let currentSalonId = null;
+    let currentSenderType = null;
+    let currentChatRoomId = null;
+
+    function connect() {
+        currentUserId = document.getElementById('user-id').value;
+        currentSalonId = document.getElementById('salon-id').value;
+        currentSenderType = document.getElementById('sender-type').value;
+
+        console.log('연결 시도:', {userId: currentUserId, salonId: currentSalonId, senderType: currentSenderType});
+
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        // 로그 출력 활성화
+        stompClient.debug = function(str) {
+            console.log('STOMP: ' + str);
+        };
+
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+
+            // 사용자 ID로 구독
+            const destination = '/user/' + (currentSenderType === 'USER' ? currentUserId : currentSalonId) + '/queue/messages';
+            console.log('구독 경로:', destination);
+
+            stompClient.subscribe(destination, onMessageReceived);
+            alert('웹소켓 연결 성공!');
+        }, function(error) {
+            console.error('연결 오류:', error);
+            alert('연결 오류가 발생했습니다: ' + error);
+        });
+    }
+
+    function onError(error) {
+        console.error('연결 오류: ', error);
+        alert('연결 오류가 발생했습니다.');
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        console.log("연결 해제됨");
+        alert('연결이 해제되었습니다.');
+    }
+
+    function createChatRoom() {
+        const userId = document.getElementById('user-id').value;
+        const salonId = document.getElementById('salon-id').value;
+
+        fetch(`/api/chat/room?userId=${userId}&salonId=${salonId}`, {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                currentChatRoomId = parseInt(data.id, 10); // 문자열을 숫자로 변환
+                document.getElementById('chat-room-id').value = currentChatRoomId;
+                console.log('채팅방 생성/조회 성공:', data);
+                alert('채팅방 생성/조회 성공! 채팅방 ID: ' + currentChatRoomId);
+
+                // 기존 메시지 로드
+                loadMessages();
+            })
+            .catch(error => {
+                console.error('채팅방 생성/조회 오류:', error);
+                alert('채팅방 생성/조회 중 오류가 발생했습니다.');
+            });
+    }
+
+    function loadMessages() {
+        if (!currentChatRoomId) {
+            alert('채팅방을 먼저 선택해주세요.');
+            return;
+        }
+
+        fetch(`/api/chat/messages/${currentChatRoomId}`)
+            .then(response => response.json())
+            .then(data => {
+                const messageArea = document.getElementById('chat-messages');
+                messageArea.innerHTML = '';
+
+                data.forEach(msg => {
+                    addMessageToUI(msg);
+                });
+            })
+            .catch(error => {
+                console.error('메시지 로드 오류:', error);
+            });
+    }
+
+    let isSubmitting = false;
+
+    function sendMessage() {
+        if (!stompClient || !currentChatRoomId || isSubmitting) {
+            alert('메시지를 보낼 수 없습니다.');
+            return;
+        }
+
+        const messageInput = document.getElementById('message');
+        const messageContent = messageInput.value.trim();
+
+        if (messageContent) {
+            isSubmitting = true;
+
+            const chatMessage = {
+                chatRoomId: parseInt(currentChatRoomId, 10),
+                senderType: currentSenderType,
+                senderId: currentSenderType === 'USER' ? currentUserId : currentSalonId,
+                message: messageContent,
+                photos: []
+            };
+
+            console.log('전송할 메시지:', chatMessage);
+
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+            messageInput.value = '';
+
+            // 0.5초 후에 다시 전송 가능하도록 설정
+            setTimeout(() => {
+                isSubmitting = false;
+            }, 500);
+        }
+    }
+
+    function onMessageReceived(payload) {
+        const message = JSON.parse(payload.body);
+        addMessageToUI(message);
+    }
+
+    function addMessageToUI(message) {
+        const messageArea = document.getElementById('chat-messages');
+        const messageElement = document.createElement('div');
+
+        const isCurrentUser = (message.senderType === currentSenderType);
+        messageElement.classList.add(isCurrentUser ? 'user-message' : 'salon-message');
+
+        const time = new Date(message.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        messageElement.innerHTML = `
+            <div><strong>${message.senderType}</strong> (${time})</div>
+            <div>${message.message}</div>
+        `;
+
+        // 사진이 있는 경우 처리
+        if (message.photos && message.photos.length > 0) {
+            const photosDiv = document.createElement('div');
+            photosDiv.style.marginTop = '5px';
+
+            message.photos.forEach(photo => {
+                const img = document.createElement('img');
+                img.src = photo.photoUrl;
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                img.style.marginRight = '5px';
+                photosDiv.appendChild(img);
+            });
+
+            messageElement.appendChild(photosDiv);
+        }
+
+        messageArea.appendChild(messageElement);
+        messageArea.scrollTop = messageArea.scrollHeight;
+    }
+</script>
+</body>
+</html>
