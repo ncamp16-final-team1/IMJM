@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { StylistSchedule } from '../../pages/HairSalon/ReservationStylistSchedule';
+import { StylistSchedule } from '../../pages/HairSalon/Reservation';
 
 
 export async function getStylistSchedule(stylistId: string | null): Promise<StylistSchedule> {
@@ -7,9 +7,10 @@ export async function getStylistSchedule(stylistId: string | null): Promise<Styl
 
   try {
     const response = await axios.get(`/api/hairsalon/reservation/${stylistId}`);
-    return response.data; // 단일 객체라고 가정
+    return response.data; 
   } catch (error) {
     console.error('Error fetching stylist schedule:', error);
     throw error;
   }
+
 }

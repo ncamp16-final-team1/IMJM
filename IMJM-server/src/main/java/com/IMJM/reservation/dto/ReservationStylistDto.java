@@ -18,8 +18,6 @@ public class ReservationStylistDto {
     private String introduction;
     private String profile;
 
-
-
     @Builder
     public ReservationStylistDto(AdminStylist adminStylist) {
         this.salonId = adminStylist.getSalon().getId();
@@ -29,9 +27,4 @@ public class ReservationStylistDto {
         this.introduction = adminStylist.getIntroduction();
         this.profile = adminStylist.getProfile();
     }
-
-
-
-
-
 }

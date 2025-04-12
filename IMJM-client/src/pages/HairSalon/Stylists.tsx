@@ -62,7 +62,7 @@ const Stylists = () => {
                 <Box sx={{ mt: 2 }}>
                     <Box
                         component={Link}
-                        to={`/hairsalon/reservation/${stylist.stylistId}`} // 원하는 경로로 바꿔줘
+                        to={`/hairsalon/reservation/${stylist.stylistId}`} 
                         sx={{
                         display: 'inline-block',
                         px: 2,
@@ -100,5 +100,7 @@ const Stylists = () => {
     </Box>
   );
 };
+
+
 
 export default Stylists;

@@ -8,7 +8,7 @@ import Login from './pages/User/Login';
 import UserDetailRegister from './pages/User/UserDetailRegister';
 import UserTypeSelect from './pages/User/UserTypeSelect';
 import Stylists from './pages/HairSalon/Stylists';
-import StylistSchedule from './pages/HairSalon/ReservationStylistSchedule';
+import StylistSchedule from './pages/HairSalon/Reservation';
 
 function App() {
     return (
