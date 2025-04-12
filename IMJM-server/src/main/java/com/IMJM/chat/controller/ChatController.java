@@ -9,7 +9,9 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,9 +51,23 @@ public class ChatController {
     }
 
     // 메시지 읽음 처리
-    @PutMapping("/messages/read")
-    public ResponseEntity<Void> markMessagesAsRead(@RequestParam Long chatRoomId, @RequestParam String senderType) {
+    @PutMapping("/messages/read/{chatRoomId}")
+    public ResponseEntity<Map<String, Boolean>> markMessagesAsRead(
+            @PathVariable Long chatRoomId,
+            @RequestParam String senderType) {
         chatService.markMessagesAsRead(chatRoomId, senderType);
-        return ResponseEntity.ok().build();
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("success", true);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/messages/unread/count/{chatRoomId}")
+    public ResponseEntity<Map<String, Integer>> getUnreadCount(
+            @PathVariable Long chatRoomId,
+            @RequestParam String senderType) {
+        int count = chatService.countUnreadMessages(chatRoomId, senderType);
+        Map<String, Integer> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
     }
 }

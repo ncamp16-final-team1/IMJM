@@ -50,14 +50,16 @@ public class ChatService {
                     );
                 });
 
-        return convertToChatRoomDto(chatRoom);
+        // 조회한 사용자가 USER인지 SALON인지에 따라 적절한 타입 전달
+        String userType = userId.equals(chatRoom.getUser().getId()) ? "USER" : "SALON";
+        return convertToChatRoomDto(chatRoom, userType);
     }
 
     // 채팅방 목록 조회 (사용자용)
     @Transactional(readOnly = true)
     public List<ChatRoomDto> getUserChatRooms(String userId) {
         return chatRoomRepository.findByUserIdOrderByLastMessageTimeDesc(userId).stream()
-                .map(this::convertToChatRoomDto)
+                .map(chatRoom -> convertToChatRoomDto(chatRoom, "USER"))
                 .collect(Collectors.toList());
     }
 
@@ -65,7 +67,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatRoomDto> getSalonChatRooms(String salonId) {
         return chatRoomRepository.findBySalonIdOrderByLastMessageTimeDesc(salonId).stream()
-                .map(this::convertToChatRoomDto)
+                .map(chatRoom -> convertToChatRoomDto(chatRoom, "SALON"))
                 .collect(Collectors.toList());
     }
 
@@ -122,6 +124,7 @@ public class ChatService {
                 .id(savedMessage.getId())
                 .chatRoomId(chatRoom.getId())
                 .senderType(savedMessage.getSenderType())
+                .senderId(messageDto.getSenderId())
                 .message(savedMessage.getMessage())
                 .isRead(savedMessage.getIsRead())
                 .sentAt(savedMessage.getSentAt())
@@ -160,27 +163,53 @@ public class ChatService {
     // 메시지를 읽음으로 표시
     @Transactional
     public void markMessagesAsRead(Long chatRoomId, String senderType) {
+        // 상대방이 보낸 메시지만 읽음 처리
         String oppositeType = "USER".equals(senderType) ? "SALON" : "USER";
         chatMessageRepository.updateMessagesAsRead(chatRoomId, oppositeType);
     }
 
-    // 엔티티를 DTO로 변환하는 메서드들
-    private ChatRoomDto convertToChatRoomDto(ChatRoom chatRoom) {
-        String lastMessage = "";
-        boolean hasUnreadMessages = false;
+    // 읽지 않은 메시지 수 카운트
+    @Transactional(readOnly = true)
+    public int countUnreadMessages(Long chatRoomId, String senderType) {
+        // 내가 받은 메시지만 카운트 (내가 USER면 SALON이 보낸 메시지, 내가 SALON이면 USER가 보낸 메시지)
+        String oppositeType = "USER".equals(senderType) ? "SALON" : "USER";
+        return chatMessageRepository.countByReadFalseAndSenderType(chatRoomId, oppositeType);
+    }
 
-        // 마지막 메시지와 읽지 않은 메시지 확인은 실제 구현에서 추가
+    // 엔티티를 DTO로 변환하는 메서드들
+    private ChatRoomDto convertToChatRoomDto(ChatRoom chatRoom, String userType) {
+        // 마지막 메시지 찾기
+        ChatMessage lastMessage = chatMessageRepository
+                .findTopByChatRoomIdOrderBySentAtDesc(chatRoom.getId())
+                .orElse(null);
+
+        String lastMessageContent = "";
+        boolean hasUnreadMessages = false;
+        int unreadCount = 0;
+
+        if (lastMessage != null) {
+            lastMessageContent = lastMessage.getMessage();
+
+            // 현재 사용자가 받은 메시지 중 읽지 않은 것만 카운트
+            String oppositeType = "USER".equals(userType) ? "SALON" : "USER";
+
+            unreadCount = chatMessageRepository.countByReadFalseAndSenderType(
+                    chatRoom.getId(), oppositeType);
+
+            hasUnreadMessages = unreadCount > 0;
+        }
 
         return ChatRoomDto.builder()
                 .id(chatRoom.getId())
                 .userId(chatRoom.getUser().getId())
                 .salonId(chatRoom.getSalon().getId())
-                .salonName(chatRoom.getSalon().getName()) // 실제로는 가져와야 함
-                .userName(chatRoom.getUser().getNickname()) // 실제로는 가져와야 함
+                .salonName(chatRoom.getSalon().getName())
+                .userName(chatRoom.getUser().getNickname())
                 .createdAt(chatRoom.getCreatedAt())
                 .lastMessageTime(chatRoom.getLastMessageTime())
-                .lastMessage(lastMessage)
+                .lastMessage(lastMessageContent)
                 .hasUnreadMessages(hasUnreadMessages)
+                .unreadCount(unreadCount)
                 .build();
     }
 
@@ -193,10 +222,19 @@ public class ChatService {
                         .build())
                 .collect(Collectors.toList());
 
+        // sender ID 추가 (USER인 경우 user ID, SALON인 경우 salon ID)
+        String senderId;
+        if ("USER".equals(message.getSenderType())) {
+            senderId = message.getChatRoom().getUser().getId();
+        } else {
+            senderId = message.getChatRoom().getSalon().getId();
+        }
+
         return ChatMessageDto.builder()
                 .id(message.getId())
                 .chatRoomId(message.getChatRoom().getId())
                 .senderType(message.getSenderType())
+                .senderId(senderId)
                 .message(message.getMessage())
                 .isRead(message.getIsRead())
                 .sentAt(message.getSentAt())
