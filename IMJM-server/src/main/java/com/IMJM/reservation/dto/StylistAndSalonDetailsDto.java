@@ -1,7 +1,6 @@
 package com.IMJM.reservation.dto;
 
 import com.IMJM.common.entity.AdminStylist;
-import com.IMJM.common.entity.Salon;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

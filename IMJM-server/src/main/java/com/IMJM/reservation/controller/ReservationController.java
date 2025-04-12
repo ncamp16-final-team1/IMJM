@@ -28,17 +28,14 @@ public class ReservationController {
                 : ResponseEntity.ok(stylists);
     }
 
-    // 특정 살롱의 휴뮤 및 특정 스타일리스트 휴무 조회
     @GetMapping("/reservation/{stylistId}")
     public ResponseEntity<?> getStylistDetailAndHoliday(@PathVariable Long stylistId) {
         try {
             StylistAndSalonDetailsDto stylistAndSalonDetailsDto = reservationStylistService.getStylistAndSalonDetails(stylistId);
             return ResponseEntity.ok(stylistAndSalonDetailsDto); // 성공 시 200 OK
         } catch (EntityNotFoundException e) {
-            // 스타일리스트를 찾을 수 없을 경우 404 Not Found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("스타일리스트를 찾을 수 없습니다.");
         } catch (Exception e) {
-            // 예기치 못한 오류는 500 Internal Server Error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
         }
     }
