@@ -27,6 +27,8 @@ public class ChatService {
     private final ChatUserRepository chatUserRepository;
     private final ChatSalonRepository chatSalonRepository;
 
+    private final TranslationService translationService;
+
     // 채팅방 생성 또는 조회
     @Transactional
     public ChatRoomDto getChatRoom(String userId, String salonId) {
@@ -78,6 +80,31 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatRoomId())
                 .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
+        // 발신자와 수신자의 언어 확인
+        String senderLanguage = getSenderLanguage(messageDto.getSenderType(), chatRoom);
+        String recipientLanguage = getRecipientLanguage(messageDto.getSenderType(), chatRoom);
+
+        System.out.println("발신자 언어: " + senderLanguage + ", 수신자 언어: " + recipientLanguage);
+
+        // 언어가 다른 경우에만 번역 수행
+        String translatedMessage = null;
+        String translationStatus = "none";
+
+        if (!senderLanguage.equals(recipientLanguage)) {
+            try {
+                translatedMessage = translationService.translate(
+                        messageDto.getMessage(),
+                        senderLanguage,
+                        recipientLanguage
+                );
+                translationStatus = "completed";
+                System.out.println("번역 완료: " + translatedMessage);
+            } catch (Exception e) {
+                System.err.println("번역 오류: " + e.getMessage());
+                translationStatus = "failed";
+            }
+        }
+
         // 메시지 저장
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
@@ -85,7 +112,8 @@ public class ChatService {
                 .message(messageDto.getMessage())
                 .isRead(false)
                 .sentAt(LocalDateTime.now())
-                .translationStatus("none")
+                .translatedMessage(translatedMessage)  // 번역된 메시지 설정
+                .translationStatus(translationStatus)  // 번역 상태 설정
                 .build();
 
         ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
@@ -242,5 +270,29 @@ public class ChatService {
                 .translationStatus(message.getTranslationStatus())
                 .photos(photos)
                 .build();
+    }
+
+    private String getSenderLanguage(String senderType, ChatRoom chatRoom) {
+        if ("USER".equals(senderType)) {
+            // 사용자가 발신자인 경우 사용자의 언어 반환
+            String userLanguage = chatRoom.getUser().getLanguage();
+            System.out.println("사용자 언어 설정: " + userLanguage);
+            return userLanguage != null ? userLanguage : "ko";
+        } else {
+            // 미용실이 발신자인 경우 한국어로 가정
+            return "ko";
+        }
+    }
+
+    private String getRecipientLanguage(String senderType, ChatRoom chatRoom) {
+        if ("USER".equals(senderType)) {
+            // 사용자가 발신자인 경우 수신자는 미용실이므로 한국어
+            return "ko";
+        } else {
+            // 미용실이 발신자인 경우 수신자는 사용자이므로 사용자 언어 반환
+            String userLanguage = chatRoom.getUser().getLanguage();
+            System.out.println("수신자 언어 설정: " + userLanguage);
+            return userLanguage != null ? userLanguage : "ko";
+        }
     }
 }

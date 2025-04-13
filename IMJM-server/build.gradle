@@ -61,6 +61,8 @@ dependencies {
 
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-database-postgresql'
+
+	implementation 'org.json:json:20231013'
 }
 
 tasks.named('test') {
