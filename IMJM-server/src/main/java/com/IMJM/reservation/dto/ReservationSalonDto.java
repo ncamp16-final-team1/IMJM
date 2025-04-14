@@ -45,8 +45,4 @@ public class ReservationSalonDto {
         this.latitude = latitude;
         this.longitude = longitude;
     }
-
-
-
-
 }

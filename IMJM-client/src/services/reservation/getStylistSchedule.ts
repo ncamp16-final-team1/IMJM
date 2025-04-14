@@ -13,4 +13,5 @@ export async function getStylistSchedule(stylistId: string | null): Promise<Styl
     throw error;
   }
 
+  
 }

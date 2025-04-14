@@ -1,5 +1,6 @@
 package com.IMJM.reservation.controller;
 
+import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.dto.ReservationStylistDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.repository.ReservationRepository;
@@ -54,17 +55,9 @@ public class ReservationController {
     @GetMapping("/reservations/available-times")
     public ResponseEntity<?> getAvailableTimes(
             @RequestParam("stylistId") Long stylistId,
-//            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam String date,
-            @AuthenticationPrincipal CustomOAuth2UserDto userDetails
+            @RequestParam String date
+
     ) {
-//        if (userDetails == null) {
-//            // 로그인되지 않은 경우
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("message", "로그인이 필요합니다");
-//            response.put("authenticated", false);
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        }
         LocalDate localDate = LocalDate.parse(date);
         Map<String, List<String>> result = reservationStylistService.getAvailableAndBookedTimeMap(stylistId, localDate);
         return ResponseEntity.ok(result);

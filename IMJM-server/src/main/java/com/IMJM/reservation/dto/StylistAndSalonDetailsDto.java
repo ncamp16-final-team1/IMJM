@@ -29,4 +29,5 @@ public class StylistAndSalonDetailsDto  {
         this.stylistHolidayMask = adminStylist.getHolidayMask();
         this.profile = adminStylist.getProfile();
     }
+
 }

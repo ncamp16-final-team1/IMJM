@@ -27,4 +27,5 @@ public class ReservationStylistDto {
         this.introduction = adminStylist.getIntroduction();
         this.profile = adminStylist.getProfile();
     }
+
 }

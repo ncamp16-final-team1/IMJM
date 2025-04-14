@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -43,13 +42,13 @@ public class ReservationStylistService {
         AdminStylist stylist = adminStylistRepository.findById(stylistId)
                 .orElseThrow(() -> new RuntimeException("스타일리스트를 찾을 수 없습니다."));
 
-        LocalTime salonStart = stylist.getSalon().getStartTime(); // 살롱 영업시작
-        LocalTime salonEnd = stylist.getSalon().getEndTime();     // 살롱 영업종료
+        LocalTime salonStart = stylist.getSalon().getStartTime();
+        LocalTime salonEnd = stylist.getSalon().getEndTime();
 
-        LocalTime stylistStart = stylist.getStartTime(); // 스타일리스트 근무 시작
-        LocalTime stylistEnd = stylist.getEndTime();     // 스타일리스트 근무 종료
+        LocalTime stylistStart = stylist.getStartTime();
+        LocalTime stylistEnd = stylist.getEndTime();
 
-        int timeUnit = stylist.getSalon().getTimeUnit(); // 예약 단위
+        int timeUnit = stylist.getSalon().getTimeUnit();
 
         LocalTime startTime = stylistStart.isBefore(salonStart) ? salonStart : stylistStart;
         LocalTime endTime = stylistEnd.isAfter(salonEnd) ? salonEnd : stylistEnd;
