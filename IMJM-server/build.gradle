@@ -35,6 +35,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'org.postgresql:postgresql'
@@ -54,9 +55,14 @@ dependencies {
 
 	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
 
-// AWS SDK (네이버 클라우드 Object Storage는 S3 호환)
+	// AWS SDK (네이버 클라우드 Object Storage는 S3 호환)
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.470'
 	implementation 'javax.annotation:javax.annotation-api:1.3.2'
+
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+
+	implementation 'org.json:json:20231013'
 }
 
 tasks.named('test') {

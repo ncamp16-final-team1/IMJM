@@ -31,4 +31,8 @@ public class ChatRoom {
 
     @Column(name = "last_message_time", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime lastMessageTime;
+
+    public void updateLastMessageTime(LocalDateTime time) {
+        this.lastMessageTime = time;
+    }
 }
