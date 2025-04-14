@@ -77,106 +77,129 @@ public class ChatService {
     @Transactional
     public ChatMessageDto sendMessage(ChatMessageDto messageDto) {
         // 채팅방 조회
-        ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatRoomId())
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+        ChatRoom chatRoom = findChatRoomById(messageDto.getChatRoomId());
 
-        // 발신자와 수신자의 언어 확인
-        String senderLanguage = getSenderLanguage(messageDto.getSenderType(), chatRoom);
-        String recipientLanguage = getRecipientLanguage(messageDto.getSenderType(), chatRoom);
-
-        System.out.println("발신자 언어: " + senderLanguage + ", 수신자 언어: " + recipientLanguage);
-
-        // 언어가 다른 경우에만 번역 수행
-        String translatedMessage = null;
-        String translationStatus = "none";
-
-        if (!senderLanguage.equals(recipientLanguage)) {
-            try {
-                translatedMessage = translationService.translate(
-                        messageDto.getMessage(),
-                        senderLanguage,
-                        recipientLanguage
-                );
-                translationStatus = "completed";
-                System.out.println("번역 완료: " + translatedMessage);
-            } catch (Exception e) {
-                System.err.println("번역 오류: " + e.getMessage());
-                translationStatus = "failed";
-            }
-        }
+        // 번역 처리
+        TranslationResult translationResult = translateMessageIfNeeded(messageDto.getMessage(), chatRoom, messageDto.getSenderType());
 
         // 메시지 저장
+        ChatMessage savedMessage = saveNewMessage(chatRoom, messageDto, translationResult);
+
+        // 채팅방 마지막 메시지 시간 업데이트
+        chatRoom.updateLastMessageTime(LocalDateTime.now());
+        chatRoomRepository.save(chatRoom);
+
+        // 사진 처리 및 응답 DTO 생성
+        ChatMessageDto responseDto = createResponseDto(savedMessage, messageDto.getSenderId(),
+                processChatPhotos(savedMessage, messageDto.getPhotos()));
+
+        // 웹소켓으로 메시지 전송
+        sendWebSocketMessage(chatRoom, responseDto);
+
+        return responseDto;
+    }
+
+    private ChatRoom findChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+    }
+
+    private static class TranslationResult {
+        final String translatedMessage;
+        final String translationStatus;
+
+        TranslationResult(String translatedMessage, String translationStatus) {
+            this.translatedMessage = translatedMessage;
+            this.translationStatus = translationStatus;
+        }
+    }
+
+    private TranslationResult translateMessageIfNeeded(String message, ChatRoom chatRoom, String senderType) {
+        String senderLanguage = getSenderLanguage(senderType, chatRoom);
+        String recipientLanguage = getRecipientLanguage(senderType, chatRoom);
+
+        // 언어가 같으면 번역하지 않음
+        if (senderLanguage.equals(recipientLanguage)) {
+            return new TranslationResult(null, "none");
+        }
+
+        try {
+            String translatedMessage = translationService.translate(
+                    message,
+                    senderLanguage,
+                    recipientLanguage
+            );
+            return new TranslationResult(translatedMessage, "completed");
+        } catch (Exception e) {
+            return new TranslationResult(null, "failed");
+        }
+    }
+
+    private ChatMessage saveNewMessage(ChatRoom chatRoom, ChatMessageDto messageDto, TranslationResult translationResult) {
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .senderType(messageDto.getSenderType())
                 .message(messageDto.getMessage())
                 .isRead(false)
                 .sentAt(LocalDateTime.now())
-                .translatedMessage(translatedMessage)  // 번역된 메시지 설정
-                .translationStatus(translationStatus)  // 번역 상태 설정
+                .translatedMessage(translationResult.translatedMessage)
+                .translationStatus(translationResult.translationStatus)
                 .build();
 
-        ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
+        return chatMessageRepository.save(chatMessage);
+    }
 
-        // 채팅방 마지막 메시지 시간 업데이트 (새 객체 생성)
-        ChatRoom updatedChatRoom = ChatRoom.builder()
-                .id(chatRoom.getId())
-                .user(chatRoom.getUser())
-                .salon(chatRoom.getSalon())
-                .createdAt(chatRoom.getCreatedAt())
-                .lastMessageTime(LocalDateTime.now())
-                .build();
-
-        chatRoomRepository.save(updatedChatRoom);
-
-        // 사진이 있는 경우 처리
-        List<ChatPhotoDto> savedPhotos = new ArrayList<>();
-        if (messageDto.getPhotos() != null && !messageDto.getPhotos().isEmpty()) {
-            for (ChatPhotoDto photoDto : messageDto.getPhotos()) {
-                ChatPhotos photo = ChatPhotos.builder()
-                        .chatMessage(savedMessage)
-                        .photoUrl(photoDto.getPhotoUrl())
-                        .uploadDate(LocalDateTime.now())
-                        .build();
-
-                ChatPhotos savedPhoto = chatPhotosRepository.save(photo);
-                savedPhotos.add(ChatPhotoDto.builder()
-                        .photoId(savedPhoto.getPhotoId())
-                        .photoUrl(savedPhoto.getPhotoUrl())
-                        .build());
-            }
+    private List<ChatPhotoDto> processChatPhotos(ChatMessage savedMessage, List<ChatPhotoDto> photoDtos) {
+        if (photoDtos == null || photoDtos.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        // 응답 DTO 생성
-        ChatMessageDto responseDto = ChatMessageDto.builder()
-                .id(savedMessage.getId())
-                .chatRoomId(chatRoom.getId())
-                .senderType(savedMessage.getSenderType())
-                .senderId(messageDto.getSenderId())
-                .message(savedMessage.getMessage())
-                .isRead(savedMessage.getIsRead())
-                .sentAt(savedMessage.getSentAt())
-                .translatedMessage(savedMessage.getTranslatedMessage())
-                .translationStatus(savedMessage.getTranslationStatus())
-                .photos(savedPhotos)
-                .build();
+        return photoDtos.stream()
+                .map(photoDto -> {
+                    ChatPhotos photo = ChatPhotos.builder()
+                            .chatMessage(savedMessage)
+                            .photoUrl(photoDto.getPhotoUrl())
+                            .uploadDate(LocalDateTime.now())
+                            .build();
 
-        // 웹소켓으로 메시지 전송
+                    ChatPhotos savedPhoto = chatPhotosRepository.save(photo);
+                    return ChatPhotoDto.builder()
+                            .photoId(savedPhoto.getPhotoId())
+                            .photoUrl(savedPhoto.getPhotoUrl())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private ChatMessageDto createResponseDto(ChatMessage message, String senderId, List<ChatPhotoDto> photos) {
+        return ChatMessageDto.builder()
+                .id(message.getId())
+                .chatRoomId(message.getChatRoom().getId())
+                .senderType(message.getSenderType())
+                .senderId(senderId)
+                .message(message.getMessage())
+                .isRead(message.getIsRead())
+                .sentAt(message.getSentAt())
+                .translatedMessage(message.getTranslatedMessage())
+                .translationStatus(message.getTranslationStatus())
+                .photos(photos)
+                .build();
+    }
+
+    private void sendWebSocketMessage(ChatRoom chatRoom, ChatMessageDto messageDto) {
         // 사용자에게 전송
         messagingTemplate.convertAndSendToUser(
                 chatRoom.getUser().getId(),
                 "/queue/messages",
-                responseDto
+                messageDto
         );
 
         // 미용실에게 전송
         messagingTemplate.convertAndSendToUser(
                 chatRoom.getSalon().getId(),
                 "/queue/messages",
-                responseDto
+                messageDto
         );
-
-        return responseDto;
     }
 
     // 메시지 목록 조회
