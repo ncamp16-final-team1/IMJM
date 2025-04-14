@@ -3,6 +3,7 @@ package com.IMJM.chat.service;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
+import com.IMJM.chat.exception.TranslationException;
 import com.IMJM.chat.repository.*;
 import com.IMJM.common.entity.*;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -130,7 +133,7 @@ public class ChatService {
                     recipientLanguage
             );
             return new TranslationResult(translatedMessage, "completed");
-        } catch (Exception e) {
+        } catch (TranslationException e) {
             return new TranslationResult(null, "failed");
         }
     }
@@ -205,9 +208,61 @@ public class ChatService {
     // 메시지 목록 조회
     @Transactional(readOnly = true)
     public List<ChatMessageDto> getChatMessages(Long chatRoomId) {
-        List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAsc(chatRoomId);
+        // 채팅방의 모든 메시지를 한 번에 조회 (채팅방 정보 포함)
+        List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdWithChatRoomOrderBySentAtAsc(chatRoomId);
+
+        if (messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 모든 메시지 ID 추출
+        List<Long> messageIds = messages.stream()
+                .map(ChatMessage::getId)
+                .collect(Collectors.toList());
+
+        // 모든 사진 정보를 한 번에 조회
+        List<ChatPhotos> allPhotos = chatPhotosRepository.findByChatMessageIdIn(messageIds);
+
+        // 메시지 ID를 키로 하는 사진 맵 생성
+        Map<Long, List<ChatPhotos>> photosByMessageId = allPhotos.stream()
+                .collect(Collectors.groupingBy(photo -> photo.getChatMessage().getId()));
+
+        // 각 메시지에 대한 DTO 생성 (사진 정보 포함)
         return messages.stream()
-                .map(this::convertToChatMessageDto)
+                .map(message -> {
+                    // 현재 메시지에 연결된 사진 목록
+                    List<ChatPhotos> photos = photosByMessageId.getOrDefault(message.getId(), Collections.emptyList());
+
+                    // 사진 DTO 변환
+                    List<ChatPhotoDto> photoDtos = photos.stream()
+                            .map(photo -> ChatPhotoDto.builder()
+                                    .photoId(photo.getPhotoId())
+                                    .photoUrl(photo.getPhotoUrl())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    // sender ID 설정
+                    String senderId;
+                    if ("USER".equals(message.getSenderType())) {
+                        senderId = message.getChatRoom().getUser().getId();
+                    } else {
+                        senderId = message.getChatRoom().getSalon().getId();
+                    }
+
+                    // 메시지 DTO 생성 및 반환
+                    return ChatMessageDto.builder()
+                            .id(message.getId())
+                            .chatRoomId(message.getChatRoom().getId())
+                            .senderType(message.getSenderType())
+                            .senderId(senderId)
+                            .message(message.getMessage())
+                            .isRead(message.getIsRead())
+                            .sentAt(message.getSentAt())
+                            .translatedMessage(message.getTranslatedMessage())
+                            .translationStatus(message.getTranslationStatus())
+                            .photos(photoDtos)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 

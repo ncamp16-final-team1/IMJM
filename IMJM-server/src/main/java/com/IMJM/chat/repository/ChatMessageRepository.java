@@ -23,4 +23,7 @@ public interface ChatMessageRepository  extends JpaRepository<ChatMessage, Long>
     int countByReadFalseAndSenderType(@Param("chatRoomId") Long chatRoomId, @Param("senderType") String senderType);
 
     Optional<ChatMessage> findTopByChatRoomIdOrderBySentAtDesc(Long chatRoomId);
+
+    @Query("SELECT cm FROM ChatMessage cm LEFT JOIN FETCH cm.chatRoom WHERE cm.chatRoom.id = :chatRoomId ORDER BY cm.sentAt ASC")
+    List<ChatMessage> findByChatRoomIdWithChatRoomOrderBySentAtAsc(@Param("chatRoomId") Long chatRoomId);
 }

@@ -1,6 +1,7 @@
 package com.IMJM.chat.service;
 
 import com.IMJM.chat.client.HyperClovaTranslationClient;
+import com.IMJM.chat.exception.TranslationException;
 import com.IMJM.chat.service.TranslationService;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
@@ -19,22 +20,35 @@ public class HyperClovaXTranslationService implements TranslationService {
     private final HyperClovaTranslationClient hyperClovaClient;
 
     @Override
-    public String translate(String text, String sourceLanguage, String targetLanguage) {
+    public String translate(String text, String sourceLanguage, String targetLanguage) throws TranslationException {
         // 언어 코드 변환 (필요한 경우)
         String sourceLang = convertLanguageCode(sourceLanguage);
         String targetLang = convertLanguageCode(targetLanguage);
 
-        System.out.println("번역 요청 정보:");
-        System.out.println("원본 텍스트: " + text);
-        System.out.println("원본 언어: " + sourceLanguage + " (변환: " + sourceLang + ")");
-        System.out.println("대상 언어: " + targetLanguage + " (변환: " + targetLang + ")");
+        try {
+            // 클라이언트를 사용하여 번역 수행
+            String translatedText = hyperClovaClient.translate(text, sourceLang, targetLang);
 
-        // 클라이언트를 사용하여 번역 수행
-        String translatedText = hyperClovaClient.translate(text, sourceLang, targetLang);
+            if (translatedText == null || translatedText.isEmpty()) {
+                throw new TranslationException(
+                        "Empty translation result",
+                        sourceLanguage,
+                        targetLanguage,
+                        text,
+                        new IllegalStateException("Translation result is empty")
+                );
+            }
 
-        System.out.println("번역 결과: " + translatedText);
-
-        return translatedText;
+            return translatedText;
+        } catch (Exception e) {
+            throw new TranslationException(
+                    "Failed to translate text: " + e.getMessage(),
+                    sourceLanguage,
+                    targetLanguage,
+                    text,
+                    e
+            );
+        }
     }
 
     // 언어 코드 변환 (예: "ko" -> "한국어")
