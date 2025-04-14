@@ -1,5 +1,6 @@
 package com.IMJM.reservation.service;
 
+import com.IMJM.common.entity.AdminStylist;
 import com.IMJM.reservation.dto.ReservationStylistDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.repository.AdminStylistRepository;
