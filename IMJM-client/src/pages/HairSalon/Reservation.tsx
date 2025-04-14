@@ -127,7 +127,7 @@ const handleTimeSelect = (time: string) => {
       setSelectedTime(time);
     }
     console.log(`${selectedDate?.format('YYYY-MM-DD')} ${time} 선택됨`);
-    allServiceMenu()
+    // allServiceMenu()
   }
 };
 
