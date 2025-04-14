@@ -1,0 +1,72 @@
+[
+  {
+    "photo_id": 101,
+    "review_id": 1,
+    "photo_url": "hair1.png",
+    "photo_order": 1,
+    "upload_date": "2025-03-15T14:35:00"
+  },
+  {
+    "photo_id": 102,
+    "review_id": 1,
+    "photo_url": "hair2.png",
+    "photo_order": 2,
+    "upload_date": "2025-03-15T14:35:15"
+  },
+  {
+    "photo_id": 103,
+    "review_id": 3,
+    "photo_url": "hair1.png",
+    "photo_order": 1,
+    "upload_date": "2025-03-20T16:50:00"
+  },
+  {
+    "photo_id": 104,
+    "review_id": 3,
+    "photo_url": "salon1.jpeg",
+    "photo_order": 2,
+    "upload_date": "2025-03-20T16:50:30"
+  },
+  {
+    "photo_id": 105,
+    "review_id": 3,
+    "photo_url": "salon2.png",
+    "photo_order": 3,
+    "upload_date": "2025-03-20T16:51:00"
+  },
+  {
+    "photo_id": 106,
+    "review_id": 6,
+    "photo_url": "salon1.jpeg",
+    "photo_order": 1,
+    "upload_date": "2025-03-28T15:15:00"
+  },
+  {
+    "photo_id": 107,
+    "review_id": 8,
+    "photo_url": "salon2.png",
+    "photo_order": 1,
+    "upload_date": "2025-04-03T17:35:00"
+  },
+  {
+    "photo_id": 108,
+    "review_id": 9,
+    "photo_url": "hair1.png",
+    "photo_order": 1,
+    "upload_date": "2025-04-05T11:50:00"
+  },
+  {
+    "photo_id": 109,
+    "review_id": 9,
+    "photo_url": "hair2.png",
+    "photo_order": 2,
+    "upload_date": "2025-04-05T11:50:30"
+  },
+  {
+    "photo_id": 110,
+    "review_id": 10,
+    "photo_url": "",
+    "photo_order": 1,
+    "upload_date": "2025-04-08T14:20:00"
+  }
+]

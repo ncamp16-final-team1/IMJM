@@ -1,0 +1,43 @@
+[
+{
+  "id": 1,
+  "salon_id": "beauty_salon1",
+  "service_type": "헤어컷",
+  "service_name": "남성 컷",
+  "service_description": "남성을 위한 베이직 헤어 컷 서비스입니다.",
+  "price": 15000
+},
+{
+  "id": 2,
+  "salon_id": "beauty_salon1",
+  "service_type": "펌",
+  "service_name": "디지털 펌",
+  "service_description": "자연스러운 웨이브를 연출하는 디지털 펌 서비스입니다.",
+  "price": 70000
+},
+{
+"id": 3,
+"salon_id": "beauty_salon1",
+"service_type": "헤어컷",
+"service_name": "여성 컷",
+"service_description": "여성을 위한 디자인 컷 서비스입니다.",
+"price": 25000
+},
+{
+"id": 4,
+"salon_id": "beauty_salon1",
+"service_type": "컬러",
+"service_name": "염색",
+"service_description": "트렌디한 컬러로 변신할 수 있는 염색 서비스입니다.",
+"price": 45000
+},
+
+{
+"id": 5,
+"salon_id": "beauty_salon1",
+"service_type": "트리트먼트",
+"service_name": "단백질 트리트먼트",
+"service_description": "손상된 모발에 단백질을 공급하는 영양 트리트먼트입니다.",
+"price": 35000
+}
+]

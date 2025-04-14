@@ -11,6 +11,7 @@
     "score": 4.5,
     "latitude": 37.5665,
     "longitude": 126.9780,
+    "detail_address": "여긴가 저긴가 그냥 잘 찾아오세요",
     "photoUrl": "salon1.jpeg"
   },
   {
@@ -25,6 +26,7 @@
     "score": 4.2,
     "latitude": 37.502915,
     "longitude": 127.028672,
+    "detail_address": "지하철역 나와서 앞으로 오면 있어요",
     "photoUrl": "salon2.png"
   },
   {
@@ -39,6 +41,7 @@
     "score": 4.2,
     "latitude": 37.507361,
     "longitude": 127.005988,
+    "detail_address": "어디있게~~",
     "photoUrl": "salon2.png"
   },
   {
@@ -53,6 +56,7 @@
     "score": 4.2,
     "latitude": 37.523828,
     "longitude": 127.032560,
+    "detail_address": "뭐",
     "photoUrl": "salon2.png"
   },
   {
@@ -67,6 +71,7 @@
     "score": 4.2,
     "latitude": 37.549497,
     "longitude": 127.050897,
+    "detail_address": "커피숍 2층입니다",
     "photoUrl": "salon2.png"
   },
   {
@@ -81,6 +86,7 @@
     "score": 4.2,
     "latitude": 37.562712,
     "longitude": 127.080605,
+    "detail_address": "딱 보면 모르냐",
     "photoUrl": "salon2.png"
   },
   {
@@ -95,6 +101,7 @@
     "score": 4.2,
     "latitude": 37.459777,
     "longitude": 127.105013,
+    "detail_address": "뭔소린지 모르겠다",
     "photoUrl": "salon2.png"
   }
 ]
