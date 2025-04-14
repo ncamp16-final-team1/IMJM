@@ -1,10 +1,12 @@
 package com.IMJM.admin.service;
 
+import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.admin.dto.SalonDto;
 import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.common.entity.Salon;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.entity.SalonPhotos;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,6 +34,13 @@ public class JoinService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+    public SalonDto selectSalonById(@AuthenticationPrincipal CustomSalonDetails salonDetails) {
+        Salon salon = salonRepository.findById(salonDetails.getSalon().getId())
+                .orElseThrow(() -> new IllegalArgumentException("미용실 정보를 찾을 수 없습니다."));
+
+        return SalonDto.from(salon);
+    }
+
     public void joinProcess(SalonDto joinDTO, List<MultipartFile> photos) {
 
         String id = joinDTO.getId();
@@ -46,6 +56,7 @@ public class JoinService {
                 .name(joinDTO.getName())
                 .corpRegNumber(joinDTO.getCorpRegNumber())
                 .address(joinDTO.getAddress())
+                .detailAddress(joinDTO.getDetailAddress())
                 .callNumber(joinDTO.getCallNumber())
                 .introduction(joinDTO.getIntroduction())
                 .holidayMask(joinDTO.getHolidayMask())

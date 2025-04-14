@@ -48,4 +48,19 @@ public class SalonDto {
         this.latitude = salon.getLatitude();
         this.longitude = salon.getLongitude();
     }
+
+    public static SalonDto from(Salon salon) {
+        return SalonDto.builder()
+                .id(salon.getId())
+                .name(salon.getName())
+                .address(salon.getAddress())
+                .detailAddress(salon.getDetailAddress())
+                .callNumber(salon.getCallNumber())
+                .introduction(salon.getIntroduction())
+                .holidayMask(salon.getHolidayMask())
+                .startTime(salon.getStartTime())
+                .endTime(salon.getEndTime())
+                .timeUnit(salon.getTimeUnit())
+                .build();
+    }
 }
