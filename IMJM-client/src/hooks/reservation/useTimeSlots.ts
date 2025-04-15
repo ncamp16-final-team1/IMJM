@@ -1,4 +1,4 @@
-// src/hooks/useTimeSlots.ts
+
 import { useState } from 'react';
 import { Dayjs } from 'dayjs';
 import axios from 'axios';
@@ -11,7 +11,7 @@ export const useTimeSlots = (stylistId: string | undefined) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // 시간대 불러오기 함수
+
   const fetchAvailableTimes = async (date: Dayjs | null) => {
     if (!stylistId || !date) return;
     setIsLoading(true);
@@ -24,11 +24,11 @@ export const useTimeSlots = (stylistId: string | undefined) => {
         }
       });
       
-      // 사용 가능한 시간대와 예약된 시간대 설정
+    
       setAvailableTimes(res.data.availableTimes || []);
       setBookedTimes(res.data.bookedTimes || []);
       
-      // 모든 시간대 = 사용 가능한 시간대 + 예약된 시간대
+  
       const allTimes = [...res.data.availableTimes || [], ...res.data.bookedTimes || []];
       
       // 정렬: 시간 순으로

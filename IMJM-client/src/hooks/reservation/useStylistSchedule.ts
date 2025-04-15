@@ -1,4 +1,4 @@
-// src/hooks/useStylistSchedule.ts
+
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { StylistSchedule } from '../../type/reservation/reservation';
@@ -13,12 +13,12 @@ export const useStylistSchedule = (stylistId: string | undefined) => {
   useEffect(() => {
     if (!stylistId) return;
     
-    // 스타일리스트 정보 불러오기
+
     getStylistSchedule(stylistId)
       .then((data) => {
         setStylistSchedule(data);
         
-        // 스타일리스트 정보를 불러온 후 현재 선택된 날짜가 휴무일인지 확인
+
         const today = dayjs();
         const holiday = isHoliday(today, data);
         setIsSelectedDateHoliday(holiday);

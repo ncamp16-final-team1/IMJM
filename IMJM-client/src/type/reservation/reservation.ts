@@ -34,7 +34,7 @@ export interface ReservationInfo {
   } | null;
 }
 
-// TimeSlotProps 인터페이스 업데이트 (type/reservation.ts 파일에서)
+
 export interface TimeSlotProps {
     allTimeSlots: string[];
     isAM: boolean;
@@ -79,8 +79,8 @@ export interface TimeSlotsSectionProps {
     isLoading: boolean;
     allTimeSlots: string[];
     selectedTime: string | null;
-    handleTimeSelect: (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null) => void; // 업데이트
-    isTimeSlotAvailable: (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null) => boolean; // 업데이트
+    handleTimeSelect: (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null) => void; 
+    isTimeSlotAvailable: (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null) => boolean; 
     isAM: (time: string) => boolean;
   }
 

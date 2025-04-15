@@ -1,4 +1,4 @@
-// src/components/reservation/ProfileSection.tsx
+
 import { Box, Typography } from '@mui/material';
 import { LocationOn as LocationIcon } from '@mui/icons-material';
 import { ProfileSectionProps } from '../../type/reservation/reservation';

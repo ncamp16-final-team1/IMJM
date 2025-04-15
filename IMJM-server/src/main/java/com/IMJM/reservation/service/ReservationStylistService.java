@@ -90,7 +90,7 @@ public class ReservationStylistService {
                         menu.getServiceName(),
                         menu.getServiceDescription(),
                         menu.getPrice(),
-                        menu.getSalon().getId() // 여기서 엔티티 대신 ID만 추출
+                        menu.getSalon().getId()
                 ))
                 .collect(Collectors.toList());
     }
