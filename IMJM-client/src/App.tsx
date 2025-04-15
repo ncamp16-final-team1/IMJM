@@ -30,6 +30,7 @@ function App() {
                         <Route path="/user/register/step1" element={<UserDetailRegister />} />
                         <Route path="/hairSalon/stylists/:salonId" element={<Stylists />} />
                         <Route path="/hairSalon/reservation/:stylistId" element={<StylistSchedule />} />
+                        <Route path="/chat/*" element={<ChatMain />} />
                     </Routes>
                 </main>
                 <Footer />
