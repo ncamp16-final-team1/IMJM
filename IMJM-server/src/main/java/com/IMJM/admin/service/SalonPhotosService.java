@@ -3,6 +3,7 @@ package com.IMJM.admin.service;
 import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.common.entity.SalonPhotos;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

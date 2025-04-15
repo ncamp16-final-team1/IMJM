@@ -62,4 +62,12 @@ public class JoinController {
         List<String> photoUrls = salonPhotosService.getPhotosBySalonId(salonDetails.getSalon().getId());
         return ResponseEntity.ok(photoUrls);
     }
+
+    @PostMapping(value = "/salons/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> salonUpdate(@AuthenticationPrincipal CustomSalonDetails salonDetails,
+                                         @RequestPart SalonDto salonUpdateDto,
+                                         @RequestPart(required = false) List<MultipartFile> newPhotos) {
+        joinService.updateProcess(salonDetails.getSalon().getId(), salonUpdateDto, newPhotos);
+        return ResponseEntity.ok().build();
+    }
 }

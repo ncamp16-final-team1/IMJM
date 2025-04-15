@@ -3,12 +3,16 @@ package com.IMJM.admin.service;
 import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.admin.dto.SalonDto;
 import com.IMJM.admin.repository.SalonPhotosRepository;
+import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.Salon;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.entity.SalonPhotos;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 
@@ -20,19 +24,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class JoinService {
 
     private final SalonRepository salonRepository;
     private final SalonPhotosRepository salonPhotosRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final StorageService storageService;
 
-    public JoinService(SalonRepository salonRepository,
-                       SalonPhotosRepository salonPhotosRepository,
-                       BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.salonRepository = salonRepository;
-        this.salonPhotosRepository = salonPhotosRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-    }
+    @Value("${ncp.bucket-name}")
+    private String bucketName;
 
     public SalonDto selectSalonById(@AuthenticationPrincipal CustomSalonDetails salonDetails) {
         Salon salon = salonRepository.findById(salonDetails.getSalon().getId())
@@ -43,16 +44,13 @@ public class JoinService {
 
     public void joinProcess(SalonDto joinDTO, List<MultipartFile> photos) {
 
-        String id = joinDTO.getId();
-        String password = joinDTO.getPassword();
-
-        if (salonRepository.existsById(id)) {
+        if (salonRepository.existsById(joinDTO.getId())) {
             return;
         }
 
         Salon salon = Salon.builder()
-                .id(id)
-                .password(bCryptPasswordEncoder.encode(password))
+                .id(joinDTO.getId())
+                .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
                 .name(joinDTO.getName())
                 .corpRegNumber(joinDTO.getCorpRegNumber())
                 .address(joinDTO.getAddress())
@@ -69,20 +67,38 @@ public class JoinService {
 
         salonRepository.save(salon);
 
-        String uploadDir = new File("src/main/resources/static/images/salon").getAbsolutePath();
+        uploadSalonPhotos(salon, photos);
+    }
 
+    @Transactional
+    public void updateProcess(String salonId, SalonDto salonUpdateDto, List<MultipartFile> photos) {
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("미용실이 존재하지 않습니다."));
+
+        salon.updateInfo(salonUpdateDto);
+
+        uploadSalonPhotos(salon, photos);
+    }
+
+    private void uploadSalonPhotos(Salon salon, List<MultipartFile> photos) {
+        if (photos == null || photos.isEmpty()) return;
+
+        String baseUrl = "https://" + bucketName + ".kr.object.ncloudstorage.com";
         int order = 0;
+
         for (MultipartFile photo : photos) {
             if (!photo.isEmpty()) {
                 try {
                     String originalFilename = photo.getOriginalFilename();
                     String ext = Objects.requireNonNull(originalFilename).substring(originalFilename.lastIndexOf("."));
-                    String fileName = UUID.randomUUID() + ext;
+                    String uuid = UUID.randomUUID().toString();
+                    String fileName = uuid + ext;
 
-                    File dest = new File(uploadDir, fileName);
-                    photo.transferTo(dest);  // 저장
+                    String s3Path = "salon/" + salon.getId() + "/" + fileName;
 
-                    String photoUrl = "/images/salon/" + fileName;
+                    storageService.upload(s3Path, photo.getInputStream());
+
+                    String photoUrl = baseUrl + "/" + s3Path;
 
                     salonPhotosRepository.save(SalonPhotos.builder()
                             .salon(salon)
