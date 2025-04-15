@@ -8,7 +8,7 @@ import Login from './pages/User/Login';
 import UserDetailRegister from './pages/User/UserDetailRegister';
 import UserTypeSelect from './pages/User/UserTypeSelect';
 import Stylists from './pages/HairSalon/Stylists';
-import StylistSchedule from './pages/HairSalon/ReservationStylistSchedule';
+import StylistSchedule from './pages/HairSalon/Reservation';
 import ChatMain from './pages/Chat/ChatMain';
 
 function App() {
@@ -30,7 +30,6 @@ function App() {
                         <Route path="/user/register/step1" element={<UserDetailRegister />} />
                         <Route path="/hairSalon/stylists/:salonId" element={<Stylists />} />
                         <Route path="/hairSalon/reservation/:stylistId" element={<StylistSchedule />} />
-                        <Route path="/chat/*" element={<ChatMain />} />
                     </Routes>
                 </main>
                 <Footer />

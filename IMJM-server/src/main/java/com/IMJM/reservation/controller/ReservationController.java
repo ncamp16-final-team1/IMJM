@@ -1,15 +1,22 @@
 package com.IMJM.reservation.controller;
 
+import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.dto.ReservationStylistDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
+import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.reservation.service.ReservationStylistService;
+import com.IMJM.user.dto.CustomOAuth2UserDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/hairsalon")
@@ -18,6 +25,7 @@ public class ReservationController {
 
     private final ReservationStylistService reservationStylistService;
 
+    private final ReservationRepository reservationRepository;
 
     // 특정 살롱의 스타일리스트 조회
     @GetMapping("/stylists/{salonId}")
@@ -31,8 +39,9 @@ public class ReservationController {
     @GetMapping("/reservation/{stylistId}")
     public ResponseEntity<?> getStylistDetailAndHoliday(@PathVariable Long stylistId) {
         try {
-            StylistAndSalonDetailsDto stylistAndSalonDetailsDto = reservationStylistService.getStylistAndSalonDetails(stylistId);
-            return ResponseEntity.ok(stylistAndSalonDetailsDto); // 성공 시 200 OK
+            StylistAndSalonDetailsDto stylistAndSalonDetailsDto = reservationStylistService
+                    .getStylistAndSalonDetails(stylistId);
+            return ResponseEntity.ok(stylistAndSalonDetailsDto);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("스타일리스트를 찾을 수 없습니다.");
         } catch (Exception e) {
@@ -41,6 +50,15 @@ public class ReservationController {
     }
 
 
+    // 날짜 클릭 시 예약 가능한 시간대 반환
+    @GetMapping("/reservations/available-times")
+    public ResponseEntity<?> getAvailableTimes(
+            @RequestParam("stylistId") Long stylistId,
+            @RequestParam String date
 
-
+    ) {
+        LocalDate localDate = LocalDate.parse(date);
+        Map<String, List<String>> result = reservationStylistService.getAvailableAndBookedTimeMap(stylistId, localDate);
+        return ResponseEntity.ok(result);
+    }
 }
