@@ -1,17 +1,13 @@
 package com.IMJM.reservation.controller;
 
+import com.IMJM.reservation.dto.ReservationServiceMenuDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.dto.ReservationStylistDto;
-import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
-import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.reservation.service.ReservationStylistService;
-import com.IMJM.user.dto.CustomOAuth2UserDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,7 +21,6 @@ public class ReservationController {
 
     private final ReservationStylistService reservationStylistService;
 
-    private final ReservationRepository reservationRepository;
 
     // 특정 살롱의 스타일리스트 조회
     @GetMapping("/stylists/{salonId}")
@@ -49,7 +44,6 @@ public class ReservationController {
         }
     }
 
-
     // 날짜 클릭 시 예약 가능한 시간대 반환
     @GetMapping("/reservations/available-times")
     public ResponseEntity<?> getAvailableTimes(
@@ -60,5 +54,12 @@ public class ReservationController {
         LocalDate localDate = LocalDate.parse(date);
         Map<String, List<String>> result = reservationStylistService.getAvailableAndBookedTimeMap(stylistId, localDate);
         return ResponseEntity.ok(result);
+    }
+
+    // 살롱의 서비스_메뉴 조회
+    @GetMapping("/reservations/service-menus/{salonId}")
+    public ResponseEntity<?> getServiceMenu(@PathVariable String salonId) {
+        List<ReservationServiceMenuDto> menus = reservationStylistService.getServiceMenusBySalonId(salonId);
+        return ResponseEntity.ok(menus);
     }
 }

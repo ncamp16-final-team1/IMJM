@@ -1,10 +1,13 @@
 package com.IMJM.reservation.service;
 
 import com.IMJM.common.entity.AdminStylist;
+import com.IMJM.common.entity.ServiceMenu;
+import com.IMJM.reservation.dto.ReservationServiceMenuDto;
 import com.IMJM.reservation.dto.ReservationStylistDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.repository.AdminStylistRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
+import com.IMJM.admin.repository.ServiceMenuRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,8 @@ public class ReservationStylistService {
     private final AdminStylistRepository adminStylistRepository;
 
     private final ReservationRepository reservationRepository;
+
+    private final ServiceMenuRepository serviceMenuRepository;
 
     @Transactional(readOnly = true)
     public List<ReservationStylistDto> getStylistsBySalon(String salonId) {
@@ -73,6 +78,21 @@ public class ReservationStylistService {
         result.put("bookedTimes", bookedTimesFormatted);
 
         return result;
+    }
+
+    public List<ReservationServiceMenuDto> getServiceMenusBySalonId(String salonId) {
+        List<ServiceMenu> menus = serviceMenuRepository.findBySalonId(salonId);
+
+        return menus.stream()
+                .map(menu -> new ReservationServiceMenuDto(
+                        menu.getId(),
+                        menu.getServiceType(),
+                        menu.getServiceName(),
+                        menu.getServiceDescription(),
+                        menu.getPrice(),
+                        menu.getSalon().getId()
+                ))
+                .collect(Collectors.toList());
     }
 
 }
