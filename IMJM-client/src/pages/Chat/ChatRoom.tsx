@@ -12,11 +12,12 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
-import MicIcon from '@mui/icons-material/Mic';
+import ImageIcon from '@mui/icons-material/Image';
 import styles from './ChatRoom.module.css';
-import ChatService, { ChatMessage } from '../../services/chat/ChatService';
+import ChatService, { ChatMessage, ChatPhoto } from '../../services/chat/ChatService';
 import WebSocketService from '../../services/chat/WebSocketService';
 import TranslationService from '../../services/chat/TranslationService';
+import FileUploadService from '../../services/chat/FileUploadService';
 
 interface ChatRoomInfo {
     id: number;
@@ -41,6 +42,10 @@ const ChatRoom: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     // 번역 상태를 관리하는 상태 변수 (messageId를 키로 사용)
     const [translations, setTranslations] = useState<Record<number, TranslationState>>({});
+    // 사진 업로드 관련 상태 추가
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const [userId] = useState<string>('user1'); // 테스트용 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
@@ -134,6 +139,42 @@ const ChatRoom: React.FC = () => {
         navigate('/chat');
     };
 
+    // 파일 선택 핸들러
+    const handleFileSelect = () => {
+        fileInputRef.current?.click();
+    };
+
+    // 파일 변경 핸들러
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const newFiles: File[] = [];
+        const newPreviewUrls: string[] = [];
+
+        Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                newFiles.push(file);
+                newPreviewUrls.push(URL.createObjectURL(file));
+            }
+        });
+
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+        setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+
+        // 파일 선택 후 input 값 초기화 (같은 파일 다시 선택 가능하도록)
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // 선택한 파일 제거 핸들러
+    const removeSelectedFile = (index: number) => {
+        URL.revokeObjectURL(previewUrls[index]); // 메모리 누수 방지
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    };
+
     // 번역 요청 및 토글 함수
     const handleTranslateRequest = async (message: ChatMessage) => {
         const messageId = message.id;
@@ -212,34 +253,63 @@ const ChatRoom: React.FC = () => {
         }
     };
 
-    const handleSendMessage = () => {
-        if (!newMessage.trim() || !chatRoom) return;
+    const handleSendMessage = async () => {
+        if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom) return;
 
-        const tempMessage: ChatMessage = {
-            id: Date.now(), // 임시 ID
-            chatRoomId: chatRoom.id,
-            senderType: 'USER',
-            senderId: userId,
-            message: newMessage,
-            isRead: false,
-            sentAt: new Date().toISOString(),
-            translatedMessage: null,
-            translationStatus: 'pending',
-            photos: []
-        };
+        setLoading(true); // 메시지 전송 중 로딩 상태 설정
 
-        // 메시지를 즉시 UI에 추가
-        setMessages(prev => [...prev, tempMessage]);
+        try {
+            // 사진이 있는 경우 먼저 업로드
+            let photoAttachments: ChatPhoto[] = [];
 
-        // 웹소켓으로 메시지 전송
-        WebSocketService.sendMessage(
-            chatRoom.id,
-            newMessage,
-            'USER',
-            [] // 사진 없음
-        );
+            if (selectedFiles.length > 0) {
+                // 여러 이미지를 한 번에 업로드
+                const uploadResults = await FileUploadService.uploadMultipleImages(selectedFiles);
 
-        setNewMessage('');
+                // 업로드 결과를 ChatPhoto 형식으로 변환
+                photoAttachments = uploadResults.map(result => ({
+                    photoId: Date.now(), // 임시 ID, 서버에서 실제 ID가 할당됨
+                    photoUrl: result.fileUrl
+                }));
+            }
+
+            // 임시 메시지 객체 생성 (UI에 즉시 표시용)
+            const tempMessage: ChatMessage = {
+                id: Date.now(), // 임시 ID
+                chatRoomId: chatRoom.id,
+                senderType: 'USER',
+                senderId: userId,
+                message: newMessage || selectedFiles.length > 0 ? '사진을 보냈습니다.' : '',
+                isRead: false,
+                sentAt: new Date().toISOString(),
+                translatedMessage: null,
+                translationStatus: 'pending',
+                photos: photoAttachments
+            };
+
+            // 메시지를 즉시 UI에 추가
+            setMessages(prev => [...prev, tempMessage]);
+
+            // 웹소켓으로 메시지 전송 (사진 포함)
+            WebSocketService.sendMessageWithPhotos(
+                chatRoom.id,
+                newMessage,
+                'USER',
+                photoAttachments
+            );
+
+            // 입력 필드 및 선택된 파일 초기화
+            setNewMessage('');
+            setSelectedFiles([]);
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            setPreviewUrls([]);
+
+        } catch (error) {
+            console.error('메시지 전송 실패:', error);
+            alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) {
@@ -276,6 +346,21 @@ const ChatRoom: React.FC = () => {
                                 <Typography className={styles.originalMessage}>
                                     {message.message}
                                 </Typography>
+
+                                {/* 이미지가 있으면 표시 */}
+                                {message.photos && message.photos.length > 0 && (
+                                    <div className={styles.imageContainer}>
+                                        {message.photos.map((photo, index) => (
+                                            <img
+                                                key={index}
+                                                src={photo.photoUrl}
+                                                alt={`Photo ${index}`}
+                                                className={`${styles.messageImage} ${message.photos.length === 1 ? styles.singleImage : styles.multipleImages}`}
+                                                onClick={() => window.open(photo.photoUrl, '_blank')}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
 
                                 <Button
                                     size="small"
@@ -314,6 +399,38 @@ const ChatRoom: React.FC = () => {
             </div>
 
             <div className={styles.inputContainer}>
+                {/* 선택된 이미지 미리보기를 입력 필드 위에 표시 */}
+                {previewUrls.length > 0 && (
+                    <div className={styles.previewContainer}>
+                        {previewUrls.map((url, index) => (
+                            <div key={index} className={styles.previewItem}>
+                                <img
+                                    src={url}
+                                    alt={`Preview ${index}`}
+                                    className={styles.previewImage}
+                                />
+                                <IconButton
+                                    size="small"
+                                    className={styles.removeButton}
+                                    onClick={() => removeSelectedFile(index)}
+                                >
+                                    ✕
+                                </IconButton>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* 파일 선택을 위한 숨겨진 input */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                />
+
                 <TextField
                     fullWidth
                     variant="outlined"
@@ -324,13 +441,14 @@ const ChatRoom: React.FC = () => {
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
-                                <IconButton size="small">
-                                    <MicIcon />
+                                {/* 사진 업로드 버튼 */}
+                                <IconButton size="small" onClick={handleFileSelect}>
+                                    <ImageIcon />
                                 </IconButton>
                                 <IconButton
                                     size="small"
                                     onClick={handleSendMessage}
-                                    disabled={!newMessage.trim()}
+                                    disabled={!newMessage.trim() && selectedFiles.length === 0}
                                     color="primary"
                                 >
                                     <SendIcon />

@@ -1,5 +1,6 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { ChatPhoto } from './ChatService';
 
 interface MessageListener {
     (message: any): void;
@@ -59,8 +60,13 @@ class WebSocketService {
         }
     }
 
-    // 메시지 전송
-    sendMessage(chatRoomId: number, content: string, senderType: string, photos: any[] = []) {
+    // 메시지 전송 (텍스트만)
+    sendMessage(chatRoomId: number, content: string, senderType: string) {
+        this.sendMessageWithPhotos(chatRoomId, content, senderType, []);
+    }
+
+    // 메시지 전송 (사진 포함)
+    sendMessageWithPhotos(chatRoomId: number, content: string, senderType: string, photos: ChatPhoto[]) {
         if (!this.client || !this.client.connected) {
             console.error('WebSocket is not connected');
             return;
