@@ -1,4 +1,3 @@
-// src/type/reservation.ts
 import { Dayjs } from 'dayjs';
 
 export interface StylistSchedule {

@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 // 메뉴 초기화 함수 콜백을 파라미터로 추가
 export const useTimeSlots = (
   stylistId: string | undefined,
-  resetMenu: () => void // 메뉴 초기화 콜백 추가
+  resetMenu: () => void 
 ) => {
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
@@ -71,11 +71,11 @@ export const useTimeSlots = (
     if (isTimeSlotAvailable(time, isSelectedDateHoliday, selectedDate)) {
       if (selectedTime === time) {
         setSelectedTime(null);
-        resetMenu(); // ✅ 메뉴 초기화
+        resetMenu(); 
         onTimeSelect();
       } else {
         setSelectedTime(time);
-        resetMenu(); // ✅ 메뉴 초기화
+        resetMenu(); 
         onTimeSelect();
       }
     }

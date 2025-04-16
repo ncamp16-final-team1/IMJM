@@ -12,6 +12,7 @@ export const useServiceTypes = () => {
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
   const [selectedMenuName, setSelectedMenuName] = useState<string | null>(null);
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  
   // 슬라이더 관련 상태
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);

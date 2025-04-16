@@ -1,4 +1,3 @@
-// src/hooks/useReservation.ts
 import { useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Menu, ReservationInfo, StylistSchedule } from '../../type/reservation/reservation';

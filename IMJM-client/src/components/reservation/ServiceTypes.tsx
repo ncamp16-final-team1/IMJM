@@ -40,7 +40,6 @@ const ServiceTypes = ({
         </Box>
       ) : (
         <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          {/* 왼쪽 화살표 버튼 */}
           {showLeftArrow && (
             <Box
               sx={{
@@ -134,7 +133,7 @@ const ServiceTypes = ({
             )}
           </Box>
           
-          {/* 오른쪽 화살표 버튼 */}
+
           {showRightArrow && (
             <Box
               sx={{
