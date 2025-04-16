@@ -18,13 +18,6 @@ export interface Stylist {
   profile: string;
 }
 
-interface ServiceMenu {
-  id: number;
-  serviceName: string;
-  serviceDescription: string;
-  price: number;
-  serviceType: string;
-}
 
 
 const Stylists = () => {
