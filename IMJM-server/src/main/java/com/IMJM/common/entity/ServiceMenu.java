@@ -30,4 +30,11 @@ public class ServiceMenu {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "salon_id", nullable = false)
     private Salon salon;
+
+    public void serviceMenuUpdate(String type, String name, String description, int price) {
+        this.serviceType = type;
+        this.serviceName = name;
+        this.serviceDescription = description;
+        this.price = price;
+    }
 }

@@ -1,5 +1,6 @@
 package com.IMJM.common.entity;
 
+import com.IMJM.admin.dto.SalonDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -64,4 +65,18 @@ public class Salon {
 
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
+
+    public void updateInfo(SalonDto salonUpdateDto) {
+        this.introduction = salonUpdateDto.getIntroduction();
+        this.holidayMask = salonUpdateDto.getHolidayMask();
+        this.startTime = salonUpdateDto.getStartTime();
+        this.endTime = salonUpdateDto.getEndTime();
+        this.address = salonUpdateDto.getAddress();
+        this.detailAddress = salonUpdateDto.getDetailAddress();
+
+        if (salonUpdateDto.getLatitude() != null && salonUpdateDto.getLongitude() != null) {
+            this.latitude = salonUpdateDto.getLatitude();
+            this.longitude = salonUpdateDto.getLongitude();
+        }
+    }
 }

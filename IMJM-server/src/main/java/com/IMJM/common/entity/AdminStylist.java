@@ -1,5 +1,6 @@
 package com.IMJM.common.entity;
 
+import com.IMJM.admin.dto.AdminStylistDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,4 +43,17 @@ public class AdminStylist {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "salon_id", nullable = false)
     private Salon salon;
+
+    public void updateAdminStylist(AdminStylistDto salon) {
+        this.name = salon.getName();
+        this.callNumber = salon.getCallNumber();
+        this.startTime = LocalTime.parse(salon.getStartTime());
+        this.endTime = LocalTime.parse(salon.getEndTime());
+        this.holidayMask = salon.getHolidayMask();
+        this.introduction = salon.getIntroduction();
+    }
+
+    public void updateProfile(String profile) {
+        this.profile = profile;
+    }
 }

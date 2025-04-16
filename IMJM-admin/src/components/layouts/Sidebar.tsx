@@ -10,7 +10,7 @@ function Sidebar() {
 
     const handleLogout = async () => {
         try {
-            await fetch('http://localhost:8080/logout', {
+            await fetch('/api/logout', {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -26,7 +26,6 @@ function Sidebar() {
         { title: '대시보드', path: '/' },
         { title: '예약관리', path: '/Reservation' },
         { title: '미용실 정보 관리', path: '/Salon' },
-        { title: '프로필 관리', path: '/Profile' },
         { title: '고객 관리', path: '/Customer' },
         { title: '채팅', path: '/Chat' },
         { title: '리뷰 관리', path: '/Review' },
