@@ -69,12 +69,46 @@
     margin-bottom: 6px;
 }
 
+/* 번역 버튼 스타일 */
+.translateButton {
+    margin-top: 4px !important;
+    margin-bottom: 2px !important;
+    padding: 0 !important;
+    font-size: 0.75rem !important;
+    text-transform: none !important;
+    color: #1976d2 !important; /* 파란색으로 변경 */
+    min-width: 0 !important;
+    /* 왼쪽 패딩 제거하여 메시지와 시작점 맞추기 */
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+}
+
+.translateButton:hover {
+    background-color: transparent !important; /* 배경색 효과 제거 */
+    text-decoration: underline !important; /* 호버 시 밑줄 효과 */
+}
+
+.translateButton:disabled {
+    color: #999 !important;
+    text-decoration: none !important;
+}
+
+.userMessage .translateButton {
+    color: #1976d2 !important; /* 파란색으로 변경 */
+    justify-content: flex-end !important; /* 사용자 메시지에서는 오른쪽 정렬 */
+}
+
 .translatedMessage {
     font-size: 14px;
     color: #666;
     font-style: italic;
-    padding-top: 6px;
     border-top: 1px dashed #ccc;
+}
+
+.translationError {
+    font-size: 13px;
+    color: #e57373;
+    margin-top: 4px;
 }
 
 .messageTimestamp {
