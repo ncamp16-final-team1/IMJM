@@ -1,6 +1,6 @@
 
 import { Box, Typography } from '@mui/material';
-import { TimeSlotProps } from '../../type/reservation/reservation'; // 프로젝트 구조에 맞게 경로 유지
+import { TimeSlotProps } from '../../type/reservation/reservation'; 
 
 
 const TimeSlot = ({
@@ -13,8 +13,7 @@ const TimeSlot = ({
     isSelectedDateHoliday,
     selectedDate
   }: TimeSlotProps) => {
- 
-  
+    
   if (allTimeSlots.length === 0) {
     return null;
   }

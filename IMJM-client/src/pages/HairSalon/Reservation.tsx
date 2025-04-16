@@ -1,5 +1,5 @@
-// src/pages/HairSalon/Reservation.tsx
 import { useParams } from 'react-router-dom';
+import { useEffect } from 'react'; 
 import { Container, Paper, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -74,34 +74,41 @@ const Reservation = () => {
     handleMenuSelect: baseHandleMenuSelect
   } = useReservation(stylistId);
 
+  // 메뉴 초기화 함수
+  const resetMenu = () => {
+    setSelectedTime(null);
+    setShowServiceType(false);
+    setSelectedType(null);
+    setServiceMenus([]);
+    setSelectedMenuName(null);
+  };
+
   // 시간대가 예약 가능한지 확인하는 함수
   const isTimeSlotAvailable = (time: string, isHoliday: boolean, date: dayjs.Dayjs | null) => {
     return checkTimeAvailability(time, isHoliday, date);
   };
 
   // 시간대 선택 핸들러
-const handleTimeSelect = (time: string, isHoliday: boolean, date: dayjs.Dayjs | null) => {
-  if (isTimeSlotAvailable(time, isHoliday, date)) {
-    // 이미 선택된 시간을 다시 클릭하면 선택 취소
-    if (selectedTime === time) {
-      setSelectedTime(null);
-      setShowServiceType(false);
-      setSelectedType(null);
-      setServiceMenus([]);
-    } else {
-      // 새로운 시간 선택
-      setSelectedTime(time);
-      setShowServiceType(true);
-      setSelectedType(null); // 타입 초기화
-      setServiceMenus([]); // 메뉴 초기화
-      
-      // 스타일리스트 정보가 있으면 서비스 타입 목록 조회
-      if (stylistSchedule?.salonId) {
-        fetchServiceTypes(stylistSchedule.salonId);
+  const handleTimeSelect = (time: string, isHoliday: boolean, date: dayjs.Dayjs | null) => {
+    if (isTimeSlotAvailable(time, isHoliday, date)) {
+      // 이미 선택된 시간을 다시 클릭하면 선택 취소
+      if (selectedTime === time) {
+        setSelectedTime(null);
+        resetMenu(); 
+      } else {
+        // 새로운 시간 선택
+        setSelectedTime(time);
+        setShowServiceType(true);
+        setSelectedType(null); 
+        setServiceMenus([]); 
+        
+
+        if (stylistSchedule?.salonId) {
+          fetchServiceTypes(stylistSchedule.salonId);
+        }
       }
     }
-  }
-};
+  };
 
   // 날짜 선택 핸들러
   const handleDateSelect = (date: dayjs.Dayjs | null) => {
@@ -138,6 +145,12 @@ const handleTimeSelect = (time: string, isHoliday: boolean, date: dayjs.Dayjs | 
     );
   };
 
+  useEffect(() => {
+    if (selectedDate && stylistSchedule) {
+      handleDateSelect(selectedDate);
+    }
+  }, [stylistSchedule]);
+
   if (!stylistSchedule) return <Typography>Loading...</Typography>;
 
   return (
@@ -160,14 +173,14 @@ const handleTimeSelect = (time: string, isHoliday: boolean, date: dayjs.Dayjs | 
 
       {/* 시간대 선택 섹션 */}
       <TimeSlotsSection
-         isSelectedDateHoliday={isSelectedDateHoliday}
-         selectedDate={selectedDate} // 이 줄을 추가해야 합니다
-         isLoading={isTimeLoading}
-         allTimeSlots={allTimeSlots}
-         selectedTime={selectedTime}
-         handleTimeSelect={handleTimeSelect}
-         isTimeSlotAvailable={isTimeSlotAvailable}
-         isAM={isAM}
+        isSelectedDateHoliday={isSelectedDateHoliday}
+        selectedDate={selectedDate}
+        isLoading={isTimeLoading}
+        allTimeSlots={allTimeSlots}
+        selectedTime={selectedTime}
+        handleTimeSelect={handleTimeSelect}
+        isTimeSlotAvailable={isTimeSlotAvailable}
+        isAM={isAM}
       />
 
       {/* 서비스 타입 선택 섹션 */}

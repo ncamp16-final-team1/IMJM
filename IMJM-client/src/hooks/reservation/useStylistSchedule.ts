@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { StylistSchedule } from '../../type/reservation/reservation';
 import { getStylistSchedule } from '../../services/reservation/getStylistSchedule';
 import { isHoliday } from '../../utils/reservation/dateUtils';
+
 
 export const useStylistSchedule = (stylistId: string | undefined) => {
   const [stylistSchedule, setStylistSchedule] = useState<StylistSchedule | null>(null);
@@ -17,8 +17,6 @@ export const useStylistSchedule = (stylistId: string | undefined) => {
     getStylistSchedule(stylistId)
       .then((data) => {
         setStylistSchedule(data);
-        
-
         const today = dayjs();
         const holiday = isHoliday(today, data);
         setIsSelectedDateHoliday(holiday);

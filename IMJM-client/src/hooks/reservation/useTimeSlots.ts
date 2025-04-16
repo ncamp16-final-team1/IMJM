@@ -4,7 +4,11 @@ import { Dayjs } from 'dayjs';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
-export const useTimeSlots = (stylistId: string | undefined) => {
+// 메뉴 초기화 함수 콜백을 파라미터로 추가
+export const useTimeSlots = (
+  stylistId: string | undefined,
+  resetMenu: () => void // 메뉴 초기화 콜백 추가
+) => {
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
   const [allTimeSlots, setAllTimeSlots] = useState<string[]>([]);
@@ -23,23 +27,17 @@ export const useTimeSlots = (stylistId: string | undefined) => {
           date: date.format('YYYY-MM-DD')
         }
       });
-      
-    
       setAvailableTimes(res.data.availableTimes || []);
       setBookedTimes(res.data.bookedTimes || []);
-      
-  
+    
       const allTimes = [...res.data.availableTimes || [], ...res.data.bookedTimes || []];
-      
-      // 정렬: 시간 순으로
       allTimes.sort((a, b) => {
         return a.localeCompare(b);
       });
       
       setAllTimeSlots(allTimes);
-      console.log("시간대 응답:", res.data);
+
     } catch (error) {
-      console.error("시간대 불러오기 실패:", error);
       setAvailableTimes([]);
       setBookedTimes([]);
       setAllTimeSlots([]);
@@ -49,17 +47,14 @@ export const useTimeSlots = (stylistId: string | undefined) => {
   };
 
   // 시간대가 예약 가능한지 확인하는 함수
-const isTimeSlotAvailable = (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null) => {
+  const isTimeSlotAvailable = (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null) => {
     if (isSelectedDateHoliday || !selectedDate) return false;
   
-    // 선택된 날짜가 오늘인 경우
     if (selectedDate.isSame(dayjs(), 'day')) {
       const currentTime = dayjs();
       const [hour, minute] = time.split(':');
-      // 선택된 날짜에 시간 설정
       const slotTime = selectedDate.hour(parseInt(hour)).minute(parseInt(minute));
       
-      // 현재 시간 이후의 시간만 활성화
       return slotTime.isAfter(currentTime) && availableTimes.includes(time);
     }
     
@@ -67,15 +62,20 @@ const isTimeSlotAvailable = (time: string, isSelectedDateHoliday: boolean, selec
   };
 
   // 시간대 선택 핸들러
-  const handleTimeSelect = (time: string, isSelectedDateHoliday: boolean, selectedDate: Dayjs | null, onTimeSelect: () => void) => {
+  const handleTimeSelect = (
+    time: string,
+    isSelectedDateHoliday: boolean,
+    selectedDate: Dayjs | null,
+    onTimeSelect: () => void
+  ) => {
     if (isTimeSlotAvailable(time, isSelectedDateHoliday, selectedDate)) {
-      // 이미 선택된 시간을 다시 클릭하면 선택 취소
       if (selectedTime === time) {
         setSelectedTime(null);
+        resetMenu(); // ✅ 메뉴 초기화
         onTimeSelect();
       } else {
-        // 새로운 시간 선택
         setSelectedTime(time);
+        resetMenu(); // ✅ 메뉴 초기화
         onTimeSelect();
       }
     }

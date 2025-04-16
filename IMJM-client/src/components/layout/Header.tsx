@@ -25,6 +25,11 @@ function Header(): React.ReactElement {
         navigate('/login');
     };
 
+    // 채팅 페이지로 이동
+    const navigateToChat = (): void => {
+        navigate('/chat');
+    };
+
     return (
         <header className="header">
             <div className="logoimage">
@@ -59,7 +64,7 @@ function Header(): React.ReactElement {
                 {isLoggedIn ? (
                     // 로그인되어 있을 때 채팅과 알림 아이콘 표시
                     <div className="header-icons">
-                        <button className="icon-button">
+                        <button className="icon-button" onClick={navigateToChat}>
                             <ChatIcon />
                         </button>
                         <button className="icon-button">

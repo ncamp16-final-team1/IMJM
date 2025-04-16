@@ -1,7 +1,7 @@
 // src/hooks/useReservation.ts
 import { useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
-import { Menu, ReservationInfo, StylistSchedule } from '../type/reservation';
+import { Menu, ReservationInfo, StylistSchedule } from '../../type/reservation/reservation';
 import { isHoliday } from '../../utils/reservation/dateUtils';
 
 export const useReservation = (stylistId: string | undefined) => {
