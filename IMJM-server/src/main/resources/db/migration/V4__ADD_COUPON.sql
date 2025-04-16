@@ -19,5 +19,5 @@ CREATE TABLE reservation_coupon (
                                     discount_amount INT NOT NULL,
                                     FOREIGN KEY (reservation_id) REFERENCES reservation(id),
                                     FOREIGN KEY (coupon_id) REFERENCES coupon(id) ON DELETE CASCADE,
-                                    CONSTRAINT unique_chat UNIQUE  (reservation_id, coupon_id)
+                                    CONSTRAINT unique_reservation_coupon UNIQUE  (reservation_id, coupon_id)
 );
