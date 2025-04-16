@@ -217,7 +217,8 @@ const Register: React.FC = () => {
           <TextField label="매장 이름" name="name" value={form.name} onChange={handleInputChange} />
           <Typography fontWeight="bold">주소</Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField label="주소" name="address" value={form.address} onChange={handleInputChange} />
+            <TextField label="주소" name="address" value={form.address} onChange={handleInputChange}
+                InputProps={{readOnly: true}} />
             <Button onClick={handleAddressSearch}>주소 찾기</Button>
           </Box>
           <TextField label="상세 주소" name="detailAddress" value={form.detailAddress} onChange={handleInputChange} />
