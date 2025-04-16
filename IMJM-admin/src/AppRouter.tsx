@@ -28,6 +28,9 @@ function AppRouter() {
 
                 if (response.ok) {
                     setIsAuthenticated(true);
+                    if (location.pathname === '/login' || location.pathname === '/register') {
+                        navigate('/');
+                    }
                 } else {
                     setIsAuthenticated(false);
                     navigate('/login');
