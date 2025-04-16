@@ -23,8 +23,6 @@ public class CustomSalonDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<Salon> salonData = salonRepository.findById(username);
 
-        System.out.println("salonData1: " + salonData);
-
         // Optional이 비어 있는지 확인
         if (salonData.isPresent()) {
             Salon salon = salonData.get();

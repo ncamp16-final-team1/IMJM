@@ -37,4 +37,13 @@ public class ChatMessage {
 
     @Column(name = "translation_status", length = 10)
     private String translationStatus = "none";
+
+    public void markAsRead() {
+        this.isRead = true;
+    }
+
+    public void updateTranslation(String translatedMessage, String status) {
+        this.translatedMessage = translatedMessage;
+        this.translationStatus = status;
+    }
 }

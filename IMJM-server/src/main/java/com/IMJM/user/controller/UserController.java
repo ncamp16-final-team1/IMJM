@@ -18,7 +18,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/user/register")
+    @PostMapping("/api/user/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto dto) {
         if(dto.getUserType().equals("MEMBER")) {
             userService.completeRegistration(dto);
@@ -26,12 +26,12 @@ public class UserController {
         return ResponseEntity.ok("회원가입 완료");
     }
 
-    @GetMapping("/user")
+    @GetMapping("/api/user")
     public String mainAPI() {
         return "user route";
     }
 
-    @GetMapping("/my")
+    @GetMapping("/api/my")
     public String myAPI() {
         return "my route";
     }
