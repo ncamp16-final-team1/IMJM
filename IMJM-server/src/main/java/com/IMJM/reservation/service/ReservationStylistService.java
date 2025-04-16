@@ -1,6 +1,6 @@
 package com.IMJM.reservation.service;
 
-import com.IMJM.common.entity.AdminStylist;
+import com.IMJM.admin.repository.ServiceMenuRepository;
 import com.IMJM.common.entity.AdminStylist;
 import com.IMJM.common.entity.ServiceMenu;
 import com.IMJM.reservation.dto.ReservationServiceMenuDto;
@@ -8,7 +8,6 @@ import com.IMJM.reservation.dto.ReservationStylistDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.repository.AdminStylistRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
-import com.IMJM.reservation.repository.ServiceMenuRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
