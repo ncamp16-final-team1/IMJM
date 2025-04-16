@@ -41,9 +41,6 @@ public class Coupon {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
-    @Column(name = "max_uses")
-    private Integer maxUses;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

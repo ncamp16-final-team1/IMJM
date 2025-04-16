@@ -8,7 +8,6 @@ CREATE TABLE coupon (
                         start_date TIMESTAMP NOT NULL,
                         expiry_date TIMESTAMP NOT NULL,
                         is_active BOOLEAN DEFAULT TRUE,
-                        max_uses INT DEFAULT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (salon_id) REFERENCES salon(id) ON DELETE CASCADE
 );
