@@ -1,6 +1,6 @@
 // src/components/reservation/TimeSlots.tsx
 import { Box, Typography } from '@mui/material';
-import { TimeSlotProps } from '../../type/reservation/reservation'; // 프로젝트 구조에 맞게 경로 유지
+import { TimeSlotProps } from '../../type/reservation/reservation'; 
 
 // TimeSlot 컴포넌트 업데이트
 const TimeSlot = ({
@@ -13,7 +13,7 @@ const TimeSlot = ({
     isSelectedDateHoliday,
     selectedDate
   }: TimeSlotProps) => {
-  // isAM이 함수인 경우의 필터링 로직 제거 (이미 TimeSlotsSection에서 필터링됨)
+  
   
   if (allTimeSlots.length === 0) {
     return null;

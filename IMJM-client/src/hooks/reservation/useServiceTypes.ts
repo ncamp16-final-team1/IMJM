@@ -1,7 +1,7 @@
 // src/hooks/useServiceTypes.ts
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Menu } from '../types/reservation';
+import { Menu } from '../../type/reservation/reservation';
 
 export const useServiceTypes = () => {
   const [showServiceType, setShowServiceType] = useState(false);
