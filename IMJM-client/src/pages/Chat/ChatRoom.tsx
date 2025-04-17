@@ -1,31 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    // Box,
     Typography,
     IconButton,
     Avatar,
     TextField,
     Paper,
-    InputAdornment
+    InputAdornment,
+    CircularProgress,
+    Button
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
-import MicIcon from '@mui/icons-material/Mic';
+import ImageIcon from '@mui/icons-material/Image';
 import styles from './ChatRoom.module.css';
+import ChatService, { ChatMessage, ChatPhoto } from '../../services/chat/ChatService';
+import WebSocketService from '../../services/chat/WebSocketService';
+import TranslationService from '../../services/chat/TranslationService';
+import FileUploadService from '../../services/chat/FileUploadService';
 
-// 메시지 인터페이스
-interface Message {
-    id: number;
-    senderId: string;
-    senderType: 'USER' | 'SALON';
-    content: string;
-    translatedContent?: string;
-    timestamp: string;
-    isRead: boolean;
-}
-
-// 채팅방 정보 인터페이스
 interface ChatRoomInfo {
     id: number;
     salonId: string;
@@ -34,81 +27,103 @@ interface ChatRoomInfo {
     salonLanguage: string;
 }
 
+// 번역 상태를 관리하기 위한 인터페이스
+interface TranslationState {
+    isLoading: boolean;
+    text: string | null;
+    error: string | null;
+}
+
 const ChatRoom: React.FC = () => {
     const { roomId, salonId } = useParams<{ roomId: string; salonId: string }>();
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
     const [chatRoom, setChatRoom] = useState<ChatRoomInfo | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    // 번역 상태를 관리하는 상태 변수 (messageId를 키로 사용)
+    const [translations, setTranslations] = useState<Record<number, TranslationState>>({});
+    // 사진 업로드 관련 상태 추가
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const [userId] = useState<string>('user1'); // 테스트용 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
+
+    // 웹소켓 연결 및 메시지 수신 설정
+    useEffect(() => {
+        // 웹소켓 초기화
+        WebSocketService.initialize(userId);
+
+        // 메시지 수신 리스너 등록
+        const handleNewMessage = (messageData: ChatMessage) => {
+            if (messageData.chatRoomId === Number(roomId)) {
+                setMessages(prev => {
+                    // 이미 같은 메시지가 있는지 확인 (임시 ID로 추가한 메시지)
+                    const messageExists = prev.some(msg =>
+                        msg.message === messageData.message &&
+                        msg.senderType === messageData.senderType &&
+                        msg.translationStatus === messageData.translationStatus &&
+                        msg.translatedMessage === messageData.translatedMessage &&
+                        Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000
+                    );
+
+                    if (messageExists) {
+                        // 기존 메시지를 새 메시지로 업데이트
+                        return prev.map(msg =>
+                            msg.message === messageData.message &&
+                            msg.senderType === messageData.senderType &&
+                            msg.translationStatus === messageData.translationStatus &&
+                            msg.translatedMessage === messageData.translatedMessage &&
+                            Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000
+                                ? messageData : msg
+                        );
+                    } else {
+                        // 새 메시지 추가
+                        return [...prev, messageData];
+                    }
+                });
+            }
+        };
+
+        WebSocketService.addListener('message', handleNewMessage);
+
+        // 컴포넌트 언마운트 시 리스너 제거 및 연결 해제
+        return () => {
+            WebSocketService.removeListener('message', handleNewMessage);
+        };
+    }, [userId, roomId]);
 
     // 채팅방 정보와 메시지 로드
     useEffect(() => {
         const fetchChatRoom = async () => {
             try {
-                // API 호출 대신 임시 데이터
-                const mockChatRoom: ChatRoomInfo = {
-                    id: parseInt(roomId || '0'),
+                if (!roomId) return;
+
+                // 채팅방 정보를 서버에서 가져오는 API가 없어서 간단한 정보로 대체
+                setChatRoom({
+                    id: Number(roomId),
                     salonId: salonId || '',
-                    salonName: 'Salon A',
+                    salonName: 'Beauty Salon', // 실제로는 API에서 받아와야 함
                     userLanguage: 'en', // 사용자 언어
                     salonLanguage: 'ko', // 미용실 언어
-                };
+                });
 
-                setChatRoom(mockChatRoom);
+                // 채팅 메시지 로드
+                const chatMessages = await ChatService.getChatMessages(Number(roomId));
+                setMessages(chatMessages);
 
-                // 메시지 로드 (임시 데이터)
-                const mockMessages: Message[] = [
-                    {
-                        id: 1,
-                        senderId: 'user1',
-                        senderType: 'USER',
-                        content: 'Hi! I want to get this hairstyle. How long will it take?',
-                        translatedContent: '안녕하세요! 이 헤어스타일을 하고 싶은데요. 시간이 얼마나 걸릴까요?',
-                        timestamp: '10:15',
-                        isRead: true
-                    },
-                    {
-                        id: 2,
-                        senderId: 'salon1',
-                        senderType: 'SALON',
-                        content: '안녕하세요! 말씀하신 스타일이라면 약 2시간 정도 걸릴 것 같습니다.',
-                        translatedContent: 'Hello! For the style you mentioned, it will take about 2 hours.',
-                        timestamp: '10:23',
-                        isRead: true
-                    },
-                    {
-                        id: 3,
-                        senderId: 'user1',
-                        senderType: 'USER',
-                        content: 'Oh, that\'s longer than I expected! Will this style damage my hair condition?',
-                        translatedContent: '오, 생각보다 오래 걸리네요! 이 스타일이 제 모발 상태에 손상을 줄 수 있나요?',
-                        timestamp: '10:30',
-                        isRead: true
-                    },
-                    {
-                        id: 4,
-                        senderId: 'salon1',
-                        senderType: 'SALON',
-                        content: '네, 염색 작업이 포함되어 있어 약간의 손상은 있을 수 있습니다. 하지만 트리트먼트로 관리해 드립니다.',
-                        translatedContent: 'Yes, since dyeing is involved, there might be some damage. But we\'ll take care of it with treatment.',
-                        timestamp: '10:35',
-                        isRead: false
-                    }
-                ];
+                // 메시지 읽음 처리
+                await ChatService.markMessagesAsRead(Number(roomId), 'USER');
 
-                setMessages(mockMessages);
                 setLoading(false);
-            } catch (error) {
-                console.error('채팅방 정보를 불러오는데 실패했습니다:', error);
+            } catch (err) {
+                console.error('채팅방 정보를 불러오는데 실패했습니다:', err);
                 setLoading(false);
             }
         };
 
-        if (roomId) {
-            fetchChatRoom();
-        }
+        fetchChatRoom();
     }, [roomId, salonId]);
 
     // 메시지 스크롤 처리
@@ -124,65 +139,186 @@ const ChatRoom: React.FC = () => {
         navigate('/chat');
     };
 
-    const handleSendMessage = () => {
-        if (!newMessage.trim() || !chatRoom) return;
-
-        // 새로운 메시지 추가
-        const newMessageObj: Message = {
-            id: Date.now(),
-            senderId: 'user1',
-            senderType: 'USER',
-            content: newMessage,
-            translatedContent: '번역 중...', // 실제로는 백엔드에서 번역 진행
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isRead: false
-        };
-
-        setMessages([...messages, newMessageObj]);
-        setNewMessage('');
-
-        // 실제로는 여기서 API 호출하여 메시지 전송 및 번역 처리
-
-        // 시뮬레이션: 미용실 응답 (2초 후)
-        setTimeout(() => {
-            // 번역 완료된 메시지로 업데이트
-            setMessages(prev => {
-                const updatedMessages = [...prev];
-                const lastMessage = updatedMessages[updatedMessages.length - 1];
-
-                if (lastMessage.id === newMessageObj.id) {
-                    // 영어 -> 한국어로 번역된 메시지
-                    if (lastMessage.content.toLowerCase().includes('hair')) {
-                        lastMessage.translatedContent = '헤어스타일에 대해 더 알고 싶습니다. 염색 과정은 어떻게 진행되나요?';
-                    } else if (lastMessage.content.toLowerCase().includes('price')) {
-                        lastMessage.translatedContent = '가격이 얼마인가요?';
-                    } else if (lastMessage.content.toLowerCase().includes('time')) {
-                        lastMessage.translatedContent = '시간이 얼마나 걸릴까요?';
-                    } else {
-                        lastMessage.translatedContent = `${lastMessage.content} (번역됨)`;
-                    }
-                }
-
-                return updatedMessages;
-            });
-
-            // 미용실 응답 추가
-            const salonResponse: Message = {
-                id: Date.now() + 1,
-                senderId: 'salon1',
-                senderType: 'SALON',
-                content: '네, 저희 미용실에서는 모발 보호를 위해 특별한 케어 제품을 사용합니다. 걱정하지 않으셔도 됩니다.',
-                translatedContent: 'Yes, our salon uses special care products to protect your hair. No need to worry.',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                isRead: false
-            };
-
-            setMessages(prev => [...prev, salonResponse]);
-        }, 2000);
+    // 파일 선택 핸들러
+    const handleFileSelect = () => {
+        fileInputRef.current?.click();
     };
 
-    if (loading || !chatRoom) {
-        return <div className={styles.loading}>채팅방을 불러오는 중...</div>;
+    // 파일 변경 핸들러
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const newFiles: File[] = [];
+        const newPreviewUrls: string[] = [];
+
+        Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                newFiles.push(file);
+                newPreviewUrls.push(URL.createObjectURL(file));
+            }
+        });
+
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+        setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+
+        // 파일 선택 후 input 값 초기화 (같은 파일 다시 선택 가능하도록)
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // 선택한 파일 제거 핸들러
+    const removeSelectedFile = (index: number) => {
+        URL.revokeObjectURL(previewUrls[index]); // 메모리 누수 방지
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // 번역 요청 및 토글 함수
+    const handleTranslateRequest = async (message: ChatMessage) => {
+        const messageId = message.id;
+
+        // 이미 번역이 로드되었으면 토글 수행
+        if (translations[messageId] && !translations[messageId].isLoading) {
+            // 이미 번역이 표시되어 있으면 제거
+            if (!translations[messageId].error && translations[messageId].text) {
+                setTranslations(prev => {
+                    const newTranslations = { ...prev };
+                    delete newTranslations[messageId];
+                    return newTranslations;
+                });
+                return;
+            }
+
+            // 에러가 있으면 다시 시도
+            if (translations[messageId].error) {
+                // 로딩 상태로 설정
+                setTranslations(prev => ({
+                    ...prev,
+                    [messageId]: { isLoading: true, text: null, error: null }
+                }));
+
+                try {
+                    await requestTranslation(message);
+                } catch (error) {
+                    console.error('번역 요청 실패:', error);
+                }
+            }
+            return;
+        }
+
+        // 로딩 상태로 설정
+        setTranslations(prev => ({
+            ...prev,
+            [messageId]: { isLoading: true, text: null, error: null }
+        }));
+
+        try {
+            await requestTranslation(message);
+        } catch (error) {
+            console.error('번역 요청 실패:', error);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+            }));
+        }
+    };
+
+    // 실제 번역 요청을 수행하는 함수
+    const requestTranslation = async (message: ChatMessage) => {
+        if (!chatRoom) return;
+
+        const messageId = message.id;
+        const sourceLang = message.senderType === 'USER' ? chatRoom.userLanguage : chatRoom.salonLanguage;
+        const targetLang = message.senderType === 'USER' ? chatRoom.salonLanguage : chatRoom.userLanguage;
+
+        try {
+            const translatedText = await TranslationService.translate(
+                message.message,
+                sourceLang,
+                targetLang
+            );
+
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: translatedText, error: null }
+            }));
+        } catch (error) {
+            console.error('번역 요청 실패:', error);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+            }));
+        }
+    };
+
+    const handleSendMessage = async () => {
+        if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom) return;
+
+        setLoading(true); // 메시지 전송 중 로딩 상태 설정
+
+        try {
+            // 사진이 있는 경우 먼저 업로드
+            let photoAttachments: ChatPhoto[] = [];
+
+            if (selectedFiles.length > 0) {
+                // 여러 이미지를 한 번에 업로드
+                const uploadResults = await FileUploadService.uploadMultipleImages(selectedFiles);
+
+                // 업로드 결과를 ChatPhoto 형식으로 변환
+                photoAttachments = uploadResults.map(result => ({
+                    photoId: Date.now(), // 임시 ID, 서버에서 실제 ID가 할당됨
+                    photoUrl: result.fileUrl
+                }));
+            }
+
+            // 임시 메시지 객체 생성 (UI에 즉시 표시용)
+            const tempMessage: ChatMessage = {
+                id: Date.now(), // 임시 ID
+                chatRoomId: chatRoom.id,
+                senderType: 'USER',
+                senderId: userId,
+                message: newMessage || selectedFiles.length > 0 ? '사진을 보냈습니다.' : '',
+                isRead: false,
+                sentAt: new Date().toISOString(),
+                translatedMessage: null,
+                translationStatus: 'pending',
+                photos: photoAttachments
+            };
+
+            // 메시지를 즉시 UI에 추가
+            setMessages(prev => [...prev, tempMessage]);
+
+            // 웹소켓으로 메시지 전송 (사진 포함)
+            WebSocketService.sendMessageWithPhotos(
+                chatRoom.id,
+                newMessage,
+                'USER',
+                photoAttachments
+            );
+
+            // 입력 필드 및 선택된 파일 초기화
+            setNewMessage('');
+            setSelectedFiles([]);
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            setPreviewUrls([]);
+
+        } catch (error) {
+            console.error('메시지 전송 실패:', error);
+            alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.loading}>
+                <CircularProgress size={40} />
+                <Typography sx={{ ml: 2 }}>채팅방을 불러오는 중...</Typography>
+            </div>
+        );
     }
 
     return (
@@ -191,33 +327,69 @@ const ChatRoom: React.FC = () => {
                 <IconButton onClick={handleBackClick} size="small">
                     <ArrowBackIcon />
                 </IconButton>
-                <Typography variant="h6">{chatRoom.salonName}</Typography>
+                <Typography variant="h6">{chatRoom?.salonName || '채팅방'}</Typography>
             </div>
 
             <div className={styles.messagesContainer}>
                 {messages.map((message) => {
                     const isUserMessage = message.senderType === 'USER';
                     const messageClassName = `${styles.messageBubble} ${isUserMessage ? styles.userMessage : styles.salonMessage}`;
+                    const translationState = translations[message.id];
 
                     return (
                         <div key={message.id} className={messageClassName}>
                             {!isUserMessage && (
-                                <Avatar className={styles.messageAvatar} alt={chatRoom.salonName} />
+                                <Avatar className={styles.messageAvatar} alt={chatRoom?.salonName} />
                             )}
 
                             <Paper elevation={0} className={styles.messageContent}>
                                 <Typography className={styles.originalMessage}>
-                                    {message.content}
+                                    {message.message}
                                 </Typography>
 
-                                {message.translatedContent && (
+                                {/* 이미지가 있으면 표시 */}
+                                {message.photos && message.photos.length > 0 && (
+                                    <div className={styles.imageContainer}>
+                                        {message.photos.map((photo, index) => (
+                                            <img
+                                                key={index}
+                                                src={photo.photoUrl}
+                                                alt={`Photo ${index}`}
+                                                className={`${styles.messageImage} ${message.photos.length === 1 ? styles.singleImage : styles.multipleImages}`}
+                                                onClick={() => window.open(photo.photoUrl, '_blank')}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                <Button
+                                    size="small"
+                                    onClick={() => handleTranslateRequest(message)}
+                                    className={styles.translateButton}
+                                    disabled={translationState?.isLoading}
+                                >
+                                    {!translationState ? '번역 보기' :
+                                        translationState.isLoading ? '번역 중...' :
+                                            translationState.error ? '다시 시도' : '번역 숨기기'}
+                                </Button>
+
+                                {translationState && !translationState.isLoading && !translationState.error && (
                                     <Typography className={styles.translatedMessage}>
-                                        {message.translatedContent}
+                                        {translationState.text}
+                                    </Typography>
+                                )}
+
+                                {translationState?.error && (
+                                    <Typography className={styles.translationError}>
+                                        {translationState.error}
                                     </Typography>
                                 )}
 
                                 <Typography className={styles.messageTimestamp}>
-                                    {message.timestamp}
+                                    {new Date(message.sentAt).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
                                 </Typography>
                             </Paper>
                         </div>
@@ -227,6 +399,38 @@ const ChatRoom: React.FC = () => {
             </div>
 
             <div className={styles.inputContainer}>
+                {/* 선택된 이미지 미리보기를 입력 필드 위에 표시 */}
+                {previewUrls.length > 0 && (
+                    <div className={styles.previewContainer}>
+                        {previewUrls.map((url, index) => (
+                            <div key={index} className={styles.previewItem}>
+                                <img
+                                    src={url}
+                                    alt={`Preview ${index}`}
+                                    className={styles.previewImage}
+                                />
+                                <IconButton
+                                    size="small"
+                                    className={styles.removeButton}
+                                    onClick={() => removeSelectedFile(index)}
+                                >
+                                    ✕
+                                </IconButton>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* 파일 선택을 위한 숨겨진 input */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                />
+
                 <TextField
                     fullWidth
                     variant="outlined"
@@ -237,13 +441,14 @@ const ChatRoom: React.FC = () => {
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
-                                <IconButton size="small">
-                                    <MicIcon />
+                                {/* 사진 업로드 버튼 */}
+                                <IconButton size="small" onClick={handleFileSelect}>
+                                    <ImageIcon />
                                 </IconButton>
                                 <IconButton
                                     size="small"
                                     onClick={handleSendMessage}
-                                    disabled={!newMessage.trim()}
+                                    disabled={!newMessage.trim() && selectedFiles.length === 0}
                                     color="primary"
                                 >
                                     <SendIcon />
