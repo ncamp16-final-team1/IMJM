@@ -33,6 +33,11 @@ public class AdminJWTFilter extends OncePerRequestFilter {
 
         String requestUri = request.getRequestURI();
 
+        if (!requestUri.startsWith("/admin") && !requestUri.startsWith("/api/admin")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (requestUri.matches("^\\/login(?:\\/.*)?$")) {
 
             filterChain.doFilter(request, response);

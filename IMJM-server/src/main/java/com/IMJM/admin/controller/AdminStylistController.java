@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin-stylist")
+@RequestMapping("/api/admin/stylist")
 @RequiredArgsConstructor
 public class AdminStylistController {
 

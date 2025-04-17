@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogTitle,
@@ -18,9 +17,6 @@ interface LoginDialogProps {
   loginText?: string;
 }
 
-/**
- * 로그인이 필요할 때 표시하는 공통 다이얼로그 컴포넌트
- */
 const LoginDialog = ({
     open,
     onClose,

@@ -29,7 +29,7 @@ const Event = () => {
     const [couponToEdit, setCouponToEdit] = useState<CouponDto | null>(null);
 
     const fetchCoupons = async () => {
-        const res = await axios.get('/api/coupon/list');
+        const res = await axios.get('/api/admin/coupon/list');
         setCoupons(res.data);
     };
 
@@ -40,7 +40,7 @@ const Event = () => {
     const handleDelete = async () => {
         if (selectedId === null) return;
         try {
-            await axios.delete(`/api/coupon/${selectedId}`);
+            await axios.delete(`/api/admin/coupon/${selectedId}`);
             setCoupons(prev => prev.filter(c => c.id !== selectedId));
         } catch (error) {
             console.error('삭제 실패:', error);

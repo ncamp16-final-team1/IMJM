@@ -1,5 +1,6 @@
 package com.IMJM.user.dto;
 
+import com.IMJM.common.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -9,10 +10,10 @@ import java.util.Map;
 
 public class CustomOAuth2UserDto implements OAuth2User {
 
-    private final UserResponseDto userResponseDto;
+    private final Users user;
 
-    public CustomOAuth2UserDto(UserResponseDto userResponseDto) {
-        this.userResponseDto = userResponseDto;
+    public CustomOAuth2UserDto(Users user) {
+        this.user = user;
     }
 
     @Override
@@ -28,7 +29,7 @@ public class CustomOAuth2UserDto implements OAuth2User {
         collection.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return userResponseDto.getUserType();
+                return user.getUserType();
             }
         });
 
@@ -37,26 +38,30 @@ public class CustomOAuth2UserDto implements OAuth2User {
 
     @Override
     public String getName() {
-        return userResponseDto.getId();
+        return user.getId();
     }
 
     public String getId(){
-        return userResponseDto.getId();
+        return user.getId();
+    }
+
+    public Users getUser(){
+        return user;
     }
 
     public String getEmail(){
-        return userResponseDto.getEmail();
+        return user.getEmail();
     }
 
     public String getLastName(){
-        return userResponseDto.getLastName();
+        return user.getLastName();
     }
 
     public String getFirstName(){
-        return userResponseDto.getFirstName();
+        return user.getFirstName();
     }
 
     public Boolean isTermsAgreed(){
-        return userResponseDto.isTermsAgreed();
+        return user.isTermsAgreed();
     }
 }
