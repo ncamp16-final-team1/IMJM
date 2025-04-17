@@ -60,24 +60,16 @@ function App() {
                             </PublicRoute>
                         } />
                         <Route path="/user/language" element={
-                            <PublicRoute>
                                 <UserLanguageSelect />
-                            </PublicRoute>
                         } />
                         <Route path="/user/register" element={
-                            <PublicRoute>
                                 <UserTypeSelect />
-                            </PublicRoute>
                         } />
                         <Route path="/user/register/step1" element={
-                            <PublicRoute>
                                 <UserDetailRegister />
-                            </PublicRoute>
                         } />
                         <Route path="/user/final" element={
-                            <PublicRoute>
                                 <UserFinalSubmit />
-                            </PublicRoute>
                         } />
                     </Routes>
                 </main>
