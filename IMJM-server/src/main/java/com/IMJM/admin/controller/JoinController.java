@@ -4,9 +4,12 @@ import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.admin.dto.SalonDto;
 import com.IMJM.admin.service.JoinService;
 import com.IMJM.admin.service.SalonPhotosService;
+import com.IMJM.jwt.JWTUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,17 +19,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api")
 public class JoinController {
 
     private final JoinService joinService;
     private final SalonPhotosService salonPhotosService;
-
-    public JoinController(JoinService joinService,
-                          SalonPhotosService salonPhotosService) {
-        this.joinService = joinService;
-        this.salonPhotosService = salonPhotosService;
-    }
+    private final JWTUtil jwtUtil;
 
     @PostMapping(value = "/admin/join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> joinProcess(@RequestPart SalonDto joinDTO,
@@ -35,8 +34,24 @@ public class JoinController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/check-login")
+    @GetMapping("/admin/check-login")
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("AdminToken")) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || jwtUtil.isExpired(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Token expired or not provided\"}");
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -46,7 +61,7 @@ public class JoinController {
         return ResponseEntity.ok(joinService.selectSalonById(salonDetails));
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/admin/logout")
     public void logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("AdminToken", null);
         cookie.setMaxAge(0); // 즉시 만료

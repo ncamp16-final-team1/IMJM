@@ -40,7 +40,7 @@ const Register: React.FC = () => {
     const loadScripts = () => {
       let postcodeLoaded = false;
       let kakaoScriptAppended = false;
-  
+
       const checkAllReady = () => {
         if (postcodeLoaded && kakaoScriptAppended) {
           if ((window as any).kakao && (window as any).kakao.maps) {
