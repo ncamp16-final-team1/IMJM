@@ -26,14 +26,14 @@ public class Reservation {
     @Column(name = "reservation_time", nullable = false)
     private LocalTime reservationTime;
 
-    @Column(name = "service_type", length = 100, nullable = false)
-    private String serviceType;
+    @Column(name = "reservation_service_type", length = 100, nullable = false)
+    private String reservationServiceType;
 
-    @Column(name = "service_name", length = 100, nullable = false)
-    private String serviceName;
+    @Column(name = "reservation_service_name", length = 100, nullable = false)
+    private String reservationServiceName;
 
-    @Column(nullable = false)
-    private int price;
+    @Column(name = "reservation_price", nullable = false)
+    private int reservationPrice;
 
     @Column(name = "is_paid", nullable = false)
     private boolean isPaid;
@@ -48,4 +48,8 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stylist_id", nullable = false)
     private AdminStylist stylist;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_menu_id", nullable = false)
+    private ServiceMenu serviceMenu;
 }
