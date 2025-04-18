@@ -40,14 +40,13 @@ export const useServiceTypes = () => {
     
     setIsMenuLoading(true);
     try {
-      const response = await axios.get(`/api/hairsalon/reservations/service-menus/${salonId}`);
+      const response = await axios.get(`/api/salon/reservations/service-menus/${salonId}`);
       
       if (response.data && Array.isArray(response.data)) {
-        // API에서 serviceType 필드를 기준으로 중복 제거하여 타입 목록 가져오기
         const types = [...new Set(response.data.map(menu => menu.serviceType))];
         
         setServiceTypes(types);
-        setAllServiceMenus(response.data); // 모든 메뉴 저장해두기
+        setAllServiceMenus(response.data); 
       } 
     } catch (error) {
       console.error("서비스 메뉴 조회 실패:", error);

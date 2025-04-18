@@ -1,25 +1,59 @@
-// src/components/reservation/ServiceMenus.tsx
 import { Box, Typography, Button, Divider } from '@mui/material';
-import { ServiceMenusSectionProps } from '../../type/reservation/reservation';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ServiceMenusSectionProps, Menu } from '../../type/reservation/reservation';
 
 const ServiceMenus = ({
   selectedType,
   isMenuLoading,
   serviceMenus,
   selectedMenuName,
-  handleMenuSelect
-} : ServiceMenusSectionProps) => {
+  handleMenuSelect,
+  selectedMenu,
+  stylistName,
+  selectedDate, 
+  selectedTime, 
+}: ServiceMenusSectionProps) => {
+
+  const { salonId,stylistId } = useParams(); 
+  const navigate = useNavigate(); 
+
+  // 메뉴 선택 핸들러
+  const handleMenuSelectInternal = (menu: Menu) => {
+    
+    if (selectedMenuName === menu.serviceName) {
+      handleMenuSelect(null); 
+    } else {
+      handleMenuSelect(menu); 
+    }
+  };
+
+  const handleNextPage = () => {
+    navigate(`/salon/${salonId}/reservation/${stylistId}/paymentDetails`, {
+      state: {
+        salonId: salonId ?? '',
+        stylistId: stylistId ? parseInt(stylistId) : null,
+        stylistName: stylistName, 
+        selectedDate: selectedDate,
+        selectedTime: selectedTime, 
+        selectedType: selectedType,
+        userId: '', 
+        selectedMenu: selectedMenu
+          ? {
+              serviceName: selectedMenu.serviceName,
+              serviceDescription: selectedMenu.serviceDescription,
+              price: selectedMenu.price,
+            }
+          : null,
+      },
+    });
+  };
+
   if (!selectedType) return null;
 
   return (
     <Box>  
       <Divider sx={{ marginY: 5, borderColor: 'grey.500', borderWidth: 2 }} />
-      <Box 
-        sx={{ 
-          mt: 2, 
-          borderRadius: 2
-        }}
-      >
+      <Box sx={{ mt: 2, borderRadius: 2 }}>
         <Typography 
           variant="subtitle1" 
           fontWeight="bold" 
@@ -45,7 +79,7 @@ const ServiceMenus = ({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             {serviceMenus.map((menu) => (
               <Box
-                key={menu.id || `menu-${Math.random()}`} // id가 없을 경우 대체 키 제공
+                key={menu.id || `menu-${Math.random()}`} 
                 sx={{
                   p: 2,
                   borderRadius: 1,
@@ -80,7 +114,7 @@ const ServiceMenus = ({
                     size="small" 
                     variant="outlined" 
                     color="primary"
-                    onClick={() => handleMenuSelect(menu)}
+                    onClick={() => handleMenuSelectInternal(menu)} // 메뉴 선택 핸들러
                     sx={{ 
                       minWidth: '80px',
                       borderColor: '#F06292',
@@ -92,7 +126,7 @@ const ServiceMenus = ({
                       }
                     }}
                   >
-                    선택
+                    {selectedMenuName === menu.serviceName ? '취소' : '선택'} {/* 선택된 경우 취소 버튼 표시 */}
                   </Button>
                 </Box>
               </Box>
@@ -105,6 +139,30 @@ const ServiceMenus = ({
             </Typography>
           </Box>
         )}
+      </Box>
+
+      {/* "확인" 버튼 추가 */}
+      <Box sx={{ textAlign: 'center', mt: 3 }}>
+      <Button 
+          variant="contained" 
+          onClick={handleNextPage} 
+          disabled={selectedMenuName === null}
+          sx={{ 
+            width: '100%', 
+            maxWidth: '300px',
+            backgroundColor: '#FDC7BF', 
+            color: '#fff',              
+            '&:hover': {
+              backgroundColor: '#e65c50', 
+            },
+            '&.Mui-disabled': {
+              backgroundColor: '#ccc',   
+              color: '#666',
+            },
+          }}
+        >
+          확인
+        </Button>
       </Box>
     </Box>
   );

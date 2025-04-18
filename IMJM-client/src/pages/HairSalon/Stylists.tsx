@@ -9,6 +9,9 @@ import {
   Avatar
 } from '@mui/material';
 
+import { useDispatch } from 'react-redux';
+import { setReservationInfo } from '../../components/features/reservation/reservationSlice';
+
 export interface Stylist {
   salonId: string;
   stylistId: number;
@@ -21,6 +24,7 @@ export interface Stylist {
 
 
 const Stylists = () => {
+  const dispatch = useDispatch(); // Redux dispatch 추가
   const [stylists, setStylists] = useState<Stylist[]>([]);
   const { salonId } = useParams<{ salonId: string }>();
   const navigate = useNavigate();
@@ -41,18 +45,41 @@ const Stylists = () => {
       return false;
     }
   };
+  // const checkLoginStatus = (): boolean => {
+  //   // 로컬 스토리지에서 유저 아이디를 확인
+  //   const userId = localStorage.getItem('userId');
+  
+  //   // 유저 아이디가 있으면 로그인 상태로 간주
+  //   if (userId) {
+  //     return true;
+  //   }
+  
+  //   // 없으면 로그인되지 않은 상태
+  //   return false;
+  // };
 
   // 예약 버튼 클릭 핸들러
   const handleReservationClick = async (stylistId: number) => {
     // 선택한 스타일리스트 ID 저장
-    setSelectedStylistId(stylistId);
-    
+    const selectedStylist = stylists.find(s => s.stylistId === stylistId);
     // 로그인 상태 확인
     const isLoggedIn = await checkLoginStatus();
     
     if (isLoggedIn) {
-      // 로그인 되어 있으면 예약 페이지로 이동
-      navigate(`/hairsalon/reservation/${stylistId}`);
+      // Redux에 salonId와 stylistId 저장
+      dispatch(setReservationInfo({
+        salonId: salonId || '', // URL의 salonId 저장
+        stylistId: stylistId,
+        selectedDate: '',
+        selectedTime: '',
+        selectedType: '',
+        userId: '',
+        selectedMenu: null,
+        stylistName: selectedStylist?.name || ''
+      }));
+
+      // 예약 페이지로 이동
+      navigate(`/salon/${salonId}/reservation/${stylistId}`);
     } else {
       // 로그인 되어 있지 않으면 로그인 다이얼로그 표시
       setOpenLoginDialog(true);
@@ -62,7 +89,7 @@ const Stylists = () => {
   // 로그인 페이지로 이동
   const handleGoToLogin = () => {
     navigate('/login', { 
-      state: { from: `/hairsalon/reservation/${selectedStylistId}` } 
+      state: { from: `/salon/reservation/${selectedStylistId}` } 
     });
   };
 

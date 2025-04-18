@@ -2,14 +2,17 @@ package com.IMJM.reservation.service;
 
 import com.IMJM.admin.repository.ServiceMenuRepository;
 import com.IMJM.common.entity.AdminStylist;
+import com.IMJM.common.entity.Coupon;
+import com.IMJM.common.entity.ReservationCoupon;
 import com.IMJM.common.entity.ServiceMenu;
-import com.IMJM.reservation.dto.ReservationServiceMenuDto;
-import com.IMJM.reservation.dto.ReservationStylistDto;
-import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
+import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
+import com.IMJM.reservation.repository.CouponRepository;
+import com.IMJM.reservation.repository.ReservationCouponRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class ReservationStylistService {
@@ -27,6 +31,10 @@ public class ReservationStylistService {
     private final ReservationRepository reservationRepository;
 
     private final ServiceMenuRepository serviceMenuRepository;
+
+    private final CouponRepository couponRepository;
+
+    private final ReservationCouponRepository reservationCouponRepository;
 
     @Transactional(readOnly = true)
     public List<ReservationStylistDto> getStylistsBySalon(String salonId) {
@@ -90,9 +98,50 @@ public class ReservationStylistService {
                         menu.getServiceName(),
                         menu.getServiceDescription(),
                         menu.getPrice(),
-                        menu.getSalon().getId() // 여기서 엔티티 대신 ID만 추출
+                        menu.getSalon().getId()
                 ))
                 .collect(Collectors.toList());
     }
 
+    // 쿠폰 정보를 가져오는 메소드
+    public List<SalonCouponDto> getCoupons(String salonId, int totalAmount, String userId) {
+        log.info("쿠폰 조회 파라미터 - salonId: {}, totalAmount: {}, userId: {}", salonId, totalAmount, userId);
+        List<Coupon> coupons = couponRepository.findBySalon_id(salonId);
+        log.info("조회된 쿠폰 개수: {}", coupons.size());
+
+        List<ReservationCoupon> usedCoupons = reservationCouponRepository
+                .findByReservation_User_idAndCoupon_Salon_id(userId, salonId);
+
+        // 사용한 쿠폰 ID만 추출
+        Set<Long> usedCouponIds = usedCoupons.stream()
+                .map(rc -> rc.getCoupon().getId())
+                .collect(Collectors.toSet());
+
+        LocalDate now = LocalDate.now();
+
+        return coupons.stream()
+                .map(coupon -> {
+                    boolean meetsMinPurchase = coupon.getMinimumPurchase() <= totalAmount;
+                    boolean isActive = coupon.getIsActive();
+                    boolean isWithinValidPeriod = !coupon.getStartDate().toLocalDate().isAfter(now)
+                            && !coupon.getExpiryDate().toLocalDate().isBefore(now);
+                    boolean notUsedBefore = !usedCouponIds.contains(coupon.getId());
+
+                    boolean isAvailable = meetsMinPurchase && isActive && isWithinValidPeriod && notUsedBefore;
+
+                    return SalonCouponDto.builder()
+                            .couponId(coupon.getId())
+                            .couponName(coupon.getName())
+                            .discountType(coupon.getDiscountType())
+                            .discountValue(coupon.getDiscountValue())
+                            .minimumPurchase(coupon.getMinimumPurchase())
+                            .startDate(coupon.getStartDate())
+                            .expiryDate(coupon.getExpiryDate())
+                            .isActive(coupon.getIsActive())
+                            .isAvailable(isAvailable)
+                            .totalAmount(totalAmount)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 }

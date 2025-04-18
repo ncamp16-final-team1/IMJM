@@ -20,13 +20,12 @@ export const useTimeSlots = (
     setIsLoading(true);
     
     try {
-      const res = await axios.get('/api/hairsalon/reservations/available-times', {
+      const res = await axios.get('/api/salon/reservations/available-times', {
         params: {
           stylistId,
           date: date.format('YYYY-MM-DD')
         }
       });
-      console.log("============================첫번째" + res.data); // 응답 데이터 확인
       setAvailableTimes(res.data.availableTimes || []);
       setBookedTimes(res.data.bookedTimes || []);
     

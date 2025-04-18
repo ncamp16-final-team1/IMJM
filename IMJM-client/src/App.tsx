@@ -10,6 +10,7 @@ import UserTypeSelect from './pages/User/UserTypeSelect';
 import Stylists from './pages/HairSalon/Stylists';
 import StylistSchedule from './pages/HairSalon/Reservation';
 import ChatMain from './pages/Chat/ChatMain';
+import PaymentDetails from './pages/HairSalon/PaymentDetails';
 
 function App() {
     return (
@@ -28,8 +29,9 @@ function App() {
                         <Route path="/user/login" element={<Login />} />
                         <Route path="/user/register" element={<UserTypeSelect />} />
                         <Route path="/user/register/step1" element={<UserDetailRegister />} />
-                        <Route path="/hairSalon/stylists/:salonId" element={<Stylists />} />
-                        <Route path="/hairSalon/reservation/:stylistId" element={<StylistSchedule />} />
+                        <Route path="/salon/stylists/:salonId" element={<Stylists />} />
+                        <Route path="/salon/:salonId/reservation/:stylistId" element={<StylistSchedule />} />
+                        <Route path="/salon/:salonId/reservation/:stylistId/paymentDetails" element={<PaymentDetails />} />
                         <Route path="/chat/*" element={<ChatMain />} />
                     </Routes>
                 </main>

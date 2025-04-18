@@ -1,19 +1,13 @@
-// src/hooks/useReservation.ts
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import dayjs, { Dayjs } from 'dayjs';
 import { Menu, ReservationInfo, StylistSchedule } from '../../type/reservation/reservation';
 import { isHoliday } from '../../utils/reservation/dateUtils';
+import { setReservationInfo } from '../../components/features/reservation/reservationSlice';
 
-export const useReservation = (stylistId: string | undefined) => {
+export const useReservation = () => {
+  const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-  const [reservationInfo, setReservationInfo] = useState<ReservationInfo>({
-    stylistId: null,
-    selectedDate: '',
-    selectedTime: '',
-    selectedType: '',
-    userId: '',
-    selectedMenu: null
-  });
 
   // 날짜 선택 핸들러
   const handleDateSelect = (
@@ -26,17 +20,13 @@ export const useReservation = (stylistId: string | undefined) => {
   ) => {
     if (!date || !stylistSchedule) return;
 
-    // 날짜 선택 시 초기화
     resetTimeSelection();
     resetServiceSelection();
-    
     setSelectedDate(date);
-    
-    // 휴무일인지 확인
+
     const holiday = isHoliday(date, stylistSchedule);
     setIsSelectedDateHoliday(holiday);
-    
-    // 휴무일이 아닌 경우에만 시간대 불러오기
+
     if (!holiday) {
       fetchTimes(date);
     }
@@ -44,21 +34,39 @@ export const useReservation = (stylistId: string | undefined) => {
 
   // 메뉴 선택 핸들러
   const handleMenuSelect = (
-    menu: Menu,
+    salonId: string,
+    menu: Menu | null, 
     stylistId: number | null,
+    stylistName: string,
     selectedDate: Dayjs | null,
     selectedTime: string | null,
     selectedType: string | null,
     setSelectedMenuName: (name: string) => void
   ) => {
-  
-   
+    // menu가 null인 경우 (취소 버튼 클릭 시)
+    if (!menu) {
+      setSelectedMenuName('');
+      return;
+    }
+
+    // selectedDate 타입 체크 및 안전한 형식 변환
+    let formattedDate = '없음';
+    if (selectedDate && typeof selectedDate.format === 'function') {
+      try {
+        formattedDate = selectedDate.format('YYYY-MM-DD');
+      } catch (error) {
+        console.error('날짜 포맷 변환 오류:', error);
+      }
+    }
+
     const updatedReservationInfo: ReservationInfo = {
+      salonId: salonId || "아이디값이없습니다.",
       stylistId: stylistId,
-      selectedDate: selectedDate?.format('YYYY-MM-DD') || '',
-      selectedTime: selectedTime || '',
-      selectedType: selectedType || '',
-      userId: '', // 현재는 빈 문자열로 두고, 결제/확정 단계에서 채움
+      stylistName: stylistName || '이름 없음',
+      selectedDate: formattedDate,
+      selectedTime: selectedTime || '없음',
+      selectedType: selectedType || '없음',
+      userId: '', // 결제/확정 단계에서 채움
       selectedMenu: {
         serviceName: menu.serviceName,
         serviceDescription: menu.serviceDescription,
@@ -66,19 +74,13 @@ export const useReservation = (stylistId: string | undefined) => {
       }
     };
 
-     // 콘솔에 로그 출력
-    console.log('업데이트된 예약 정보:', updatedReservationInfo);
-    console.log('메뉴 정보가 담겼는지 확인:', menu);
-    
-    setReservationInfo(updatedReservationInfo);
+    dispatch(setReservationInfo(updatedReservationInfo));
     setSelectedMenuName(menu.serviceName);
   };
 
   return {
     selectedDate,
-    reservationInfo,
     handleDateSelect,
-    handleMenuSelect,
-    setReservationInfo
+    handleMenuSelect
   };
 };
