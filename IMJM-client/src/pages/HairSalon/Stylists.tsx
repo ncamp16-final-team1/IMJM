@@ -38,7 +38,7 @@ const Stylists = () => {
     //   return true;
     // }
     try {
-      const res = await axios.get('/check-login');
+      const res = await axios.get('/api/user/check-login');
       return res.status === 200;
     } catch (error) {
       console.error("로그인 확인 실패:", error);

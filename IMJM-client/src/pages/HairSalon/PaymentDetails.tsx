@@ -105,7 +105,7 @@ function PaymentDetails() {
     const fetchCoupons = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<Coupon[]>(`/api/hairsalon/reservation/coupons`, {
+        const response = await axios.get<Coupon[]>(`/api/salon/reservation/coupons`, {
           params: {
             salonId: salonId,
             totalAmount: totalAmount,
