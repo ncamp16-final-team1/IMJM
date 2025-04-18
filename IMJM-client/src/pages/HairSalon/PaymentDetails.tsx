@@ -105,7 +105,7 @@ function PaymentDetails() {
     const fetchCoupons = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<Coupon[]>(`/api/salon/reservation/coupons`, {
+        const response = await axios.get<Coupon[]>(`/api/hairsalon/reservation/coupons`, {
           params: {
             salonId: salonId,
             totalAmount: totalAmount,
@@ -530,7 +530,6 @@ function PaymentDetails() {
                   fontWeight: '500'
                 }}>
                   <svg height="24" width="40" viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
-
                   </svg>
                 </Box>
               </Paper>
