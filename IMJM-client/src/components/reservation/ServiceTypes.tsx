@@ -118,7 +118,7 @@ const ServiceTypes = ({
                       backgroundColor: selectedType === type ? '#FDE4D0' : '#FEE5EC',
                       borderColor: '#E91E63',
                     },
-                    pointerEvents: 'auto', // 항상 클릭 가능하도록 설정
+                    pointerEvents: 'auto', 
                   }}
                 >
                   {type}

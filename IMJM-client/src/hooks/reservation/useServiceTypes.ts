@@ -1,4 +1,4 @@
-// src/hooks/useServiceTypes.ts
+
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Menu } from '../../type/reservation/reservation';
@@ -11,7 +11,8 @@ export const useServiceTypes = () => {
   const [allServiceMenus, setAllServiceMenus] = useState<Menu[]>([]);
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
   const [selectedMenuName, setSelectedMenuName] = useState<string | null>(null);
-
+  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  
   // 슬라이더 관련 상태
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -20,18 +21,18 @@ export const useServiceTypes = () => {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
 
-  // 스크롤 이벤트 핸들러
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
 
-    // 왼쪽 스크롤 위치가 0보다 크면 왼쪽 화살표 표시
+  
     setShowLeftArrow(container.scrollLeft > 0);
 
     const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
     setShowRightArrow(!isAtEnd);
   };
 
-  // 서비스 타입 목록 조회 함수
+
   const fetchServiceTypes = async (salonId: string | undefined) => {
     if (!salonId) {
       console.error("salonId가 없습니다.");
@@ -55,28 +56,32 @@ export const useServiceTypes = () => {
     }
   };
 
-  // 타입 클릭 핸들러
+
   const handleTypeChange = (type: string) => {
     if (selectedType === type) {
       setSelectedType(null);
       setServiceMenus([]);
+      setSelectedMenu(null);
+      setSelectedMenuName(null);
     } else {
       setSelectedType(type);
+      setSelectedMenu(null);
+      setSelectedMenuName(null);
       
-      // 필터링 로직 - 대소문자 무시하고 비교
+
       const filteredMenus = allServiceMenus.filter(menu => 
         menu.serviceType === type || 
         (menu.serviceType && menu.serviceType.toLowerCase() === type.toLowerCase())
       );
       
-      // 필터링된 메뉴가 있으면 설정
+
       if (filteredMenus.length > 0) {
         setServiceMenus(filteredMenus);
       }
     }
   };
 
-  // 슬라이더 드래그 관련 핸들러
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!sliderRef.current) return;
     
@@ -88,10 +93,10 @@ export const useServiceTypes = () => {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !sliderRef.current) return;
-    e.preventDefault(); // 기본 동작 방지
+    e.preventDefault(); 
     
     const x = e.pageX - sliderRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // 스크롤 속도 조절
+    const walk = (x - startX) * 2; 
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
 
@@ -102,7 +107,7 @@ export const useServiceTypes = () => {
     }
   };
 
-  // 터치 이벤트 핸들러 (모바일 지원)
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!sliderRef.current) return;
     
@@ -119,7 +124,7 @@ export const useServiceTypes = () => {
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  // 화살표 클릭 핸들러
+
   const handleArrowClick = (direction: 'left' | 'right') => {
     if (!sliderRef.current) return;
     
@@ -130,7 +135,7 @@ export const useServiceTypes = () => {
     });
   };
 
-  // 컴포넌트 마운트 시 슬라이더 이벤트 등록
+
   useEffect(() => {
     const slider = sliderRef.current;
     if (slider) {

@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useLocation, useNavigate  } from 'react-router-dom';
-import { 
-  Container, TextField, Button, Typography, Paper, RadioGroup, FormControlLabel, Radio, Checkbox, FormGroup 
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Avatar,
+  IconButton,
+  Grid,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 const UserDetailRegister: React.FC = () => {
   const location = useLocation();
@@ -11,75 +19,241 @@ const UserDetailRegister: React.FC = () => {
   const { userType } = location.state || {};
 
   const [form, setForm] = useState({
-    language: '',
+    language: localStorage.getItem('language') || 'KR',
     gender: '',
     nickname: '',
-    profile: '', // 파일 업로드 처리 필요
+    profile: null,
+    profilePreview: null,
     birthday: '',
     region: '',
     is_notification: true,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type, checked } = e.target;
-    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
-  const handleSubmit = async () => {
-    const fullData = { userType, ...form };
-  
-    try {
-      const response = await axios.post('/api/user/register', fullData, {
-        withCredentials: true, // 쿠키 전송 필요 시 사용
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (response.status === 200) {
-        alert('회원가입이 완료되었습니다!');
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('회원가입 중 오류 발생:', error);
-      alert('회원가입 실패');
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setForm((prev) => ({
+        ...prev,
+        profile: file,
+        profilePreview: previewUrl,
+      }));
     }
   };
 
+  const isValid =
+    form.nickname.trim() &&
+    form.birthday &&
+    form.gender &&
+    form.region;
+
+  const handleNext = () => {
+    navigate("/user/final", {
+      state: {
+        ...form,
+        userType
+      },
+    });
+  };
+
+  // const handleNext = async () => {
+  //   try {
+  //     const formData = new FormData();
+      
+  //     const dto = {
+  //       userType,
+  //       language: form.language,
+  //       gender: form.gender,
+  //       nickname: form.nickname,
+  //       birthday: form.birthday,
+  //       region: form.region,
+  //       is_notification: form.is_notification,
+  //     };
+  
+  //     formData.append("userDto", new Blob([JSON.stringify(dto)], { type: "application/json" }));
+  //     if (form.profile !== null) {
+  //       formData.append("profile", form.profile);
+  //     }
+  
+  //     const response = await axios.post("/api/user/register", formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //       withCredentials: true,
+  //     });
+  
+  //     if (response.status === 200) {
+  //       navigate("/user/final");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("회원가입 실패");
+  //   }
+  // };
+
   return (
-    <Container maxWidth="sm" sx={{ mt: 5 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          회원 정보 입력
-        </Typography>
-        <RadioGroup row name="language" value={form.language} onChange={handleChange}>
-          <FormControlLabel value="KOREAN" control={<Radio />} label="한국어" />
-          <FormControlLabel value="ENGLISH" control={<Radio />} label="영어" />
-        </RadioGroup>
-        <RadioGroup row name="gender" value={form.gender} onChange={handleChange}>
-          <FormControlLabel value="MALE" control={<Radio />} label="남자" />
-          <FormControlLabel value="FEMALE" control={<Radio />} label="여자" />
-        </RadioGroup>
-        <TextField label="닉네임" fullWidth sx={{ my: 1 }} name="nickname" value={form.nickname} onChange={handleChange} />
-        <input type="file" name="profile" onChange={(e) => console.log('업로드 처리 필요')} />
-        <TextField type="date" name="birthday" fullWidth sx={{ my: 1 }} value={form.birthday} onChange={handleChange} />
-        <RadioGroup row name="region" value={form.region} onChange={handleChange}>
-          <FormControlLabel value="ASIA" control={<Radio />} label="아시아" />
-          <FormControlLabel value="EUROPE" control={<Radio />} label="유럽" />
-          <FormControlLabel value="AFRICA" control={<Radio />} label="아프리카" />
-          <FormControlLabel value="OCEANIA" control={<Radio />} label="오세아니아" />
-          <FormControlLabel value="AMERICAS" control={<Radio />} label="아메리카" />
-          <FormControlLabel value="ANTARCTICA" control={<Radio />} label="남극" />
-        </RadioGroup>
-        <FormGroup>
-          <FormControlLabel
-            control={<Checkbox checked={form.is_notification} onChange={handleChange} name="is_notification" />}
-            label="알림 수신 동의"
+    <Box
+      sx={{
+        px: 5,
+        py: 2.5,
+        margin: '0 auto',
+        fontFamily: 'sans-serif',
+        color: '#333',
+      }}
+    >
+      <Typography fontWeight="bold" fontSize="20px">
+        Nickname <span style={{ color: 'salmon', fontSize: '14px' }}>*Required Item</span>
+      </Typography>
+      <TextField
+        name="nickname"
+        value={form.nickname}
+        onChange={handleChange}
+        fullWidth
+        sx={{ my: 1 }}
+        size="small"
+      />
+
+      <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 1 }}>
+        Profile
+      </Typography>
+      <Box
+        sx={{
+          width: '80px',
+          height: '80px',
+          backgroundColor: '#eee',
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mt: 1,
+        }}
+      >
+        <input
+          accept="image/*"
+          type="file"
+          id="profile-upload"
+          style={{ display: 'none' }}
+          onChange={handleImageUpload}
+        />
+        <label htmlFor="profile-upload">
+          <IconButton component="span">
+            {form.profilePreview ? (
+              <Avatar src={form.profilePreview} sx={{ width: 80, height: 80 }} />
+            ) : (
+              <AddIcon />
+            )}
+          </IconButton>
+        </label>
+      </Box>
+
+      <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 1 }}>
+        Birthday <span style={{ color: 'salmon', fontSize: '14px' }}>*Required Item</span>
+      </Typography>
+      <TextField
+        type="date"
+        name="birthday"
+        value={form.birthday}
+        onChange={handleChange}
+        fullWidth
+        size="small"
+        sx={{ my: 1 }}
+        InputLabelProps={{ shrink: true }}
+      />
+
+      <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 1 }}>
+        Gender
+      </Typography>
+      <Box sx={{ display: 'flex', gap: 2, my: 1 }}>
+        <Button
+          variant={form.gender === 'MALE' ? 'contained' : 'outlined'}
+          onClick={() => setForm({ ...form, gender: 'MALE' })}
+          sx={{
+            borderColor: '#FF9080',
+            color: form.gender === 'MALE' ? '#fff' : '#FF9080',
+            backgroundColor: form.gender === 'MALE' ? '#FF9080' : '#fff',
+            fontWeight: 'bold',
+          }}
+        >
+          Male
+        </Button>
+        <Button
+          variant={form.gender === 'FEMALE' ? 'contained' : 'outlined'}
+          onClick={() => setForm({ ...form, gender: 'FEMALE' })}
+          sx={{
+            borderColor: '#FF9080',
+            color: form.gender === 'FEMALE' ? '#fff' : '#FF9080',
+            backgroundColor: form.gender === 'FEMALE' ? '#FF9080' : '#fff',
+            fontWeight: 'bold',
+          }}
+        >
+          Female
+        </Button>
+      </Box>
+
+      <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 2 }}>
+        Region
+      </Typography>
+      <Grid container spacing={1} sx={{ my: 1 }}>
+        {['Asia', 'Africa', 'Europe', 'North America', 'South America', 'Oceania'].map((r) => (
+          <Grid item key={r}>
+            <Button
+              variant={form.region === r.toUpperCase().replace(' ', '_') ? 'contained' : 'outlined'}
+              onClick={() => setForm({ ...form, region: r.toUpperCase().replace(' ', '_') })}
+              sx={{
+                borderColor: '#FF9080',
+                color: form.region === r.toUpperCase().replace(' ', '_') ? '#fff' : '#FF9080',
+                backgroundColor: form.region === r.toUpperCase().replace(' ', '_') ? '#FF9080' : '#fff',
+                fontWeight: 'bold',
+              }}
+            >
+              {r}
+            </Button>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 2 }}>
+        Would you like to receive notifications?
+      </Typography>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={form.is_notification}
+            onChange={handleChange}
+            name="is_notification"
+            sx={{ color: '#FF9080' }}
           />
-        </FormGroup>
-        <Button fullWidth variant="contained" sx={{ mt: 2 }} onClick={handleSubmit}>가입 완료</Button>
-      </Paper>
-    </Container>
+        }
+        label="Approval"
+      />
+
+      <Box sx={{ mt: 3, textAlign: 'right' }}>
+        <Button
+          onClick={handleNext}
+          disabled={!isValid}
+          sx={{
+            color: '#FF9080',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            textTransform: 'none',
+            borderRadius: 0,
+            '&:disabled': { color: '#ccc' },
+          }}
+        >
+          Next →
+        </Button>
+      </Box>
+    </Box>
   );
 };
 

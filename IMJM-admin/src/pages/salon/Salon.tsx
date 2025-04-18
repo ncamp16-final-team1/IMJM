@@ -109,7 +109,7 @@ function Salon() {
     loadScripts();
   
     axios
-      .get("/api/salons/my", { withCredentials: true })
+      .get("/api/admin/salons/my", { withCredentials: true })
       .then((res) => {
         const data = res.data;
         
@@ -129,15 +129,15 @@ function Salon() {
         });
         setHolidays(holidayObj);
 
-        axios.get(`/api/salon-photos`).then((res) => {
+        axios.get(`/api/admin/salon-photos`).then((res) => {
           setPreviews(res.data);
         });
 
-        axios.get(`/api/admin-stylist/stylists`).then((res) => {
+        axios.get(`/api/admin/stylist/stylists`).then((res) => {
           setStylists(res.data);
         });
 
-        axios.get(`/api/salon-designs/designs`).then((res) => {
+        axios.get(`/api/admin/salon/designs`).then((res) => {
           setDesigns(res.data);
         });
       })
@@ -243,7 +243,7 @@ function Salon() {
         console.log(`${pair[0]}:`, pair[1]);
       }
   
-      await axios.post('/api/salons/update', formData, {
+      await axios.post('/api/admin/salons/update', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -256,14 +256,14 @@ function Salon() {
   };
 
   const handleDesignOpen = async () => {
-    const response = await fetch(`/api/salon-designs/designs`);
+    const response = await fetch(`/api/admin/salon/designs`);
     const data = await response.json();
     setMenus(data);
     setDesignModalOpen(true);
   };
 
   const handleDesignSave = async (rows) => {
-    await fetch(`/api/salon-designs/menus`, {
+    await fetch(`/api/admin/salon/menus`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(rows),
@@ -285,7 +285,7 @@ function Salon() {
     if (!confirm) return;
   
     try {
-      await axios.delete(`/api/admin-stylist/${stylistId}`);
+      await axios.delete(`/api/admin/stylist/${stylistId}`);
       setStylists((prev) => prev.filter((stylist) => stylist.stylistId !== stylistId));
     } catch (err) {
       console.error(err);

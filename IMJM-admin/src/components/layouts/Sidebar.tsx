@@ -4,19 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import logoImage from "../../assets/images/IMJM-logo.png";
 
 
-function Sidebar() {
+function Sidebar({ setIsAuthenticated }) {
     const location = useLocation();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/logout', {
+            await fetch('/api/admin/logout', {
                 method: 'POST',
                 credentials: 'include',
             });
-
-            navigate('/login');
-            console.log('로그아웃 성공');
+    
+            setIsAuthenticated(false);
+            navigate('/login', { replace: true });
         } catch (error) {
             console.error('로그아웃 실패:', error);
         }
@@ -30,7 +30,7 @@ function Sidebar() {
         { title: '채팅', path: '/Chat' },
         { title: '리뷰 관리', path: '/Review' },
         { title: '이벤트 관리', path: '/Event' },
-        { title: '로그아웃', path: '/logout' }
+        { title: '로그아웃', path: null }
     ];
 
     return (

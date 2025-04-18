@@ -1,9 +1,11 @@
-import { Container, Button, Typography, Box, Paper } from '@mui/material';
+import { Container, Button, Box } from '@mui/material';
+import GoogleIcon from '@mui/icons-material/Google';
+import AppleIcon from '@mui/icons-material/Apple';
+import logoImage from '../../assets/images/logo.png';
 
 const Login = () => {
 
     const handleGoogleLogin = () => {
-        // 실제 구글 로그인 URL로 리다이렉트
         window.location.href = 'http://localhost:8080/oauth2/authorization/google';
     };
 
@@ -16,44 +18,47 @@ const Login = () => {
             return;
         }
 
-        // 실제 애플 로그인 URL로 리다이렉트
         window.location.href = 'http://localhost:8080/oauth2/authorization/apple';
     };
 
     return (
-        <Container maxWidth="sm" sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-                <Typography variant="h5" gutterBottom>IMJM 로그인</Typography>
-
-                <Box sx={{ mt: 3 }}>
+        <Container maxWidth="xs" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+            {/* 중앙 로그인 콘텐츠 */}
+            <Box sx={{ textAlign: 'center', mt: 'auto', mb: 'auto' }}>
+                <Box>
+                    <img
+                        src={logoImage}
+                        alt="IMJM Logo"
+                        width="300"
+                        height="300"
+                    />
+                </Box>
+                <Box sx={{ mb: 3, color: '#aaa' }}>- Or continue with -</Box>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
                     <Button
-                        variant="contained"
-                        fullWidth
                         onClick={handleGoogleLogin}
                         sx={{
-                            mb: 2,
-                            bgcolor: '#4285F4',
-                            color: '#fff',
-                            '&:hover': { bgcolor: '#357ae8' }
+                            minWidth: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            border: '1px solid #ccc',
                         }}
                     >
-                        구글로 로그인
+                        <GoogleIcon fontSize="large" sx={{ color: '#4285F4' }} />
                     </Button>
-
                     <Button
-                        variant="contained"
-                        fullWidth
                         onClick={handleAppleLogin}
                         sx={{
-                            bgcolor: '#000000',
-                            color: '#fff',
-                            '&:hover': { bgcolor: '#333' }
+                            minWidth: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            border: '1px solid #ccc',
                         }}
                     >
-                        애플로 로그인
+                        <AppleIcon fontSize="large" sx={{ color: '#000' }} />
                     </Button>
                 </Box>
-            </Paper>
+            </Box>
         </Container>
     );
 };

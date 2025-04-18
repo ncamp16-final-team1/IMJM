@@ -9,7 +9,7 @@ export const useReservation = () => {
   const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
 
-  // 날짜 선택 핸들러
+
   const handleDateSelect = (
     date: Dayjs | null, 
     stylistSchedule: StylistSchedule | null,
@@ -32,7 +32,7 @@ export const useReservation = () => {
     }
   };
 
-  // 메뉴 선택 핸들러
+
   const handleMenuSelect = (
     salonId: string,
     menu: Menu | null, 

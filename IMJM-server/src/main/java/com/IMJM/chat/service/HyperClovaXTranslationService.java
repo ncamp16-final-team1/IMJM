@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.text.Normalizer;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +40,10 @@ public class HyperClovaXTranslationService implements TranslationService {
                 );
             }
 
-            return translatedText;
+            // ✅ 정규화 추가 (자소 분리 방지)
+            String normalizedText = Normalizer.normalize(translatedText, Normalizer.Form.NFC);
+
+            return normalizedText;
         } catch (Exception e) {
             throw new TranslationException(
                     "Failed to translate text: " + e.getMessage(),
