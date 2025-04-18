@@ -18,6 +18,7 @@ function AppRouter() {
     const isRegisterPage = window.location.pathname === '/admin/register';
 
     useEffect(() => {
+        
         const checkLogin = async () => {
             try {
                 const response = await fetch('/api/admin/check-login', {
@@ -28,12 +29,16 @@ function AppRouter() {
                     setIsAuthenticated(true);
                 } else {
                     setIsAuthenticated(false);
-                    navigate('/login');
+                    if (!isRegisterPage && window.location.pathname !== '/login') {
+                        navigate('/login');
+                    }
                 }
             } catch (error) {
                 console.error('로그인 상태 확인 중 오류:', error);
                 setIsAuthenticated(false);
-                navigate('/login');
+                if (!isRegisterPage && window.location.pathname !== '/login') {
+                    navigate('/login');
+                }
             }
         };
 

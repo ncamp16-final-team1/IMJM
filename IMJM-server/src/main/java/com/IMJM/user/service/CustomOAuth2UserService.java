@@ -48,34 +48,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .firstName(oAuth2ResponseDto.getFirstName())
                     .lastName(oAuth2ResponseDto.getLastName())
                     .email(oAuth2ResponseDto.getEmail())
+                    .termsAgreed(false)
                     .build();
 
             userRepository.save(newUsers);
 
-            UserResponseDto userResponseDto = UserResponseDto.builder()
-                    .id(id)
-                    .firstName(oAuth2ResponseDto.getFirstName())
-                    .lastName(oAuth2ResponseDto.getLastName())
-                    .email(oAuth2ResponseDto.getEmail())
-                    .termsAgreed(false)
-                    .build();
-
-            return new CustomOAuth2UserDto(userResponseDto);
+            return new CustomOAuth2UserDto(newUsers);
         }
         else {
             Users users = existData.get();
             users.updateEmail(users.getEmail());
             users.updateName(users.getFirstName(), users.getLastName());
 
-            UserResponseDto userResponseDto = UserResponseDto.builder()
-                    .id(users.getId())
-                    .userType(users.getUserType())
-                    .firstName(oAuth2ResponseDto.getFirstName())
-                    .lastName(oAuth2ResponseDto.getLastName())
-                    .termsAgreed(users.isTermsAgreed())
-                    .build();
-
-            return new CustomOAuth2UserDto(userResponseDto);
+            return new CustomOAuth2UserDto(users);
         }
     }
 }

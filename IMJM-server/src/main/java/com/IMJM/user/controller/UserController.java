@@ -1,38 +1,50 @@
 package com.IMJM.user.controller;
 
+import com.IMJM.common.entity.Users;
+import com.IMJM.jwt.JWTUtil;
+import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserDto;
+import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/user")
 public class UserController {
 
     private final UserService userService;
+    private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto,
+                                          @RequestPart(value = "profile", required = false) MultipartFile profile) {
 
-    @PostMapping("/api/user/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserDto dto) {
-        if(dto.getUserType().equals("MEMBER")) {
-            userService.completeRegistration(dto);
+        if(userDto.getUserType().equals("MEMBER")) {
+            userService.completeMemberRegistration(userDto ,profile);
         }
         return ResponseEntity.ok("회원가입 완료");
     }
 
-    @GetMapping("/api/user")
-    public String mainAPI() {
-        return "user route";
+    @PostMapping("/logout")
+    public void logout(HttpServletResponse response) {
+        userService.logout(response);
     }
 
-    @GetMapping("/api/my")
-    public String myAPI() {
-        return "my route";
+    @GetMapping("/check-login")
+    public ResponseEntity<?> checkLogin(HttpServletRequest request) {
+        return userService.checkLogin(request);
     }
+
 }

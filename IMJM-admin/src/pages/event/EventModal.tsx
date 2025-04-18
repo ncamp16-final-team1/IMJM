@@ -59,9 +59,9 @@ const EventModal: React.FC<EventModalProps> = ({ open, onClose, onSuccess, coupo
             };
     
             if (couponToEdit) {
-                await axios.put(`/api/coupon/${couponToEdit.id}`, data);
+                await axios.put(`/api/admin/coupon/${couponToEdit.id}`, data);
             } else {
-                await axios.post('/api/coupon/create', data);
+                await axios.post('/api/admin/coupon/create', data);
             }
 
             onSuccess();

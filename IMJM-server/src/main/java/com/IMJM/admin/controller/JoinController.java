@@ -20,21 +20,21 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/admin")
 public class JoinController {
 
     private final JoinService joinService;
     private final SalonPhotosService salonPhotosService;
     private final JWTUtil jwtUtil;
 
-    @PostMapping(value = "/admin/join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> joinProcess(@RequestPart SalonDto joinDTO,
                                          @RequestPart List<MultipartFile> photos) {
         joinService.joinProcess(joinDTO, photos);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/admin/check-login")
+    @GetMapping("/check-login")
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
         String token = null;
         Cookie[] cookies = request.getCookies();
@@ -61,7 +61,7 @@ public class JoinController {
         return ResponseEntity.ok(joinService.selectSalonById(salonDetails));
     }
 
-    @PostMapping("/admin/logout")
+    @PostMapping("/logout")
     public void logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("AdminToken", null);
         cookie.setMaxAge(0); // 즉시 만료

@@ -98,12 +98,12 @@ const StylistModal = ({ open, handleClose, stylist }) => {
             }
     
             if (isEditMode) {
-                await axios.put(`/api/admin-stylist/${stylist.stylistId}`, formData, {
+                await axios.put(`/api/admin/stylist/${stylist.stylistId}`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 alert("스타일리스트 정보가 수정되었습니다!");
             } else {
-                await axios.post("/api/admin-stylist/register", formData, {
+                await axios.post("/api/admin/stylist/register", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 alert("스타일리스트가 성공적으로 추가되었습니다!");
