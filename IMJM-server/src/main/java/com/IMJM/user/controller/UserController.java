@@ -1,13 +1,16 @@
 package com.IMJM.user.controller;
 
+import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserDto;
+import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +25,7 @@ public class UserController {
 
     private final UserService userService;
     private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto,
@@ -35,33 +39,12 @@ public class UserController {
 
     @PostMapping("/logout")
     public void logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("Authorization", null);
-        cookie.setMaxAge(0); // 즉시 만료
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-
-        response.addCookie(cookie);
-        System.out.println("logout success");
+        userService.logout(response);
     }
 
     @GetMapping("/check-login")
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
-        String token = null;
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("Authorization")) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (token == null || jwtUtil.isExpired(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"error\": \"Token expired or not provided\"}");
-        }
-        return ResponseEntity.ok().build();
+        return userService.checkLogin(request);
     }
+
 }

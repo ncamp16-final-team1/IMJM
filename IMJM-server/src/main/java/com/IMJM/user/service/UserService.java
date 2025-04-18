@@ -3,12 +3,18 @@ package com.IMJM.user.service;
 import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.Users;
+import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserDto;
 import com.IMJM.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,6 +34,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final JWTUtil jwtUtil;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -88,4 +95,23 @@ public class UserService {
             throw new RuntimeException("프로필 업로드 실패", e);
         }
     }
+
+    public void logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("Authorization", null);
+        cookie.setMaxAge(0); // 즉시 만료
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+
+        response.addCookie(cookie);
+    }
+
+    public ResponseEntity<?> checkLogin(HttpServletRequest request) {
+        String token = jwtUtil.resolveUserToken(request);
+        if (token == null || jwtUtil.isExpired(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Token expired or not provided\"}");
+        }
+        return ResponseEntity.ok().build();
+    }
+
 }
