@@ -2,10 +2,10 @@ import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
-function Layout() {
+function Layout({ setIsAuthenticated }) {
     return (
         <Box sx={{ display: 'flex' }}>
-            <Sidebar />
+            <Sidebar setIsAuthenticated={setIsAuthenticated} />
             <Box
                 component="main"
                 sx={{

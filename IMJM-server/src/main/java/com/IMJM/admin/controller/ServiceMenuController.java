@@ -16,7 +16,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/api/salon-designs")
+@RequestMapping("/api/admin/salon")
 public class ServiceMenuController {
 
     private final ServiceMenuService serviceMenuService;

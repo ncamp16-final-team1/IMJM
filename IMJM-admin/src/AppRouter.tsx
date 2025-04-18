@@ -15,14 +15,13 @@ function AppRouter() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (window.location.pathname === '/admin/register') {
-            return;
-        }
+    const isRegisterPage = window.location.pathname === '/admin/register';
 
+    useEffect(() => {
+        
         const checkLogin = async () => {
             try {
-                const response = await fetch('/api/check-login', {
+                const response = await fetch('/api/admin/check-login', {
                     credentials: 'include',
                 });
 
@@ -30,31 +29,36 @@ function AppRouter() {
                     setIsAuthenticated(true);
                 } else {
                     setIsAuthenticated(false);
-                    navigate('/login');
+                    if (!isRegisterPage && window.location.pathname !== '/login') {
+                        navigate('/login');
+                    }
                 }
             } catch (error) {
                 console.error('로그인 상태 확인 중 오류:', error);
                 setIsAuthenticated(false);
-                navigate('/login');
+                if (!isRegisterPage && window.location.pathname !== '/login') {
+                    navigate('/login');
+                }
             }
         };
 
         checkLogin();
     }, [navigate]);
 
-    if (isAuthenticated === null) {
+    if (!isRegisterPage && isAuthenticated === null) {
         return null;
     }
 
     return (
         <Routes>
             <Route path="/login" element={
-                <Login onLoginSuccess={() => setIsAuthenticated(true)} />
+                isAuthenticated ? <Navigate to="/" replace /> : <Login onLoginSuccess={() => setIsAuthenticated(true)} />
             } />
-            <Route path="/admin/register" element={<Register />} />
-
+            <Route path="/admin/register" element={
+                isAuthenticated ? <Navigate to="/" replace /> : <Register />
+            } />
             <Route path="/" element={
-                isAuthenticated ? <Layout /> : <Navigate to="/login" />
+                isAuthenticated ? <Layout setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />
             }>
                 <Route index element={<Dashboard />} />
                 <Route path="Reservation" element={<Reservation />} />

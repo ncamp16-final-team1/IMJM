@@ -41,7 +41,7 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         response.addCookie(createCookie("Authorization", token));
 
         if (!customUserDetails.isTermsAgreed()) {
-            response.sendRedirect("http://localhost:3000/user/register");
+            response.sendRedirect("http://localhost:3000/user/language");
         } else {
             response.sendRedirect("http://localhost:3000/");
         }

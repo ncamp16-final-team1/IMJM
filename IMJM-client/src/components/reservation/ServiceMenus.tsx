@@ -1,4 +1,4 @@
-// src/components/reservation/ServiceMenus.tsx
+
 import { Box, Typography, Button, Divider } from '@mui/material';
 import { ServiceMenusSectionProps } from '../../type/reservation/reservation';
 
@@ -45,7 +45,7 @@ const ServiceMenus = ({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             {serviceMenus.map((menu) => (
               <Box
-                key={menu.id || `menu-${Math.random()}`} // id가 없을 경우 대체 키 제공
+                key={menu.id || `menu-${Math.random()}`} 
                 sx={{
                   p: 2,
                   borderRadius: 1,

@@ -83,7 +83,7 @@ public class Users {
     }
 
     public void updateDetailInfo(String language, String gender, String nickname, String profile,
-                                 LocalDate birthday, String region, boolean isNotification) {
+                                 LocalDate birthday, String region, boolean isNotification, boolean termsAgreed) {
         this.language = language;
         this.gender = gender;
         this.nickname = nickname;
@@ -91,6 +91,6 @@ public class Users {
         this.birthday = birthday;
         this.region = region;
         this.isNotification = isNotification;
-        this.termsAgreed = true; // 가입 완료로 간주
+        this.termsAgreed = termsAgreed;
     }
 }

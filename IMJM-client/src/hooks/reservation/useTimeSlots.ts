@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dayjs } from 'dayjs';
 import axios from 'axios';
@@ -6,7 +7,7 @@ import dayjs from 'dayjs';
 // 메뉴 초기화 함수 콜백을 파라미터로 추가
 export const useTimeSlots = (
   stylistId: string | undefined,
-  resetMenu: () => void // 메뉴 초기화 콜백 추가
+  resetMenu: () => void 
 ) => {
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
@@ -14,7 +15,7 @@ export const useTimeSlots = (
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // 시간대 불러오기 함수
+
   const fetchAvailableTimes = async (date: Dayjs | null) => {
     if (!stylistId || !date) return;
     setIsLoading(true);
@@ -26,7 +27,6 @@ export const useTimeSlots = (
           date: date.format('YYYY-MM-DD')
         }
       });
-      console.log("============================첫번째" + res.data); // 응답 데이터 확인
       setAvailableTimes(res.data.availableTimes || []);
       setBookedTimes(res.data.bookedTimes || []);
     
@@ -71,11 +71,11 @@ export const useTimeSlots = (
     if (isTimeSlotAvailable(time, isSelectedDateHoliday, selectedDate)) {
       if (selectedTime === time) {
         setSelectedTime(null);
-        resetMenu(); // ✅ 메뉴 초기화
+        resetMenu(); 
         onTimeSelect();
       } else {
         setSelectedTime(time);
-        resetMenu(); // ✅ 메뉴 초기화
+        resetMenu(); 
         onTimeSelect();
       }
     }

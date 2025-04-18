@@ -1,4 +1,4 @@
-// src/components/reservation/ServiceTypes.tsx
+
 import { Box, Button, Typography, Divider } from '@mui/material';
 import {
   KeyboardArrowLeft as KeyboardArrowLeftIcon,
@@ -40,7 +40,6 @@ const ServiceTypes = ({
         </Box>
       ) : (
         <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          {/* 왼쪽 화살표 버튼 */}
           {showLeftArrow && (
             <Box
               sx={{
@@ -73,7 +72,7 @@ const ServiceTypes = ({
             </Box>
           )}
           
-          {/* 스크롤 컨테이너 */}
+
           <Box
             ref={sliderRef}
             sx={{
@@ -121,7 +120,7 @@ const ServiceTypes = ({
                       backgroundColor: selectedType === type ? '#FDE4D0' : '#FEE5EC',
                       borderColor: '#E91E63',
                     },
-                    pointerEvents: 'auto', // 항상 클릭 가능하도록 설정
+                    pointerEvents: 'auto', 
                   }}
                 >
                   {type}
@@ -134,7 +133,7 @@ const ServiceTypes = ({
             )}
           </Box>
           
-          {/* 오른쪽 화살표 버튼 */}
+
           {showRightArrow && (
             <Box
               sx={{

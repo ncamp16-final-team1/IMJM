@@ -1,8 +1,8 @@
-// src/components/reservation/TimeSlots.tsx
+
 import { Box, Typography } from '@mui/material';
 import { TimeSlotProps } from '../../type/reservation/reservation'; 
 
-// TimeSlot 컴포넌트 업데이트
+
 const TimeSlot = ({
     allTimeSlots,
     isAM,
@@ -13,8 +13,7 @@ const TimeSlot = ({
     isSelectedDateHoliday,
     selectedDate
   }: TimeSlotProps) => {
-  
-  
+    
   if (allTimeSlots.length === 0) {
     return null;
   }
@@ -34,17 +33,17 @@ const TimeSlot = ({
         {isAM ? 'A.M' : 'P.M'}
       </Typography>
 
-      {/* 중앙 정렬을 위한 컨테이너 */}
+
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'center'
       }}>
-        {/* 한 줄에 4개 항목을 표시하기 위한 고정 너비 컨테이너 */}
+
         <Box sx={{ 
           display: 'flex',
           flexWrap: 'wrap',
           gap: 2,
-          width: { xs: '450px', sm: '480px' }, // 모바일과 태블릿 너비 조정
+          width: { xs: '450px', sm: '480px' }, 
           justifyContent: 'flex-start'
         }}>
           {allTimeSlots.map((time) => {

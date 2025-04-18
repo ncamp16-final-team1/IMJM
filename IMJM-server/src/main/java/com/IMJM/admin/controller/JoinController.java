@@ -4,9 +4,12 @@ import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.admin.dto.SalonDto;
 import com.IMJM.admin.service.JoinService;
 import com.IMJM.admin.service.SalonPhotosService;
+import com.IMJM.jwt.JWTUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,19 +19,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequiredArgsConstructor
+@RequestMapping("/api/admin")
 public class JoinController {
 
     private final JoinService joinService;
     private final SalonPhotosService salonPhotosService;
+    private final JWTUtil jwtUtil;
 
-    public JoinController(JoinService joinService,
-                          SalonPhotosService salonPhotosService) {
-        this.joinService = joinService;
-        this.salonPhotosService = salonPhotosService;
-    }
-
-    @PostMapping(value = "/admin/join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> joinProcess(@RequestPart SalonDto joinDTO,
                                          @RequestPart List<MultipartFile> photos) {
         joinService.joinProcess(joinDTO, photos);
@@ -37,6 +36,22 @@ public class JoinController {
 
     @GetMapping("/check-login")
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("AdminToken")) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || jwtUtil.isExpired(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Token expired or not provided\"}");
+        }
         return ResponseEntity.ok().build();
     }
 

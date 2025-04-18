@@ -1,4 +1,3 @@
-// src/hooks/useReservation.ts
 import { useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Menu, ReservationInfo, StylistSchedule } from '../../type/reservation/reservation';
@@ -15,7 +14,7 @@ export const useReservation = (stylistId: string | undefined) => {
     selectedMenu: null
   });
 
-  // 날짜 선택 핸들러
+
   const handleDateSelect = (
     date: Dayjs | null, 
     stylistSchedule: StylistSchedule | null,
@@ -26,23 +25,22 @@ export const useReservation = (stylistId: string | undefined) => {
   ) => {
     if (!date || !stylistSchedule) return;
 
-    // 날짜 선택 시 초기화
+ 
     resetTimeSelection();
     resetServiceSelection();
     
     setSelectedDate(date);
-    
-    // 휴무일인지 확인
+
     const holiday = isHoliday(date, stylistSchedule);
     setIsSelectedDateHoliday(holiday);
     
-    // 휴무일이 아닌 경우에만 시간대 불러오기
+
     if (!holiday) {
       fetchTimes(date);
     }
   };
 
-  // 메뉴 선택 핸들러
+
   const handleMenuSelect = (
     menu: Menu,
     stylistId: number | null,
@@ -66,7 +64,7 @@ export const useReservation = (stylistId: string | undefined) => {
       }
     };
 
-     // 콘솔에 로그 출력
+
     console.log('업데이트된 예약 정보:', updatedReservationInfo);
     console.log('메뉴 정보가 담겼는지 확인:', menu);
     

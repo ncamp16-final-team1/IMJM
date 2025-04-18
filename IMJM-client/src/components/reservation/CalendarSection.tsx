@@ -1,4 +1,4 @@
-// src/components/reservation/CalendarSection.tsx
+
 import { Box, Typography, Divider } from '@mui/material';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -93,7 +93,6 @@ const CalendarSection = ({
             '& .MuiButtonBase-root.MuiPickersDay-root.Mui-selected': {
               backgroundColor: '#F06292 !important',
             },
-            // 비활성화된 날짜 스타일
             '& .Mui-disabled': {
               opacity: 0.5,
               backgroundColor: 'rgba(0, 0, 0, 0.05)'
