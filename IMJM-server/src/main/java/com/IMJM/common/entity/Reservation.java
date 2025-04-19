@@ -52,4 +52,9 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_menu_id", nullable = false)
     private ServiceMenu serviceMenu;
+
+    public void updateReservation(String reservationDate, String reservationTime) {
+        this.reservationDate = LocalDate.parse(reservationDate);
+        this.reservationTime = LocalTime.parse(reservationTime);
+    }
 }

@@ -1,59 +1,226 @@
-import React from 'react';
-import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Avatar, Button } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import {
+    Container,
+    Typography,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Avatar,
+    Stack,
+    CircularProgress,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    IconButton,
+} from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
 
-const reservations = [
-  { name: '@venus.sys', designer: '원터 원장', menu: '앞머리 컷트', amount: '12,000원', time: '09:00', status: '예약 취소' },
-  { name: 'Robert Bacins', designer: '뷔 실장', menu: '디지털 펌', amount: '87,000원', time: '09:00', status: '완료' },
-  { name: 'John Carilo', designer: '원영 디자이너', menu: '남성 컷트', amount: '20,000원', time: '10:30', status: '변경' },
-  { name: 'Adriene Watson', designer: '혜원 디자이너', menu: '앞머리 펌', amount: '매장에서 결제', time: '10:30', status: '변경' },
-  { name: 'Jhon Deo', designer: '원터 원장', menu: '베이직 염색', amount: '110,000원', time: '12:00', status: '변경' },
-  { name: 'Mark Ruffalo', designer: '뷔 실장', menu: '여성 컷트', amount: '30,000원', time: '13:30', status: '변경' },
-  { name: 'Bethany Jackson', designer: '원터 원장', menu: '볼륨 매직', amount: '80,000원', time: '14:00', status: '변경' },
-  { name: 'Christine Huston', designer: '원영 디자이너', menu: '디자인 펌', amount: '170,000원', time: '15:00', status: '변경' },
-  { name: 'Anne Jacob', designer: '유진 디자이너', menu: '여성 컷트', amount: '30,000원', time: '15:30', status: '변경' },
-];
+interface AdminReservationDto {
+    id: number;
+    reservationId: number;
+    userId: string;
+    userName: string;
+    userProfile: string;
+    stylistName: string;
+    serviceName: string;
+    paymentPrice: number;
+    reservationDate: string;
+    reservationTime: string;
+}
 
 const Reservation = () => {
-  return (
-    <Container>
-      <Typography variant="h4" gutterBottom>
-        예약 현황
-      </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>이름</TableCell>
-              <TableCell>디자이너</TableCell>
-              <TableCell>메뉴</TableCell>
-              <TableCell>결제금액</TableCell>
-              <TableCell>예약시간</TableCell>
-              <TableCell>상태</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reservations.map((reservation, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Avatar src={`https://i.pravatar.cc/150?img=${index + 1}`} />
-                  {reservation.name}
-                </TableCell>
-                <TableCell>{reservation.designer}</TableCell>
-                <TableCell>{reservation.menu}</TableCell>
-                <TableCell>{reservation.amount}</TableCell>
-                <TableCell>{reservation.time}</TableCell>
-                <TableCell>
-                  <Button variant="contained" color={reservation.status === '완료' ? 'success' : 'error'}>
-                    {reservation.status}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Container>
-  );
+    const [reservations, setReservations] = useState<AdminReservationDto[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+
+    const [open, setOpen] = useState(false);
+    const [selectedReservation, setSelectedReservation] = useState<AdminReservationDto | null>(null);
+    const [newDate, setNewDate] = useState<Dayjs | null>(null);
+    const [newTime, setNewTime] = useState<Dayjs | null>(null);
+
+    const fetchReservations = (date: string) => {
+        setLoading(true);
+        axios
+            .get(`/api/admin/reservation?date=${date}`)
+            .then((res) => setReservations(res.data))
+            .catch((err) => console.error('예약 데이터 로딩 실패:', err))
+            .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchReservations(selectedDate.format('YYYY-MM-DD'));
+    }, [selectedDate]);
+
+    const handleTodayClick = () => {
+        setSelectedDate(dayjs());
+    };
+
+    const handleOpenModal = (Reservation: AdminReservationDto) => {
+        setSelectedReservation(Reservation);
+        setNewDate(dayjs(Reservation.reservationDate));
+        const timeParts = Reservation.reservationTime.split(":");
+        const time = dayjs()
+            .hour(parseInt(timeParts[0]))
+            .minute(parseInt(timeParts[1]));
+        
+        setNewTime(time);
+        setOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setOpen(false);
+        setSelectedReservation(null);
+    };
+
+    const handleUpdateReservation = () => {
+        if (!selectedReservation || !newDate || !newTime) return;
+
+        const formattedDate = newDate.format("YYYY-MM-DD");
+        const formattedTime = newTime.format("HH:mm:ss");
+
+        axios
+            .put(`/api/admin/reservation/${selectedReservation.id}`, {
+                reservationDate: formattedDate,
+                reservationTime: formattedTime,
+            })
+            .then(() => {
+                setSelectedDate(newDate);
+                fetchReservations(newDate.format("YYYY-MM-DD"));
+                handleCloseModal();
+            })
+            .catch((err) => console.error("예약 변경 실패", err));
+    };
+
+    return (
+        <Container>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mt={3}>
+                <Typography variant="h5" fontWeight="bold">
+                    예약 현황
+                </Typography>
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <IconButton onClick={() => setSelectedDate(prev => prev.subtract(1, 'day'))}>
+                        <ChevronLeft />
+                    </IconButton>
+
+                    <DatePicker
+                        label="날짜 선택"
+                        value={selectedDate}
+                        onChange={(newValue) => newValue && setSelectedDate(newValue)}
+                        format="YYYY-MM-DD"
+                        slotProps={{ textField: { size: 'small' } }}
+                    />
+
+                    <IconButton onClick={() => setSelectedDate(prev => prev.add(1, 'day'))}>
+                        <ChevronRight />
+                    </IconButton>
+
+                    <Button variant="outlined" size="small" onClick={handleTodayClick}>
+                        오늘
+                    </Button>
+                </Stack>
+            </Stack>
+
+            <Typography variant="subtitle1" align="right" color="gray" gutterBottom mt={1}>
+                선택된 날짜: {selectedDate.format('YYYY-MM-DD')}
+            </Typography>
+
+            {loading ? (
+                <Stack alignItems="center" mt={5}>
+                    <CircularProgress />
+                </Stack>
+            ) : (
+                <TableContainer component={Paper} elevation={0} sx={{ height: 700 }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>예약자</TableCell>
+                                <TableCell align="center">디자이너</TableCell>
+                                <TableCell align="center">메뉴</TableCell>
+                                <TableCell align="center">결제금액</TableCell>
+                                <TableCell align="center">예약시간</TableCell>
+                                <TableCell align="center">상태</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {reservations.map((res) => {
+                                const now = dayjs();
+                                const resDateTime = dayjs(`${res.reservationDate} ${res.reservationTime}`);
+                                const isFuture = resDateTime.isAfter(now);
+
+                                return (
+                                    <TableRow key={res.id}>
+                                        <TableCell align="center">
+                                            <Stack direction="row" alignItems="center" spacing={1}>
+                                                <Avatar src={res.userProfile} alt={res.userName} />
+                                                <span>{res.userName}</span>
+                                            </Stack>
+                                        </TableCell>
+                                        <TableCell align="center">{res.stylistName}</TableCell>
+                                        <TableCell align="center">{res.serviceName}</TableCell>
+                                        <TableCell align="center">{res.paymentPrice.toLocaleString()}원</TableCell>
+                                        <TableCell align="center">{resDateTime.format("HH:mm")}</TableCell>
+                                        <TableCell align="center">
+                                            {isFuture ? (
+                                                <Button variant="outlined" size="small" onClick={() => handleOpenModal(res)}>
+                                                    일정 변경
+                                                </Button>
+                                            ) : (
+                                                <Button variant="outlined" size="small" disabled>
+                                                    완료
+                                                </Button>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+
+            <Dialog open={open} onClose={handleCloseModal}>
+                <DialogTitle>예약 변경</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <DatePicker
+                            label="날짜"
+                            value={newDate}
+                            onChange={(newValue) => newValue && setNewDate(newValue)}
+                            format="YYYY-MM-DD"
+                        />
+                        <TextField
+                            label="예약 시간"
+                            type="time"
+                            value={newTime?.format("HH:mm") ?? ""}
+                            onChange={(e) => setNewTime(dayjs(e.target.value, "HH:mm"))}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            inputProps={{
+                                step: 300, // 5분 단위
+                            }}
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseModal}>취소</Button>
+                    <Button variant="contained" color="secondary" onClick={handleUpdateReservation}>
+                        변경 완료
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Container>
+    );
 };
 
 export default Reservation;

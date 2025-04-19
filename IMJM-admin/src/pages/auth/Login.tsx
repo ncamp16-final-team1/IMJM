@@ -53,7 +53,7 @@ function Login({ onLoginSuccess }: LoginProps) {
     };
 
     return (
-        <Container component="main" maxWidth="sm" sx={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+        <Container component="main" maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
             <Paper elevation={0} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <Box>
                     <img
