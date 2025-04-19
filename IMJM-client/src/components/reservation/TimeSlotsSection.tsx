@@ -1,4 +1,4 @@
-// src/components/reservation/TimeSlotsSection.tsx
+
 import { Box, Typography, Divider } from '@mui/material';
 import TimeSlot from './TimeSlots';
 import { TimeSlotsSectionProps } from '../../type/reservation/reservation';
@@ -39,7 +39,7 @@ const TimeSlotsSection = ({
           </Typography>
         ) : allTimeSlots.length > 0 ? (  
           <>
-            {/* 오전 시간대 */}
+ 
             {allTimeSlots.filter(time => isAM(time)).length > 0 && (
               <TimeSlot
                 allTimeSlots={allTimeSlots.filter(time => isAM(time))}
@@ -53,7 +53,7 @@ const TimeSlotsSection = ({
               />
             )}
             
-            {/* 오후 시간대 */}
+
             {allTimeSlots.filter(time => !isAM(time)).length > 0 && (
               <TimeSlot
                 allTimeSlots={allTimeSlots.filter(time => !isAM(time))}

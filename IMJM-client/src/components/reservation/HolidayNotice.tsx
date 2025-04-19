@@ -1,4 +1,4 @@
-// src/components/reservation/HolidayNotice.tsx
+
 import { Box, Typography } from '@mui/material';
 import { HolidayNoticeProps } from '../../type/reservation/reservation';
 

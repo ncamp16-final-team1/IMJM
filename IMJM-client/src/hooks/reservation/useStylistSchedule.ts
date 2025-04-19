@@ -13,12 +13,10 @@ export const useStylistSchedule = (stylistId: string | undefined) => {
   useEffect(() => {
     if (!stylistId) return;
     
-    // 스타일리스트 정보 불러오기
+
     getStylistSchedule(stylistId)
       .then((data) => {
         setStylistSchedule(data);
-        
-      
         const today = dayjs();
         const holiday = isHoliday(today, data);
         setIsSelectedDateHoliday(holiday);

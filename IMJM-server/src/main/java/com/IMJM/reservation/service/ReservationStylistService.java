@@ -7,8 +7,8 @@ import com.IMJM.common.entity.ReservationCoupon;
 import com.IMJM.common.entity.ServiceMenu;
 import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
-import com.IMJM.reservation.repository.CouponRepository;
-import com.IMJM.reservation.repository.ReservationCouponRepository;
+import com.IMJM.admin.repository.ReservationCouponRepository;
+import com.IMJM.admin.repository.CouponRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -106,7 +106,7 @@ public class ReservationStylistService {
     // 쿠폰 정보를 가져오는 메소드
     public List<SalonCouponDto> getCoupons(String salonId, int totalAmount, String userId) {
         log.info("쿠폰 조회 파라미터 - salonId: {}, totalAmount: {}, userId: {}", salonId, totalAmount, userId);
-        List<Coupon> coupons = couponRepository.findBySalon_id(salonId);
+        List<Coupon> coupons = couponRepository.findBySalonId(salonId);
         log.info("조회된 쿠폰 개수: {}", coupons.size());
 
         List<ReservationCoupon> usedCoupons = reservationCouponRepository
