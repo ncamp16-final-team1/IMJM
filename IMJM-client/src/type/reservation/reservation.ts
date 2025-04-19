@@ -21,7 +21,9 @@ export interface Menu {
 }
 
 export interface ReservationInfo {
+  salonId: string;
   stylistId: number | null;
+  stylistName: string;
   selectedDate: string;
   selectedTime: string;
   selectedType: string;
@@ -32,7 +34,6 @@ export interface ReservationInfo {
     price: number;
   } | null;
 }
-
 
 export interface TimeSlotProps {
     allTimeSlots: string[];
@@ -59,6 +60,7 @@ export interface ServiceMenuProps {
   isMenuLoading: boolean;
   selectedMenuName: string | null;
   handleMenuSelect: (menu: Menu) => void;
+  sanlonId: string;
 }
 
 export interface CalendarSectionProps {
@@ -74,7 +76,7 @@ export interface ProfileSectionProps {
 
 export interface TimeSlotsSectionProps {
     isSelectedDateHoliday: boolean;
-    selectedDate: Dayjs | null; // 새로 추가
+    selectedDate: Dayjs | null; 
     isLoading: boolean;
     allTimeSlots: string[];
     selectedTime: string | null;
@@ -105,7 +107,12 @@ export interface ServiceMenusSectionProps {
   isMenuLoading: boolean;
   serviceMenus: Menu[];
   selectedMenuName: string | null;
-  handleMenuSelect: (menu: Menu) => void;
+  handleMenuSelect: (menu: Menu | null) => void; 
+  selectedMenu: Menu | null;  
+  stylistName: string;
+  selectedDate: string;
+  selectedTime: string;
+
 }
 
 export interface HolidayNoticeProps {
