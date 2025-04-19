@@ -1,4 +1,4 @@
-package com.IMJM.admin.repository;
+package com.IMJM.reservation.repository;
 
 import com.IMJM.common.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;

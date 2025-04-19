@@ -40,6 +40,7 @@ public class AdminStylistController {
     public ResponseEntity<?> updateStylist(@PathVariable Long id,
                                            @RequestPart("adminStylistDto") AdminStylistDto adminStylistDto,
                                            @RequestPart(value = "profile", required = false) MultipartFile profile){
+
         adminStylistService.updateStylist(id, adminStylistDto, profile);
         return ResponseEntity.ok().build();
     }
