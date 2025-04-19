@@ -1,6 +1,7 @@
 package com.IMJM.reservation.controller;
 
 import com.IMJM.reservation.dto.ReservationServiceMenuDto;
+import com.IMJM.reservation.dto.SalonCouponDto;
 import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
 import com.IMJM.reservation.dto.ReservationStylistDto;
 import com.IMJM.reservation.service.ReservationStylistService;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/hairsalon")
+@RequestMapping("/api/salon")
 @RequiredArgsConstructor
 public class ReservationController {
 
@@ -31,6 +32,7 @@ public class ReservationController {
                 : ResponseEntity.ok(stylists);
     }
 
+    // 예약가능한
     @GetMapping("/reservation/{stylistId}")
     public ResponseEntity<?> getStylistDetailAndHoliday(@PathVariable Long stylistId) {
         try {
@@ -61,5 +63,27 @@ public class ReservationController {
     public ResponseEntity<?> getServiceMenu(@PathVariable String salonId) {
         List<ReservationServiceMenuDto> menus = reservationStylistService.getServiceMenusBySalonId(salonId);
         return ResponseEntity.ok(menus);
+    }
+
+    // 쿠폰 조회
+    @GetMapping("/reservation/coupons")
+    public ResponseEntity<List<SalonCouponDto>> getCoupons(
+            @RequestParam String salonId,
+            @RequestParam String totalAmount
+//      @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+    ) {
+//    String userId = customOAuth2UserDto.getId();
+        String userId = "user001";
+        try {
+            int totalAmountInt = Integer.parseInt(totalAmount);
+
+            List<SalonCouponDto> coupons = reservationStylistService.getCoupons(salonId, totalAmountInt, userId);
+
+            return ResponseEntity.ok(coupons);
+
+        } catch (NumberFormatException e) {
+
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

@@ -41,10 +41,9 @@ export const useServiceTypes = () => {
     
     setIsMenuLoading(true);
     try {
-      const response = await axios.get(`/api/hairsalon/reservations/service-menus/${salonId}`);
+      const response = await axios.get(`/api/salon/reservations/service-menus/${salonId}`);
       
       if (response.data && Array.isArray(response.data)) {
-   
         const types = [...new Set(response.data.map(menu => menu.serviceType))];
         
         setServiceTypes(types);

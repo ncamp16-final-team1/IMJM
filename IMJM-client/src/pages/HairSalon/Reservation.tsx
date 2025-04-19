@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useEffect } from 'react'; 
+import { useEffect, useState } from 'react'; 
 import { Container, Paper, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -16,13 +16,16 @@ import ServiceMenus from '../../components/reservation/ServiceMenus';
 import { useStylistSchedule } from '../../hooks/reservation/useStylistSchedule';
 import { useTimeSlots } from '../../hooks/reservation/useTimeSlots';
 import { useServiceTypes } from '../../hooks/reservation/useServiceTypes';
-import { useReservation } from '../../hooks/reservation/useReservation';
+import { useReservation } from '../../hooks/reservation/useDispatch';
 
 // 유틸리티 임포트
 import { isHoliday, isAM } from '../../utils/reservation/dateUtils';
 
 const Reservation = () => {
-  const { stylistId } = useParams<{ stylistId: string }>();
+  const { stylistId } = useParams<{ stylistId: string; salonId: string }>();
+  
+  // 선택된 메뉴 로컬 상태 관리
+  const [selectedMenuObj, setSelectedMenuObj] = useState(null);
   
   // 스타일리스트 정보 관련 훅
   const { 
@@ -71,8 +74,8 @@ const Reservation = () => {
     selectedDate,
     reservationInfo,
     handleDateSelect: baseHandleDateSelect,
-    handleMenuSelect: baseHandleMenuSelect
-  } = useReservation(stylistId);
+    handleMenuSelect: baseHandleMenuSelect,
+  } = useReservation();
 
   // 메뉴 초기화 함수
   const resetMenu = () => {
@@ -81,6 +84,7 @@ const Reservation = () => {
     setSelectedType(null);
     setServiceMenus([]);
     setSelectedMenuName(null);
+    setSelectedMenuObj(null); 
   };
 
   // 시간대가 예약 가능한지 확인하는 함수
@@ -121,6 +125,7 @@ const Reservation = () => {
       setSelectedType(null);
       setServiceMenus([]);
       setSelectedMenuName(null);
+      setSelectedMenuObj(null); // 메뉴 객체 초기화
     };
 
     baseHandleDateSelect(
@@ -135,15 +140,36 @@ const Reservation = () => {
 
   // 메뉴 선택 핸들러
   const handleMenuSelect = (menu: any) => {
+    if (menu === null) {
+      setSelectedMenuName(null);
+      setSelectedMenuObj(null); // 메뉴 객체 초기화
+    } else {
+      setSelectedMenuName(menu.serviceName);
+      setSelectedMenuObj(menu); // 선택된 메뉴 객체 저장
+    }
+
     baseHandleMenuSelect(
+      stylistSchedule?.salonId || '',
       menu,
       stylistSchedule?.stylistId || null,
+      stylistSchedule?.name || '',
       selectedDate,
       selectedTime,
       selectedType,
       setSelectedMenuName
     );
   };
+
+  // 초기 날짜 설정 및 가용 시간대 불러오기
+  useEffect(() => {
+    if (stylistSchedule && !selectedDate) {
+      // 기본 날짜로 오늘 설정
+      handleDateSelect(dayjs());
+    } else if (stylistSchedule && selectedDate) {
+      // 이미 날짜가 선택된 경우, 해당 날짜의 가용 시간대 불러오기
+      fetchAvailableTimes(selectedDate);
+    }
+  }, [stylistSchedule]);
 
   useEffect(() => {
     if (selectedDate && stylistSchedule) {
@@ -201,13 +227,17 @@ const Reservation = () => {
         onArrowClick={handleArrowClick}
       />
 
-      {/* 서비스 메뉴 선택 섹션 */}
+      {/* 서비스 메뉴 선택 섹션 - 필요한 모든 속성 전달 */}
       <ServiceMenus
         selectedType={selectedType}
         isMenuLoading={isMenuLoading}
         serviceMenus={serviceMenus}
         selectedMenuName={selectedMenuName}
         handleMenuSelect={handleMenuSelect}
+        selectedMenu={selectedMenuObj} 
+        stylistName={stylistSchedule.name} 
+        selectedDate={selectedDate ? selectedDate.format('YYYY-MM-DD') : ''} 
+        selectedTime={selectedTime || ''} 
       />
     </Container>
   );
