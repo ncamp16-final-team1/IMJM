@@ -1,5 +1,6 @@
 package com.IMJM.common.entity;
 
+import com.IMJM.admin.dto.CouponDto;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -43,4 +44,14 @@ public class Coupon {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    public void updateCoupon(CouponDto couponDto){
+        this.name = couponDto.getName();
+        this.discountType = couponDto.getDiscountType();
+        this.discountValue = couponDto.getDiscountValue();
+        this.minimumPurchase = couponDto.getMinimumPurchase();
+        this.startDate = couponDto.getStartDate().atStartOfDay();
+        this.expiryDate = couponDto.getExpiryDate().atStartOfDay();
+        this.isActive = couponDto.getIsActive();
+    }
 }

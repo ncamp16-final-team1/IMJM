@@ -40,7 +40,7 @@ const Register: React.FC = () => {
     const loadScripts = () => {
       let postcodeLoaded = false;
       let kakaoScriptAppended = false;
-  
+
       const checkAllReady = () => {
         if (postcodeLoaded && kakaoScriptAppended) {
           if ((window as any).kakao && (window as any).kakao.maps) {
@@ -69,9 +69,17 @@ const Register: React.FC = () => {
   
       document.body.appendChild(postcodeScript);
       document.body.appendChild(kakaoScript);
+
+      
     };
   
     loadScripts();
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#FDF6F3';
+
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
   }, []);
 
   const handleAddressSearch = () => {
@@ -194,8 +202,8 @@ const Register: React.FC = () => {
   };
 
   return (
-    <Container fixed sx={{ width: 1280, mt: 0, bgcolor: '#FDF6F3', minHeight: '100vh', py: 4 }} maxWidth="lg">
-      <Paper elevation={0} sx={{ p: 0, display: 'flex', gap: 6, bgcolor: '#fdf5f2' }}>
+    <Container fixed sx={{ width: 1280, mt: 0, bgcolor: '#FDF6F3', height: 803, py: 4 }} maxWidth="lg">
+      <Paper elevation={0} sx={{ p: 0, display: 'flex', gap: 6, bgcolor: '#FDF6F3' }}>
         <Box>
           <img
             src={logoImage}

@@ -1,5 +1,6 @@
 package com.IMJM.jwt;
 
+import com.IMJM.common.entity.Users;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserResponseDto;
 import jakarta.servlet.FilterChain;
@@ -28,6 +29,11 @@ public class UserJWTFilter extends OncePerRequestFilter {
         String authorization = null;
 
         String requestUri = request.getRequestURI();
+
+        if (requestUri.startsWith("/admin") || requestUri.startsWith("/api/admin")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
 
@@ -65,7 +71,12 @@ public class UserJWTFilter extends OncePerRequestFilter {
         userDto.setId(username);
         userDto.setUserType(role);
 
-        CustomOAuth2UserDto customOAuth2UserDto = new CustomOAuth2UserDto(userDto);
+        Users user = Users.builder()
+                .id(username)
+                .userType(role)
+                .build();
+
+        CustomOAuth2UserDto customOAuth2UserDto = new CustomOAuth2UserDto(user);
 
         Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2UserDto, null, customOAuth2UserDto.getAuthorities());
 

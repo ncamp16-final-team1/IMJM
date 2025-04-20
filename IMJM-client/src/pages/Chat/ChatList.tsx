@@ -8,20 +8,12 @@ import {
     Avatar,
     Typography,
     Divider,
-    Box
+    Box,
+    CircularProgress
 } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import styles from './ChatList.module.css';
-
-// 채팅방 타입 정의
-interface ChatRoom {
-    id: number;
-    salonId: string;
-    salonName: string;
-    lastMessage: string;
-    lastMessageTime: string;
-    unreadCount: number;
-}
+import ChatService, { ChatRoom } from '../../services/chat/ChatService';
 
 const ChatList: React.FC = () => {
     const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -29,46 +21,12 @@ const ChatList: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // 채팅방 목록을 가져오는 API 호출 대신 임시 데이터
         const fetchChatRooms = async () => {
             try {
-                // 임시 데이터
-                const mockChatRooms: ChatRoom[] = [
-                    {
-                        id: 1,
-                        salonId: 'salonA',
-                        salonName: 'Salon A',
-                        lastMessage: '안녕하세요! 예약 확인해 드렸습니다.',
-                        lastMessageTime: '10:23',
-                        unreadCount: 2
-                    },
-                    {
-                        id: 2,
-                        salonId: 'salonB',
-                        salonName: 'Salon B',
-                        lastMessage: 'We will be expecting you tomorrow.',
-                        lastMessageTime: '어제',
-                        unreadCount: 0
-                    },
-                    {
-                        id: 3,
-                        salonId: 'salonC',
-                        salonName: 'Salon C',
-                        lastMessage: 'How about 3pm?',
-                        lastMessageTime: '어제',
-                        unreadCount: 0
-                    },
-                    {
-                        id: 4,
-                        salonId: 'salonD',
-                        salonName: 'Salon D',
-                        lastMessage: '감사합니다! 내일 뵙겠습니다.',
-                        lastMessageTime: '5월 20일',
-                        unreadCount: 0
-                    },
-                ];
-
-                setChatRooms(mockChatRooms);
+                // 현재 로그인한 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
+                const userId = 'user2'; // 테스트용 사용자 ID
+                const rooms = await ChatService.getUserChatRooms(userId);
+                setChatRooms(rooms);
                 setLoading(false);
             } catch (error) {
                 console.error('채팅방 목록을 불러오는데 실패했습니다:', error);
@@ -84,7 +42,12 @@ const ChatList: React.FC = () => {
     };
 
     if (loading) {
-        return <div className={styles.loading}>채팅방 목록을 불러오는 중...</div>;
+        return (
+            <div className={styles.loading}>
+                <CircularProgress size={40} />
+                <Typography sx={{ ml: 2 }}>채팅방 목록을 불러오는 중...</Typography>
+            </div>
+        );
     }
 
     return (
@@ -144,7 +107,10 @@ const ChatList: React.FC = () => {
                                     }
                                 />
                                 <Typography component="span" className={styles.messageTime}>
-                                    {room.lastMessageTime}
+                                    {new Date(room.lastMessageTime).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
                                 </Typography>
                                 <KeyboardArrowRightIcon color="action" />
                             </ListItem>
