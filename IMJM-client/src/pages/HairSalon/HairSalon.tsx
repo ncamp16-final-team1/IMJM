@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-// import axios from 'axios';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 import StarIcon from '@mui/icons-material/Star';
 import StarHalfIcon from '@mui/icons-material/StarHalf';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import salon1Image from "../../assets/images/salon1.jpeg";
-import salon2Image from "../../assets/images/salon2.png";
-import salon3Image from "../../assets/images/salon3.png";
-import salon4Image from "../../assets/images/salon4.png";
-import salonData from "../../data/salon.json";
-import userData from "../../data/user.json"; // 사용자 데이터 불러오기
 
 import './HairSalon.css';
 
@@ -41,7 +36,6 @@ interface Salon {
     latitude: number;
     longitude: number;
     photoUrl: string;
-    // 추가로 사용하는 속성
     photos?: SalonPhoto[];
     distance?: number;
 }
@@ -196,53 +190,93 @@ function HairSalon() {
         script.async = true;
         script.onload = () => setMapLoaded(true);
         document.head.appendChild(script);
+
         const fetchData = async (): Promise<void> => {
             try {
-                // 현재 사용자 설정 (첫 번째 사용자로 가정)
-                const user: User = {
-                    id: userData[0].id,
-                    name: userData[0].first_name + ' ' + userData[0].last_name,
-                    latitude: userData[0].latitude,
-                    longitude: userData[0].longitude
-                };
-                setCurrentUser(user);
+                setLoading(true);
 
-                // 이미지 매핑
-                const imageMap: Record<string, string> = {
-                    'salon1.jpeg': salon1Image,
-                    'salon2.png': salon2Image,
-                    'salon3.png': salon3Image,
-                    'salon4.png': salon4Image
+                // 1. 로그인한 사용자 정보 가져오기 (없으면 기본 위치 사용)
+                let userLocation: UserLocation = {
+                    latitude: 37.5665, // 서울 시청 좌표(기본값)
+                    longitude: 126.9780
                 };
 
-                const salonsWithPhotos = salonData.map((salon: any) => ({
-                    ...salon,
-                    photos: [
-                        {
-                            photoId: 1,
-                            photoUrl: imageMap[salon.photoUrl] || salon1Image,
-                            photoOrder: 1
+                try {
+                    const userResponse = await axios.get('/api/user/me');
+                    if (userResponse.status === 200) {
+                        const userData = userResponse.data;
+                        // 사용자에게 위치 정보가 있으면 사용, 없으면 기본값 유지
+                        if (userData.latitude && userData.longitude) {
+                            userLocation = {
+                                latitude: userData.latitude,
+                                longitude: userData.longitude
+                            };
                         }
-                    ]
-                }));
 
-                setSalons(salonsWithPhotos);
+                        setCurrentUser({
+                            id: userData.id,
+                            name: userData.firstName + ' ' + userData.lastName,
+                            ...userLocation
+                        });
+                    }
+                } catch {
+                    console.log('로그인한 사용자 정보가 없습니다. 기본 위치를 사용합니다.');
+                    // 기본 사용자 객체 설정
+                    setCurrentUser({
+                        id: 'guest',
+                        name: '게스트',
+                        ...userLocation
+                    });
+                }
 
-                // 실제 API 호출 코드 (주석 처리)
-                /*
-                const response = await axios.get(`http://localhost:8080/api/salons/${id}/with-photos`);
-                setSalon(response.data);
+                // 2. 미용실 목록 가져오기
+                const salonsResponse = await axios.get('/api/salon');
+
+                if (salonsResponse.status === 200) {
+                    const salonsWithPhotos = salonsResponse.data.map((salon: any) => ({
+                        id: salon.id,
+                        name: salon.name,
+                        address: salon.address,
+                        call_number: salon.callNumber || salon.call_number,
+                        introduction: salon.introduction,
+                        holiday_mask: salon.holidayMask || salon.holiday_mask,
+                        start_time: salon.startTime || salon.start_time,
+                        end_time: salon.endTime || salon.end_time,
+                        score: salon.score,
+                        latitude: salon.latitude,
+                        longitude: salon.longitude,
+                        // 백엔드에서 사진 정보를 제공하는 경우 사용
+                        photos: salon.photos?.map((photo: any) => ({
+                            photoId: photo.photoId,
+                            photoUrl: photo.photoUrl,
+                            photoOrder: photo.photoOrder
+                        })) || [
+                            {
+                                photoId: 1,
+                                photoUrl: salon1Image,
+                                photoOrder: 1
+                            }
+                        ]
+                    }));
+
+                    setSalons(salonsWithPhotos);
+                } else {
+                    throw new Error('미용실 데이터를 가져오는데 실패했습니다.');
+                }
+
                 setLoading(false);
-                */
-
-
-
-                setLoading(false);
-
             } catch (err) {
-                setError('데이터를 불러오는데 실패했습니다.');
                 console.error('데이터 불러오기 오류:', err);
+                setError('데이터를 불러오는데 실패했습니다.');
                 setLoading(false);
+
+                // 기본 사용자 설정
+                setCurrentUser({
+                    id: 'guest',
+                    name: '게스트',
+                    latitude: 37.5665,
+                    longitude: 126.9780
+                });
             }
         };
 

@@ -22,6 +22,8 @@ public class UserDto {
     private String hairSalon;
     private String license;
     private boolean termsAgreed;
+    private Double latitude;
+    private Double longitude;
 
     public UserDto() {
         this.userType = getUserType();
@@ -42,6 +44,8 @@ public class UserDto {
         this.hairSalon = getHairSalon();
         this.license = getLicense();
         this.termsAgreed = isTermsAgreed();
+        this.latitude = getLatitude();
+        this.longitude = getLongitude();
     }
 
     public boolean isIs_notification() {

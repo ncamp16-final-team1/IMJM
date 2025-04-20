@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-// import axios from 'axios';
+import axios from 'axios';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarHalfIcon from '@mui/icons-material/StarHalf';
@@ -18,9 +18,6 @@ import salon2Image from "../../assets/images/salon2.png";
 import salon3Image from "../../assets/images/salon3.png";
 import hair1Image from "../../assets/images/hair1.png";
 import hair2Image from "../../assets/images/hair2.png";
-import salonData from "../../data/salon.json";
-import stylistData from "../../data/stylist.json";
-import serviceMenuData from "../../data/service_menu.json";
 import reviewData from "../../data/review.json";
 import reviewPhotoData from "../../data/review_photos.json";
 import userData from "../../data/user.json";
@@ -93,18 +90,17 @@ interface Review {
     content: string;
     review_tag: string;
     reservation_id: number;
-    // 추가 속성
     photos?: ReviewPhoto[];
     user_nickname?: string;
 }
 
 interface ServiceMenu {
     id: number;
-    salon_id: string;
-    service_type: string;
-    service_name: string;
-    service_description: string;
+    serviceType: string;
+    serviceName: string;
+    serviceDescription: string;
     price: number;
+    salon_id?: string; // 호환성을 위해 남겨둠
 }
 
 function SalonDetail() {
@@ -118,11 +114,18 @@ function SalonDetail() {
     const [stylists, setStylists] = useState<Stylist[]>([]); // 스타일리스트 상태 추가
     const [serviceMenus, setServiceMenus] = useState<ServiceMenu[]>([]); // 서비스 메뉴 상태 추가
     const [reviews, setReviews] = useState<Review[]>([]); // 리뷰 상태 추가
+    const [selectedServiceType, setSelectedServiceType] = useState<string>('전체');
+    const [serviceTypes, setServiceTypes] = useState<string[]>(['전체']);
 
     const isDayOff = (dayIndex: number, holidayMask: number) => {
+
         const bitValue = 1 << dayIndex;
+
+        console.log(`요일 인덱스: ${dayIndex}, 비트값: ${bitValue}, 휴일마스크: ${holidayMask}, 결과: ${(holidayMask & bitValue) !== 0}`);
+
         return (holidayMask & bitValue) !== 0;
     };
+
 
     // 지도 표시 함수
     const showMap = () => {
@@ -138,11 +141,20 @@ function SalonDetail() {
         setShowAllHours(!showAllHours);
     };
 
+    // 서비스 타입 변경 핸들러 추가
+    const handleServiceTypeChange = (type: string) => {
+        setSelectedServiceType(type);
+    };
+
 
     useEffect(() => {
         const fetchSalonDetail = async () => {
             try {
                 setLoading(true);
+
+                // 미용실 정보 가져오기
+                const response = await axios.get(`/api/salon/${id}`);
+                const salonData = response.data;
 
                 // 이미지 매핑
                 const imageMap: Record<string, string> = {
@@ -153,69 +165,147 @@ function SalonDetail() {
                     'hair2.png' : hair2Image
                 };
 
-                // salon.json에서 id와 일치하는 살롱 찾기
-                const foundSalon = salonData.find(salon => salon.id === id);
-
-                if (foundSalon) {
+                if (salonData) {
                     const salonWithDetails: Salon = {
-                        ...foundSalon,
+                        ...salonData,
                         photos: [
-                            {photoId: 1, photoUrl: imageMap[foundSalon.photoUrl] || salon1Image, photoOrder: 1},
+                            {photoId: 1, photoUrl: imageMap[salonData.photoUrl] || salon1Image, photoOrder: 1},
                             {photoId: 2, photoUrl: salon2Image, photoOrder: 2},
                             {photoId: 3, photoUrl: salon3Image, photoOrder: 3}
                         ],
                         businessHours: [
-                            { day: "월", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "화", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "수", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "목", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "금", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "토", open: foundSalon.start_time, close: foundSalon.end_time },
-                            { day: "일", open: foundSalon.start_time, close: foundSalon.end_time }
+                            { day: "월", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
+                            { day: "화", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
+                            { day: "수", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
+                            { day: "목", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
+                            { day: "금", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
+                            { day: "토", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
+                            { day: "일", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time }
                         ]
                     };
 
                     setSalon(salonWithDetails);
 
-                    const salonStylists = stylistData.filter(stylist => stylist.salon_id === foundSalon.id);
-                    setStylists(salonStylists);
+                    // 스타일리스트 정보 가져오기
+                    try {
+                        const stylistsResponse = await axios.get(`/api/hairsalon/stylists/${id}`);
+                        if (stylistsResponse.status === 200) {
+                            // 스타일리스트 데이터 형식 변환 (필요시)
+                            const stylistsData = stylistsResponse.data.map((stylist: any) => ({
+                                stylist_id: stylist.id || stylist.stylistId,
+                                name: stylist.name,
+                                salon_id: stylist.salonId || id,
+                                introduction: stylist.introduction
+                            }));
+                            setStylists(stylistsData);
+                        } else {
+                            // 스타일리스트 정보가 없을 경우
+                            setStylists([]);
+                        }
+                    } catch (stylistError) {
+                        console.error('스타일리스트 정보를 불러오는데 실패했습니다:', stylistError);
+                    }
 
-                    const salonServices = serviceMenuData.filter(service => service.salon_id === foundSalon.id);
-                    setServiceMenus(salonServices);
+                    // 서비스 메뉴 정보 API로 가져오기
+                    try {
+                        const serviceMenuResponse = await axios.get(`/api/salons/${id}/menu`);
+                        if (serviceMenuResponse.status === 200) {
+                            const serviceMenus = serviceMenuResponse.data;
+
+                            // 서비스 타입 목록 추출 (중복 제거)
+                            const typeSet = new Set<string>();
+                            serviceMenus.forEach(menu => typeSet.add(menu.serviceType));
+                            const types = ['전체', ...Array.from(typeSet)];
+                            setServiceTypes(types);
+
+                            setServiceMenus(serviceMenus);
+                        } else {
+                            setServiceMenus([]);
+                        }
+                    } catch (serviceMenuError) {
+                        console.error('서비스 메뉴 정보를 불러오는데 실패했습니다:', serviceMenuError);
+                        setServiceMenus([]);
+                    }
 
 
-                    const salonReviews = reviewData.filter(review => review.salon_id === foundSalon.id)
+
+
+                    // 리뷰 정보 - 아직 API가 없으므로 임시 데이터 사용
+                    const salonReviews = reviewData.filter(review => review.salon_id === id)
                         .map(review => {
                             const reviewPhotos = reviewPhotoData.filter(photo => photo.review_id === review.id);
-
                             const user = userData.find(user => user.id === review.user_id);
                             const userNickname = user ? user.nickname : '익명';
-
                             return {
                                 ...review,
                                 photos: reviewPhotos,
                                 user_nickname: userNickname
                             };
                         })
-                        .sort((a, b) => new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime()); // 최신순 정렬
+                        .sort((a, b) => new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime());
 
                     setReviews(salonReviews);
-
                     setLoading(false);
                 } else {
                     setError(`ID: ${id}에 해당하는 살롱을 찾을 수 없습니다.`);
                     setLoading(false);
                 }
-
-                // 실제 API 호출 코드 (주석 처리)
-                /*
-                const response = await axios.get(`http://localhost:8080/api/salons/${id}/with-photos`);
-                setSalon(response.data);
-                setLoading(false);
-                */
             } catch (err) {
                 setError('살롱 상세 정보를 불러오는데 실패했습니다.');
                 console.error('살롱 상세 정보 불러오기 오류:', err);
+                setLoading(false);
+
+                // // 오류 발생 시 더미 데이터 사용 (개발 중에만)
+                // // TODO: 프로덕션에서는 제거할 것
+                // const dummySalon: Salon = {
+                //     id: id || "SALON001",
+                //     name: "뷰티살롱",
+                //     address: "서울시 강남구 테헤란로 123",
+                //     call_number: "02-555-1234",
+                //     introduction: "최고의 미용 서비스를 제공합니다.",
+                //     holiday_mask: 1,
+                //     start_time: "09:00:00",
+                //     end_time: "20:00:00",
+                //     score: 4.7,
+                //     latitude: 37.50637483,
+                //     longitude: 127.05838392,
+                //     photoUrl: "salon1.jpeg",
+                //     detail_address: "4층 402호",
+                //     photos: [
+                //         {photoId: 1, photoUrl: salon1Image, photoOrder: 1},
+                //         {photoId: 2, photoUrl: salon2Image, photoOrder: 2},
+                //         {photoId: 3, photoUrl: salon3Image, photoOrder: 3}
+                //     ],
+                //     businessHours: [
+                //         { day: "월", open: "09:00:00", close: "20:00:00" },
+                //         { day: "화", open: "09:00:00", close: "20:00:00" },
+                //         { day: "수", open: "09:00:00", close: "20:00:00" },
+                //         { day: "목", open: "09:00:00", close: "20:00:00" },
+                //         { day: "금", open: "09:00:00", close: "20:00:00" },
+                //         { day: "토", open: "09:00:00", close: "20:00:00" },
+                //         { day: "일", open: "09:00:00", close: "20:00:00" }
+                //     ]
+                // };
+                // setSalon(dummySalon);
+
+                // const salonStylists = stylistData.filter(stylist => stylist.salon_id === id);
+                // setStylists(salonStylists);
+
+
+                const salonReviews = reviewData.filter(review => review.salon_id === id)
+                    .map(review => {
+                        const reviewPhotos = reviewPhotoData.filter(photo => photo.review_id === review.id);
+                        const user = userData.find(user => user.id === review.user_id);
+                        const userNickname = user ? user.nickname : '익명';
+                        return {
+                            ...review,
+                            photos: reviewPhotos,
+                            user_nickname: userNickname
+                        };
+                    })
+                    .sort((a, b) => new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime());
+
+                setReviews(salonReviews);
                 setLoading(false);
             }
         };
@@ -291,6 +381,7 @@ function SalonDetail() {
         const hasHalfStar = score - fullStars >= 0.5;
         const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
+
         return (
             <div className="stars-container">
                 {[...Array(fullStars)].map((_, i) => (
@@ -356,6 +447,10 @@ function SalonDetail() {
         '일': 6
     };
 
+    const filteredServiceMenus = selectedServiceType === '전체'
+        ? serviceMenus
+        : serviceMenus.filter(menu => menu.serviceType === selectedServiceType);
+
     return (
         <div className="salon-detail-container">
             {/* 이미지 갤러리 */}
@@ -399,7 +494,7 @@ function SalonDetail() {
             <div className="info-section">
                 <div className="info-header" onClick={toggleBusinessHours}>
                     <AccessTimeIcon />
-                    <h2>Business hours | {salon.start_time} ~ {salon.end_time}</h2>
+                    <h2>운영 시간 | {salon.start_time} ~ {salon.end_time}</h2>
                     <KeyboardArrowDownIcon className={showAllHours ? "rotated" : ""} />
                 </div>
                 {showAllHours && (
@@ -435,7 +530,7 @@ function SalonDetail() {
             <div className="info-section">
                 <div className="info-header">
                     <InfoIcon />
-                    <h2>Store Information</h2>
+                    <h2>매장 정보</h2>
                 </div>
                 <div className="store-info">
                     <p dangerouslySetInnerHTML={{__html: salon.introduction.replace(/\n/g, '<br>')}}></p>
@@ -493,18 +588,32 @@ function SalonDetail() {
                 <div className="info-header service-menu-header">
                     <InfoIcon />
                     <h2>서비스 메뉴</h2>
-                    <Link to="/services" className="view-all-link">
+                    <Link to={`/services/${salon.id}`} className="view-all-link">
                         모두보기 <KeyboardArrowRightIcon/>
                     </Link>
                 </div>
+
+                {/* 서비스 타입 필터 추가 */}
+                <div className="service-type-filter">
+                    {serviceTypes.map((type, index) => (
+                        <button
+                            key={index}
+                            className={`type-filter-btn ${selectedServiceType === type ? 'active' : ''}`}
+                            onClick={() => handleServiceTypeChange(type)}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="service-menu-list">
-                    {serviceMenus.length > 0 ? (
-                        serviceMenus.slice(0, 2).map((service) => (
+                    {filteredServiceMenus.length > 0 ? (
+                        filteredServiceMenus.map((service) => (
                             <div key={service.id} className="service-menu-item">
                                 <div className="service-info">
-                                    <h3 className="service-name">{service.service_name}</h3>
-                                    <p className="service-type">{service.service_type}</p>
-                                    <p className="service-description">{service.service_description}</p>
+                                    <h3 className="service-name">{service.serviceName}</h3>
+                                    <p className="service-type">{service.serviceType}</p>
+                                    <p className="service-description">{service.serviceDescription}</p>
                                 </div>
                                 <div className="service-price">
                                     <p>{service.price.toLocaleString()}원</p>
@@ -512,7 +621,11 @@ function SalonDetail() {
                             </div>
                         ))
                     ) : (
-                        <p className="no-services">등록된 서비스 메뉴가 없습니다.</p>
+                        <p className="no-services">
+                            {selectedServiceType === '전체'
+                                ? '등록된 서비스 메뉴가 없습니다.'
+                                : `${selectedServiceType} 유형의 서비스 메뉴가 없습니다.`}
+                        </p>
                     )}
                 </div>
             </div>
