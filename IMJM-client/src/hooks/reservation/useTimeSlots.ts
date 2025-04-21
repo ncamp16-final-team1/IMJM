@@ -21,7 +21,7 @@ export const useTimeSlots = (
     setIsLoading(true);
     
     try {
-      const res = await axios.get('/api/hairsalon/reservations/available-times', {
+      const res = await axios.get('/api/salon/reservations/available-times', {
         params: {
           stylistId,
           date: date.format('YYYY-MM-DD')
