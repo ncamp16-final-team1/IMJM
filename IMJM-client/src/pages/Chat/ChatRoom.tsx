@@ -263,14 +263,21 @@ const ChatRoom: React.FC = () => {
             let photoAttachments: ChatPhoto[] = [];
 
             if (selectedFiles.length > 0) {
-                // 여러 이미지를 한 번에 업로드
-                const uploadResults = await FileUploadService.uploadMultipleImages(selectedFiles);
+                try {
+                    // 여러 이미지를 개별적으로 업로드
+                    const uploadResults = await FileUploadService.uploadMultipleImages(selectedFiles, chatRoom.id);
 
-                // 업로드 결과를 ChatPhoto 형식으로 변환
-                photoAttachments = uploadResults.map(result => ({
-                    photoId: Date.now(), // 임시 ID, 서버에서 실제 ID가 할당됨
-                    photoUrl: result.fileUrl
-                }));
+                    // 업로드 결과를 ChatPhoto 형식으로 변환
+                    photoAttachments = uploadResults.map((result, index) => ({
+                        photoId: Date.now() + index, // 고유 ID 생성
+                        photoUrl: result.fileUrl
+                    }));
+                } catch (uploadError: any) {
+                    console.error('사진 업로드 실패:', uploadError);
+                    alert(`사진 업로드 실패: ${uploadError.message}`);
+                    setLoading(false);
+                    return;
+                }
             }
 
             // 임시 메시지 객체 생성 (UI에 즉시 표시용)
