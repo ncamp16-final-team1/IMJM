@@ -279,7 +279,7 @@ const ChatRoom: React.FC = () => {
                 chatRoomId: chatRoom.id,
                 senderType: 'USER',
                 senderId: userId,
-                message: newMessage || selectedFiles.length > 0 ? '사진을 보냈습니다.' : '',
+                message: newMessage.trim() ? newMessage : (selectedFiles.length > 0 ? '사진을 보냈습니다.' : ''),
                 isRead: false,
                 sentAt: new Date().toISOString(),
                 translatedMessage: null,

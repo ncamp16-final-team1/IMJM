@@ -39,9 +39,11 @@ class ChatService {
     private baseUrl = '/api/chat';
 
     // 사용자 기준 채팅방 목록 조회
-    async getUserChatRooms(userId: string): Promise<ChatRoom[]> {
+    async getUserChatRooms(): Promise<ChatRoom[]> {
         try {
-            const response = await axios.get(`${this.baseUrl}/rooms/user/${userId}`);
+            const response = await axios.get(`/api/chat/rooms/user`, {
+                withCredentials: true  // 쿠키 포함
+            });
             return response.data;
         } catch (error) {
             console.error('Failed to fetch user chat rooms:', error);
