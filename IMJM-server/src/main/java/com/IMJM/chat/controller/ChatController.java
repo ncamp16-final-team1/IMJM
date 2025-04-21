@@ -3,6 +3,7 @@ package com.IMJM.chat.controller;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
 import com.IMJM.chat.service.ChatService;
+import com.IMJM.common.cloud.StorageService;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,10 +11,10 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ import java.util.Map;
 public class ChatController {
 
     private final ChatService chatService;
+    private final StorageService storageService;
 
     // 웹소켓으로 메시지 전송
     @MessageMapping("/chat.sendMessage")
@@ -72,5 +74,26 @@ public class ChatController {
         Map<String, Integer> response = new HashMap<>();
         response.put("count", count);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadChatImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("chatRoomId") Long chatRoomId) {
+
+        String imageUrl = chatService.uploadChatImage(file, chatRoomId);
+
+        return ResponseEntity.ok(Map.of("fileUrl", imageUrl));
+    }
+
+    // 다중 파일 업로드 엔드포인트
+    @PostMapping("/upload/multiple")
+    public ResponseEntity<List<Map<String, String>>> uploadMultipleImages(
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam("chatRoomId") Long chatRoomId) {
+
+        List<Map<String, String>> results = chatService.uploadMultipleChatImages(files, chatRoomId);
+
+        return ResponseEntity.ok(results);
     }
 }
