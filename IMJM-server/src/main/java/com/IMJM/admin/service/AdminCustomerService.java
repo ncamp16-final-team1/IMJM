@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -64,6 +65,7 @@ public class AdminCustomerService {
                 .user(user)
                 .salon(salon)
                 .reason(blacklistDto.getReason())
+                .blockedDate(LocalDateTime.now())
                 .build();
 
         blacklistRepository.save(blacklist);
@@ -80,5 +82,18 @@ public class AdminCustomerService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자는 블랙리스트에 없습니다."));
 
         blacklistRepository.delete(blacklist);
+    }
+
+    public List<BlacklistDto> allBlackCustomer(String salonId) {
+        List<Blacklist> blacklists = blacklistRepository.findBySalonId(salonId);
+
+        return blacklists.stream()
+                .map(blacklist -> BlacklistDto.builder()
+                        .userId(blacklist.getUser().getId())
+                        .userName(blacklist.getUser().getFirstName() + " " + blacklist.getUser().getLastName())
+                        .reason(blacklist.getReason())
+                        .blockedDate(String.valueOf(blacklist.getBlockedDate()))
+                        .build())
+                .collect(Collectors.toList());
     }
 }

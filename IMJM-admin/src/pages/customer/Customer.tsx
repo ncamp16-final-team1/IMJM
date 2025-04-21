@@ -28,6 +28,7 @@ interface BlacklistDto {
     userId: string;
     userName: string;
     reason: string;
+    blockedDate: string;
 }
 
 const Customer = () => {
@@ -49,6 +50,12 @@ const Customer = () => {
             })
             .catch(err => {
                 console.error("고객 목록 불러오기 실패:", err);
+            });
+
+        axios.get("/api/admin/customer/black")
+            .then(res => setBlacklist(res.data))
+            .catch(err => {
+                console.error("블랙리스트 목록 불러오기 실패:", err);
             });
     }, []);
 

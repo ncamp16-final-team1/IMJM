@@ -28,6 +28,13 @@ public class AdminCustomerController {
         return ResponseEntity.ok(reservationCustomerDtos);
     }
 
+    @GetMapping("/black")
+    public ResponseEntity<List<BlacklistDto>> allBlackCustomers(
+            @AuthenticationPrincipal CustomSalonDetails salonDetails){
+        List<BlacklistDto> blacklistDtos = adminCustomerService.allBlackCustomer(salonDetails.getSalonId());
+        return ResponseEntity.ok(blacklistDtos);
+    }
+
     @PostMapping("/black/{userId}")
     public ResponseEntity<?> blackCustomer(@PathVariable String userId,
                                            @AuthenticationPrincipal CustomSalonDetails salonDetails,
