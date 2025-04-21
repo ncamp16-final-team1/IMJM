@@ -20,6 +20,7 @@ import {
     DialogActions,
     TextField,
     IconButton,
+    Box,
 } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -102,7 +103,7 @@ const Reservation = () => {
     };
 
     return (
-        <Container>
+        <Box sx={{width: '940px', padding: '30px'}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mt={3}>
                 <Typography variant="h5" fontWeight="bold">
                     예약 현황
@@ -139,7 +140,7 @@ const Reservation = () => {
                     <CircularProgress />
                 </Stack>
             ) : (
-                <TableContainer component={Paper} elevation={0} sx={{ height: 700 }}>
+                <TableContainer component={Paper} elevation={0} sx={{ height: 670 }}>
                     <Table>
                         <TableHead>
                             <TableRow>
@@ -213,13 +214,24 @@ const Reservation = () => {
                     </Stack>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseModal}>취소</Button>
-                    <Button variant="contained" color="secondary" onClick={handleUpdateReservation}>
+                    <Button onClick={handleCloseModal} sx={{ color: "FF9080" }}>취소</Button>
+                    <Button variant="contained" color="secondary" onClick={handleUpdateReservation}
+                        sx={{
+                            bgcolor: "#FF9080",
+                            color: "#fff",
+                            borderRadius: '20px',
+                            boxShadow: 'none', 
+                            "&:hover": {
+                                bgcolor: "#FF7563",
+                                boxShadow: 'none'
+                            }
+                        }}
+                    >
                         변경 완료
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Container>
+        </Box>
     );
 };
 
