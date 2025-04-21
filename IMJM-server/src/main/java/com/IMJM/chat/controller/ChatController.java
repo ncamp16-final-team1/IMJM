@@ -3,10 +3,12 @@ package com.IMJM.chat.controller;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
 import com.IMJM.chat.service.ChatService;
+import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -27,8 +29,9 @@ public class ChatController {
     }
 
     // 채팅방 목록 조회 (사용자)
-    @GetMapping("/rooms/user/{userId}")
-    public ResponseEntity<List<ChatRoomDto>> getUserChatRooms(@PathVariable String userId) {
+    @GetMapping("/rooms/user")
+    public ResponseEntity<List<ChatRoomDto>> getUserChatRooms(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        String userId = userDetails.getId();
         return ResponseEntity.ok(chatService.getUserChatRooms(userId));
     }
 
