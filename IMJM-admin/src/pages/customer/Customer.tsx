@@ -1,82 +1,209 @@
-import React, { useState } from "react";
-import { Box, Typography, TextField, Button, List, ListItem, ListItemText, MenuItem, Select } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    InputAdornment
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import axios from "axios";
+import BlacklistModal from "./BlacklistModal";
 
-interface Customers {
-  id: number;
-  name: string;
-  phone: string;
-  design: string;
-  visitDate: string;
-  request: string;
+interface ReservationCustomerDto {
+    userId: string;
+    userName: string;
+    serviceName: string;
+    reservationDate: string;
+    visitCount: number;
+    requirements: string;
 }
 
-const dummyCustomers: Customers[] = [
-  { id: 1, name: "신동엽", phone: "010-1111-1111", design: "[커트] 남성 커트", visitDate: "2025.01.01 /2회", request: "Please cut it nicely" },
-  { id: 2, name: "James", phone: "010-2222-2222", design: "[염색] 브라운", visitDate: "2025.02.15 /1회", request: "" },
-  { id: 3, name: "James Walker", phone: "010-3333-3333", design: "[펌] 아이롱펌", visitDate: "2025.03.10 /3회", request: "No sideburns" },
-];
+interface BlacklistDto {
+    userId: string;
+    userName: string;
+    reason: string;
+}
 
 const Customer = () => {
-  const [selectedCustomer, setSelectedCustomer] = useState<Customers | null>(null);
-  const [blacklist, setBlacklist] = useState<Customers[]>([]);
+    const [customers, setCustomers] = useState<ReservationCustomerDto[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<ReservationCustomerDto | null>(null);
+    const [blacklist, setBlacklist] = useState<BlacklistDto[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [blacklistModalOpen, setBlacklistModalOpen] = useState(false);
 
-  const handleBlacklistToggle = () => {
-    if (!selectedCustomer) return;
-    const isBlacklisted = blacklist.find(c => c.id === selectedCustomer.id);
-    if (isBlacklisted) {
-      setBlacklist(blacklist.filter(c => c.id !== selectedCustomer.id));
-    } else {
-      setBlacklist([...blacklist, selectedCustomer]);
-    }
-  };
+    const isBlacklisted = selectedCustomer && blacklist.some(b => b.userId === selectedCustomer.userId);
 
-  return (
-    <Box display="flex" gap={4} p={4}>
-      {/* 고객 리스트 */}
-      <Box minWidth="250px" border="1px solid #ffa394" p={2} borderRadius={2}>
-        <Typography variant="h6" fontWeight="bold">고객 이름 검색</Typography>
-        <TextField fullWidth variant="standard" placeholder="이름 검색" sx={{ mt: 2 }} />
-        <List>
-          {dummyCustomers.map(customer => (
-            <ListItem button key={customer.id} onClick={() => setSelectedCustomer(customer)}>
-              <ListItemText primary={customer.name} />
-            </ListItem>
-          ))}
-        </List>
-      </Box>
+    useEffect(() => {
+        axios.get("/api/admin/customer")
+            .then(res => {
+                const sorted = [...res.data].sort((a: ReservationCustomerDto, b: ReservationCustomerDto) =>
+                    new Date(b.reservationDate).getTime() - new Date(a.reservationDate).getTime()
+                );
+                setCustomers(sorted);
+            })
+            .catch(err => {
+                console.error("고객 목록 불러오기 실패:", err);
+            });
+    }, []);
 
-      {/* 사용자 정보 */}
-      <Box flex={1} border="2px solid #ffa394" borderRadius={2} p={2}>
-        <Typography variant="h6" fontWeight="bold">사용자 정보</Typography>
-        {selectedCustomer ? (
-          <Box mt={2}>
-            <Typography><strong>이름:</strong> {selectedCustomer.name}</Typography>
-            <Typography><strong>연락처:</strong> {selectedCustomer.phone}</Typography>
-            <Typography><strong>디자인:</strong> {selectedCustomer.design}</Typography>
-            <Typography><strong>방문일:</strong> {selectedCustomer.visitDate}</Typography>
-            <Typography><strong>요구사항:</strong> {selectedCustomer.request}</Typography>
-            <Button variant="outlined" color="error" sx={{ mt: 2 }} onClick={handleBlacklistToggle}>
-              블랙 리스트 {blacklist.some(c => c.id === selectedCustomer.id) ? "제거" : "추가"}
-            </Button>
-          </Box>
-        ) : (
-          <Typography mt={2}>고객을 선택하세요.</Typography>
-        )}
-      </Box>
+    const handleBlacklistToggle = async () => {
+        if (!selectedCustomer) return;
+        if (isBlacklisted) {
+            try {
+                await axios.delete(`/api/admin/customer/black/${selectedCustomer.userId}`);
+                setBlacklist(prev => prev.filter(b => b.userId !== selectedCustomer.userId));
+            } catch (error) {
+                console.error("블랙리스트 제거 실패:", error);
+            }
+        } else {
+            setBlacklistModalOpen(true);
+        }
+    };
 
-      {/* 블랙 리스트 */}
-      <Box minWidth="250px" border="1px solid #ffa394" p={2} borderRadius={2}>
-        <Typography variant="h6" fontWeight="bold">블랙 리스트</Typography>
-        <List>
-          {blacklist.map(c => (
-            <ListItem key={c.id}>
-              <ListItemText primary={c.name} />
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-    </Box>
-  );
+    const handleBlacklistSubmit = async (reason: string) => {
+        if (!selectedCustomer) return;
+
+        try {
+            await axios.post(`/api/admin/customer/black/${selectedCustomer.userId}`, { reason });
+            setBlacklist(prev => [
+                ...prev,
+                {
+                    userId: selectedCustomer.userId,
+                    userName: selectedCustomer.userName,
+                    reason
+                }
+            ]);
+        } catch (error) {
+            console.error("블랙리스트 등록 실패:", error);
+        }
+    };
+
+    const filteredCustomers = customers.filter(c =>
+        c.userName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <Box display="flex" gap={4} p={4}>
+            {/* 고객 리스트 */}
+            <Box>
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>고객 검색</Typography>
+                <Box width="400px" height="680px" border="2px solid #ffa394" borderRadius={2} p={2}>
+                    <TextField
+                        placeholder="고객 이름 검색"
+                        fullWidth
+                        variant="standard"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            )
+                        }}
+                    />
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell><b>Name</b></TableCell>
+                                <TableCell><b>Date</b></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filteredCustomers.map(c => (
+                                <TableRow key={`${c.userId}-${c.reservationDate}`} hover onClick={() => setSelectedCustomer(c)} style={{ cursor: "pointer" }}>
+                                    <TableCell>{c.userName}</TableCell>
+                                    <TableCell>{c.reservationDate}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </Box>
+            </Box>
+            <Box flex="0 0 480px" display="flex" flexDirection="column" gap={4}>
+                {/* 사용자 정보 */}
+                <Box>
+                    <Typography variant="h6" fontWeight="bold">상세 정보</Typography>
+                    <Box mt={2} border="2px solid #ffa394" height="250px" borderRadius={2}>
+                        <Table sx={{ height: "100%" }}>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell sx={{ width: 100 }}><b>이름</b></TableCell>
+                                    <TableCell>{selectedCustomer?.userName ?? "-"}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell sx={{ width: 100 }}><b>디자인</b></TableCell>
+                                    <TableCell>{selectedCustomer?.serviceName ?? "-"}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell sx={{ width: 100 }}><b>방문일</b></TableCell>
+                                    <TableCell>{selectedCustomer ? `${selectedCustomer.reservationDate} / ${selectedCustomer.visitCount}회` : "-"}</TableCell>
+                                </TableRow>
+                                <TableRow sx={{ height: "100%" }}>
+                                    <TableCell sx={{ width: 100, verticalAlign: "top" }}><b>요구사항</b></TableCell>
+                                    <TableCell sx={{}}>
+                                        <Box
+                                            sx={{
+                                                height: "60px",
+                                                overflowY: "auto",
+                                                whiteSpace: "pre-wrap"
+                                            }}
+                                        >
+                                            {selectedCustomer?.requirements || "-"}
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </Box>
+                    {selectedCustomer && (
+                        <Button variant="outlined" color="error" onClick={handleBlacklistToggle} sx={{ mt: 2 }}>
+                            블랙 리스트 {isBlacklisted ? "제거" : "추가"}
+                        </Button>
+                    )}
+                </Box>
+
+                {/* 블랙리스트 */}
+                <Box>
+                    <Typography variant="h6" fontWeight="bold">블랙 리스트</Typography>
+                    <Box mt={2} border="2px solid #ffa394" borderRadius={2} height="326px" >
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell><b>이름</b></TableCell>
+                                    <TableCell><b>사유</b></TableCell>
+                                    <TableCell><b>Date</b></TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {blacklist.map(item => {
+                                    const lastDate = customers.find(c => c.userId === item.userId)?.reservationDate ?? "-";
+                                    return (
+                                        <TableRow key={`black-${item.userId}`}>
+                                            <TableCell>{item.userName}</TableCell>
+                                            <TableCell>{item.reason}</TableCell>
+                                            <TableCell>{lastDate}</TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </Box>
+                </Box>
+            </Box>
+            <BlacklistModal
+                open={blacklistModalOpen}
+                onClose={() => setBlacklistModalOpen(false)}
+                onSubmit={handleBlacklistSubmit}
+            />
+        </Box>
+    );
 };
 
 export default Customer;

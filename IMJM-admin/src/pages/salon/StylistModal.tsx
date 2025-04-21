@@ -226,8 +226,8 @@ const StylistModal = ({ open, handleClose, stylist }) => {
                         variant="contained"
                         onClick={handleSubmit}
                         sx={{
-                            backgroundColor: "#f77c6b", borderRadius: "20px", px: 4,
-                            "&:hover": { backgroundColor: "#e6685c" }
+                            backgroundColor: "#FF9080", color: "#fff", borderRadius: "20px", px: 4, boxShadow: "none",
+                            "&:hover": { backgroundColor: "#FF7563", boxShadow: "none" }
                         }}
                     >
                         저장
