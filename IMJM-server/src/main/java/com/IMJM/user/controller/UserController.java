@@ -1,9 +1,7 @@
 package com.IMJM.user.controller;
 
-import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserDto;
-import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
