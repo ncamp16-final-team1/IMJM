@@ -1,20 +1,16 @@
 package com.IMJM.user.controller;
 
-import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserDto;
 import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,8 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
     private final UserService userService;
-    private final JWTUtil jwtUtil;
-    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto,
