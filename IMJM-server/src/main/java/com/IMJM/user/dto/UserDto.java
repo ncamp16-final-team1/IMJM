@@ -1,8 +1,13 @@
 package com.IMJM.user.dto;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
 public class UserDto {
     private String userType;
     private String id;
@@ -22,31 +27,8 @@ public class UserDto {
     private String hairSalon;
     private String license;
     private boolean termsAgreed;
-    private Double latitude;
-    private Double longitude;
-
-    public UserDto() {
-        this.userType = getUserType();
-        this.id = getId();
-        this.firstName = getFirstName();
-        this.lastName = getLastName();
-        this.language = getLanguage();
-        this.email = getEmail();
-        this.gender = getGender();
-        this.nickname = getNickname();
-        this.profile = getProfile();
-        this.birthday = getBirthday();
-        this.region = getRegion();
-        this.point = getPoint();
-        this.isNotification = isNotification();
-        this.history = getHistory();
-        this.washingHair = getWashingHair();
-        this.hairSalon = getHairSalon();
-        this.license = getLicense();
-        this.termsAgreed = isTermsAgreed();
-        this.latitude = getLatitude();
-        this.longitude = getLongitude();
-    }
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 
     public boolean isIs_notification() {
         return isNotification();

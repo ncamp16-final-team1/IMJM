@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
@@ -114,21 +115,24 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
-    public UserDto convertToDto(Users user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-        dto.setEmail(user.getEmail());
-        dto.setNickname(user.getNickname());
-        dto.setProfile(user.getProfile());
-        dto.setLanguage(user.getLanguage());
-        dto.setGender(user.getGender());
-        dto.setBirthday(user.getBirthday().toString());
-        dto.setRegion(user.getRegion());
-        dto.setPoint(user.getPoint());
-        dto.setNotification(user.isNotification());
-        return dto;
+    public UserDto getUserLocation(String userID) {
+
+        Users user = userRepository.findById(userID)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+        BigDecimal latitude = user.getLatitude();
+        BigDecimal longitude = user.getLongitude();
+
+        // 로그인하지 않은 사용자(anonymous) 처리
+        if (user.getId() == null || latitude == null || longitude == null) {
+            latitude = BigDecimal.valueOf(37.498297);
+            longitude = BigDecimal.valueOf(127.027733);
+        }
+
+        return UserDto.builder()
+                .latitude(latitude)
+                .longitude(longitude)
+                .build();
     }
 
 }
