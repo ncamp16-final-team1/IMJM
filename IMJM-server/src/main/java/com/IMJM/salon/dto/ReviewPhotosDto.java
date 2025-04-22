@@ -1,4 +1,4 @@
-package com.IMJM.admin.dto;
+package com.IMJM.salon.dto;
 
 import lombok.*;
 
@@ -9,8 +9,9 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SalonPhotoDto {
-    private String salonId;
+public class ReviewPhotosDto {
+
+    private Long photoId;
     private String photoUrl;
     private int photoOrder;
     private LocalDateTime uploadDate;

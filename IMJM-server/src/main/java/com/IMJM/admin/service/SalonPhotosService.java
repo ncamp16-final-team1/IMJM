@@ -1,5 +1,6 @@
 package com.IMJM.admin.service;
 
+import com.IMJM.admin.dto.SalonPhotoDto;
 import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.common.entity.SalonPhotos;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,17 @@ public class SalonPhotosService {
         return salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(salonId)
                 .stream()
                 .map(SalonPhotos::getPhotoUrl)
+                .collect(Collectors.toList());
+    }
+    public List<SalonPhotoDto> getSalonPhotosBySalonId(String salonId) {
+        return salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(salonId)
+                .stream()
+                .map(photo -> SalonPhotoDto.builder()
+                        .salonId(photo.getSalon().getId())
+                        .photoUrl(photo.getPhotoUrl())
+                        .photoOrder(photo.getPhotoOrder())
+                        .uploadDate(photo.getUploadDate())
+                        .build())
                 .collect(Collectors.toList());
     }
 }

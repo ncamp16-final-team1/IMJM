@@ -13,9 +13,10 @@ import java.time.LocalTime;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 @Table(name = "salon")
 public class Salon {
 

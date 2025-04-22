@@ -69,6 +69,8 @@ public class Users {
     @Column(name = "terms_agreed")
     private boolean termsAgreed;
 
+    @Column
+
     public void updateName(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
