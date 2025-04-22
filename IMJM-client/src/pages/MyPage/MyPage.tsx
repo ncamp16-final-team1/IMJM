@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 const menuItems = [
   { label: "My Profile", path: "/profile" },
   { label: "Point", path: "/point", right: "10,000 P" },
-  { label: "My Coupons", path: "/coupons" },
   { label: "Appointment history", path: "/appointments" },
   { label: "My Review", path: "/reviews" },
   { label: "My Acahive", path: "/acahive" },

@@ -45,4 +45,5 @@ public class AdminReservationDto {
         @JsonFormat(pattern = "HH:mm:ss")
         private String reservationTime;
     }
+
 }
