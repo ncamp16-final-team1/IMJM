@@ -64,7 +64,7 @@ function AppRouter() {
                 <Route path="Reservation" element={<Reservation />} />
                 <Route path="Salon" element={<Salon />} />
                 <Route path="Customer" element={<Customer />} />
-                <Route path="Chat" element={<Chat />} />
+                <Route path="chat/*" element={<Chat />} />
                 <Route path="Review" element={<Review />} />
                 <Route path="Event" element={<Event />} />
             </Route>
