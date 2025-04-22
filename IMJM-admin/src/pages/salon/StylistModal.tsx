@@ -7,7 +7,7 @@ import axios from "axios";
 
 const days = ["월", "화", "수", "목", "금", "토", "일"];
 
-const StylistModal = ({ open, handleClose, stylist }) => {
+const StylistModal = ({ open, handleClose, stylist, onSave }) => {
     const isEditMode = Boolean(stylist);
     const [form, setForm] = useState({
         name: "",
@@ -108,7 +108,8 @@ const StylistModal = ({ open, handleClose, stylist }) => {
                 });
                 alert("스타일리스트가 성공적으로 추가되었습니다!");
             }
-    
+
+            if (onSave) onSave();
             handleClose();
         } catch (err) {
             console.error(err);
@@ -226,8 +227,8 @@ const StylistModal = ({ open, handleClose, stylist }) => {
                         variant="contained"
                         onClick={handleSubmit}
                         sx={{
-                            backgroundColor: "#f77c6b", borderRadius: "20px", px: 4,
-                            "&:hover": { backgroundColor: "#e6685c" }
+                            backgroundColor: "#FF9080", color: "#fff", borderRadius: "20px", px: 4, boxShadow: "none",
+                            "&:hover": { backgroundColor: "#FF7563", boxShadow: "none" }
                         }}
                     >
                         저장
