@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -16,6 +17,9 @@ import java.util.Iterator;
 
 @Component
 public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+
+    @Value("${app.client.domain}")
+    private String clientDomain;
 
     private final JWTUtil jwtUtil;
 
@@ -41,9 +45,9 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         response.addCookie(createCookie("Authorization", token));
 
         if (!customUserDetails.isTermsAgreed()) {
-            response.sendRedirect("http://localhost:3000/user/language");
+            response.sendRedirect(clientDomain + "/user/language");
         } else {
-            response.sendRedirect("http://localhost:3000/");
+            response.sendRedirect(clientDomain);
         }
     }
 

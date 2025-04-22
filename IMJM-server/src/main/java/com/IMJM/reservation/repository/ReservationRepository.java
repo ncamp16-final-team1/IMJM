@@ -36,4 +36,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 ORDER BY r.reservationDate DESC, r.reservationTime DESC
             """)
     List<Reservation> findPastReservationsBySalonIdOrderByDateTimeDesc(String salonId);
+
+    List<Reservation> findByStylist_Salon_id(String salonId);
 }

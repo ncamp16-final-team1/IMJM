@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,8 +27,19 @@ public class AdminReservationService {
 
         List<Payment> payments = paymentRepository.findByReservation_Stylist_Salon_id(salonId);
 
+        if (date.equals("today")) {
+            LocalDate today = LocalDate.now();
+
+            return payments.stream()
+                    .filter(payment -> payment.getReservation().getReservationDate().isEqual(today))
+                    .sorted(Comparator.comparing(p -> p.getReservation().getReservationTime()))
+                    .map(AdminReservationDto::new)
+                    .collect(Collectors.toList());
+        }
+
         return payments.stream()
                 .filter(payment -> payment.getReservation().getReservationDate().isEqual(LocalDate.parse(date)))
+                .sorted(Comparator.comparing(p -> p.getReservation().getReservationTime()))
                 .map(AdminReservationDto::new)
                 .collect(Collectors.toList());
     }
@@ -42,4 +54,5 @@ public class AdminReservationService {
                 adminReservationUpdateDto.getReservationTime()
         );
     }
+
 }
