@@ -1,25 +1,27 @@
 import axios from 'axios';
 
-// 파일 업로드 결과 인터페이스
-export interface UploadResult {
+interface UploadResult {
     fileUrl: string;
     fileName: string;
     fileSize: number;
-    fileType: string;
 }
 
 class FileUploadService {
-    private baseUrl = '/api/files';
+    private baseUrl = '/api/chat';
+    // 최대 파일 크기 제한 (10MB)
+    private readonly MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-    /**
-     * 이미지 파일을 서버에 업로드하는 함수
-     * @param file 업로드할 파일
-     * @returns 업로드된 파일의 정보
-     */
-    async uploadImage(file: File): Promise<UploadResult> {
+    // 단일 이미지 업로드
+    async uploadImage(file: File, chatRoomId: number): Promise<UploadResult> {
         try {
+            // 파일 크기 검사
+            if (file.size > this.MAX_FILE_SIZE) {
+                throw new Error(`파일 크기가 너무 큽니다. 최대 10MB까지 가능합니다.`);
+            }
+
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('chatRoomId', chatRoomId.toString());
 
             const response = await axios.post(`${this.baseUrl}/upload`, formData, {
                 headers: {
@@ -27,32 +29,23 @@ class FileUploadService {
                 }
             });
 
-            return response.data;
+            return {
+                fileUrl: response.data.fileUrl,
+                fileName: file.name,
+                fileSize: file.size
+            };
         } catch (error) {
             console.error('이미지 업로드 실패:', error);
             throw error;
         }
     }
 
-    /**
-     * 여러 이미지 파일을 서버에 업로드하는 함수
-     * @param files 업로드할 파일 배열
-     * @returns 업로드된 파일들의 정보 배열
-     */
-    async uploadMultipleImages(files: File[]): Promise<UploadResult[]> {
+    // 다중 이미지 업로드
+    async uploadMultipleImages(files: File[], chatRoomId: number): Promise<UploadResult[]> {
         try {
-            const formData = new FormData();
-            files.forEach((file, index) => {
-                formData.append('files', file);
-            });
-
-            const response = await axios.post(`${this.baseUrl}/upload/multiple`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
-            return response.data;
+            // 개별 업로드 방식으로 변경 (413 오류 방지)
+            const uploadPromises = files.map(file => this.uploadImage(file, chatRoomId));
+            return await Promise.all(uploadPromises);
         } catch (error) {
             console.error('다중 이미지 업로드 실패:', error);
             throw error;
@@ -60,5 +53,4 @@ class FileUploadService {
     }
 }
 
-// 싱글톤으로 내보내기
 export default new FileUploadService();

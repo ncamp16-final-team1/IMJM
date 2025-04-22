@@ -15,6 +15,7 @@ import UserFinalSubmit from './pages/User/UserFinalSubmit';
 import MyPage from './pages/MyPage/MyPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
+import PaymentDetails from './pages/HairSalon/PaymentDetails';
 
 function App() {
     return (
@@ -31,14 +32,19 @@ function App() {
                         <Route path="/salon/:id" element={<SalonDetail />} />
 
                         {/* 로그인된 사용자만 접근 가능한 경로 */}
-                        <Route path="/hairSalon/stylists/:salonId" element={
+                        <Route path="/salon/stylists/:salonId" element={
                             <ProtectedRoute>
                                 <Stylists />
                             </ProtectedRoute>
                         } />
-                        <Route path="/hairSalon/reservation/:stylistId" element={
+                        <Route path="/salon/:salonId/reservation/:stylistId" element={
                             <ProtectedRoute>
                                 <StylistSchedule />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/salon/:salonId/reservation/:stylistId/paymentDetails" element={
+                            <ProtectedRoute>
+                                <PaymentDetails />
                             </ProtectedRoute>
                         } />
                         <Route path="/chat/*" element={

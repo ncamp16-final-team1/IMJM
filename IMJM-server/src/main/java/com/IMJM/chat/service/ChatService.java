@@ -5,17 +5,19 @@ import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
 import com.IMJM.chat.exception.TranslationException;
 import com.IMJM.chat.repository.*;
+import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +33,11 @@ public class ChatService {
     private final ChatSalonRepository chatSalonRepository;
 
     private final TranslationService translationService;
+
+    private final StorageService storageService;
+
+    @Value("${ncp.bucket-name}")
+    private String bucketName;
 
     // 채팅방 생성 또는 조회
     @Transactional
@@ -372,5 +379,39 @@ public class ChatService {
             System.out.println("수신자 언어 설정: " + userLanguage);
             return userLanguage != null ? userLanguage : "ko";
         }
+    }
+    public String uploadChatImage(MultipartFile file, Long chatRoomId) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("파일이 비어있습니다.");
+        }
+
+        try {
+            String originalFilename = file.getOriginalFilename();
+            String ext = Objects.requireNonNull(originalFilename).substring(originalFilename.lastIndexOf("."));
+            String uuid = UUID.randomUUID().toString();
+            String fileName = uuid + ext;
+
+            // chat/{chatRoomId}/{timestamp}_{uuid}.ext 형식의 경로
+            String s3Path = "chat/" + chatRoomId + "/" + System.currentTimeMillis() + "_" + fileName;
+
+            storageService.upload(s3Path, file.getInputStream());
+
+            return "https://" + bucketName + ".kr.object.ncloudstorage.com/" + s3Path;
+        } catch (IOException e) {
+            throw new RuntimeException("파일 업로드 실패", e);
+        }
+    }
+
+    public List<Map<String, String>> uploadMultipleChatImages(List<MultipartFile> files, Long chatRoomId) {
+        return files.stream()
+                .map(file -> {
+                    String fileUrl = uploadChatImage(file, chatRoomId);
+                    return Map.of(
+                            "fileUrl", fileUrl,
+                            "fileName", file.getOriginalFilename(),
+                            "fileSize", String.valueOf(file.getSize())
+                    );
+                })
+                .collect(Collectors.toList());
     }
 }

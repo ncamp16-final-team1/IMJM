@@ -26,12 +26,12 @@ public class GoogleResponseDto implements OAuth2ResponseDto{
     }
 
     @Override
-    public String getLastName() {
+    public String getFirstName() {
         return attributes.get("given_name").toString();
     }
 
     @Override
-    public String getFirstName() {
+    public String getLastName() {
         return attributes.get("family_name").toString();
     }
 }

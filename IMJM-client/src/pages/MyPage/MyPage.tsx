@@ -21,7 +21,7 @@ export default function MyPage() {
     try {
       const response = await fetch("/api/user/logout", {
         method: "POST",
-        credentials: "include", // 쿠키 포함
+        credentials: "include", 
       });
 
       if (response.ok) {
