@@ -47,4 +47,36 @@ public class UserController {
         return userService.checkLogin(request);
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        // 현재 인증된 사용자의 ID 가져오기
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("Current User ID: " + userId);
+        System.out.println("Authentication: " + SecurityContextHolder.getContext().getAuthentication());
+
+        // 로그인하지 않은 사용자 처리
+        if ("anonymousUser".equals(userId)) {
+            UserDto guestDto = new UserDto();
+            guestDto.setId("guest");
+            guestDto.setFirstName("게스트");
+            guestDto.setLatitude(37.498297);
+            guestDto.setLongitude(127.027733);
+            return ResponseEntity.ok(guestDto);
+        }
+
+        try {
+            Users user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+            UserDto userDto = userService.convertToDto(user);
+
+            userDto.setLatitude(37.498297);
+            userDto.setLongitude(127.027733);
+
+            return ResponseEntity.ok(userDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증되지 않은 사용자");
+        }
+    }
+
 }

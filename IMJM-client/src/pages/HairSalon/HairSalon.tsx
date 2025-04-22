@@ -9,14 +9,12 @@ import salon1Image from "../../assets/images/salon1.jpeg";
 
 import './HairSalon.css';
 
-// 네이버 맵 타입 정의
 declare global {
     interface Window {
         naver: any;
     }
 }
 
-// 인터페이스 정의
 interface SalonPhoto {
     photoId: number;
     photoUrl: string;
@@ -50,7 +48,6 @@ interface User {
     name?: string;
     latitude: number;
     longitude: number;
-    // 필요한 경우 더 많은 사용자 속성 추가
 }
 
 function HairSalon() {
@@ -64,6 +61,7 @@ function HairSalon() {
     const navigate = useNavigate();
 
     const handleSalonClick = (salonId: string): void => {
+        console.log('Selected Salon ID:', salonId);
         navigate(`/salon/${salonId}`);
     };
 
@@ -88,7 +86,6 @@ function HairSalon() {
         return stars;
     };
 
-    // 두 좌표 간의 거리 계산 (하버사인 공식)
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
         const R = 6371; // 지구 반경 (km)
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -98,13 +95,12 @@ function HairSalon() {
             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
             Math.sin(dLon/2) * Math.sin(dLon/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = R * c; // 킬로미터 단위
+        const distance = R * c;
         return distance;
     };
 
-    // 가까운 미용실 찾기
     const findNearbySalons = (userLocation: UserLocation, salons: Salon[]): Salon[] => {
-        const maxDistance = 10; // 10km 이내의 미용실만 표시
+        const maxDistance =5;
 
         return salons.filter(salon => {
             const distance = calculateDistance(
@@ -142,11 +138,9 @@ function HairSalon() {
             title: '내 위치'
         });
 
-        // 주변 미용실 표시
         const nearby = findNearbySalons(userLocation, salonsWithPhotos);
         setNearbySalons(nearby);
 
-        // 미용실 마커 표시
         nearby.forEach(salon => {
             const marker = new window.naver.maps.Marker({
                 position: new window.naver.maps.LatLng(salon.latitude, salon.longitude),
@@ -173,7 +167,6 @@ function HairSalon() {
                 pixelOffset: new window.naver.maps.Point(10, -10)
             });
 
-            // 마커 클릭시 정보창 표시 및 다른 정보창 닫기
             window.naver.maps.Event.addListener(marker, 'click', () => {
                 if (infoWindow.getMap()) {
                     infoWindow.close();
@@ -195,45 +188,27 @@ function HairSalon() {
             try {
                 setLoading(true);
 
-                // 1. 로그인한 사용자 정보 가져오기 (없으면 기본 위치 사용)
-                let userLocation: UserLocation = {
-                    latitude: 37.5665, // 서울 시청 좌표(기본값)
-                    longitude: 126.9780
-                };
-
                 try {
                     const userResponse = await axios.get('/api/user/me');
                     if (userResponse.status === 200) {
                         const userData = userResponse.data;
-                        // 사용자에게 위치 정보가 있으면 사용, 없으면 기본값 유지
-                        if (userData.latitude && userData.longitude) {
-                            userLocation = {
-                                latitude: userData.latitude,
-                                longitude: userData.longitude
-                            };
-                        }
 
                         setCurrentUser({
                             id: userData.id,
-                            name: userData.firstName + ' ' + userData.lastName,
-                            ...userLocation
+                            name: userData.firstName || '게스트',
+                            latitude: userData.latitude,
+                            longitude: userData.longitude
                         });
                     }
-                } catch {
-                    console.log('로그인한 사용자 정보가 없습니다. 기본 위치를 사용합니다.');
-                    // 기본 사용자 객체 설정
-                    setCurrentUser({
-                        id: 'guest',
-                        name: '게스트',
-                        ...userLocation
-                    });
+                } catch (error) {
+                    console.error('사용자 정보를 가져오는데 실패했습니다:', error);
+                    setError('사용자 정보를 불러오는데 실패했습니다.');
                 }
 
-                // 2. 미용실 목록 가져오기
                 const salonsResponse = await axios.get('/api/salon');
 
                 if (salonsResponse.status === 200) {
-                    const salonsWithPhotos = salonsResponse.data.map((salon: any) => ({
+                    const salonsData = salonsResponse.data.map((salon: any) => ({
                         id: salon.id,
                         name: salon.name,
                         address: salon.address,
@@ -245,19 +220,47 @@ function HairSalon() {
                         score: salon.score,
                         latitude: salon.latitude,
                         longitude: salon.longitude,
-                        // 백엔드에서 사진 정보를 제공하는 경우 사용
-                        photos: salon.photos?.map((photo: any) => ({
-                            photoId: photo.photoId,
-                            photoUrl: photo.photoUrl,
-                            photoOrder: photo.photoOrder
-                        })) || [
-                            {
-                                photoId: 1,
-                                photoUrl: salon1Image,
-                                photoOrder: 1
-                            }
-                        ]
+                        photos: [] // 초기에는 빈 배열로 설정
                     }));
+
+                    // 3. 각 미용실의 사진 정보를 추가로 가져오기
+                    const salonsWithPhotos = await Promise.all(
+                        salonsData.map(async (salon: Salon) => {
+                            try {
+                                // 새로 만든 API 호출
+                                const photosResponse = await axios.get(`/api/salon/${salon.id}/photos`);
+
+                                if (photosResponse.status === 200 && photosResponse.data.length > 0) {
+                                    // 사진 정보 매핑
+                                    salon.photos = photosResponse.data.map((photo: any) => ({
+                                        photoId: photo.photoId,
+                                        photoUrl: photo.photoUrl,
+                                        photoOrder: photo.photoOrder
+                                    }));
+                                } else {
+                                    // 사진이 없는 경우 기본 이미지 사용
+                                    salon.photos = [
+                                        {
+                                            photoId: 1,
+                                            photoUrl: salon1Image,
+                                            photoOrder: 1
+                                        }
+                                    ];
+                                }
+                            } catch (error) {
+                                console.warn(`${salon.id} 미용실의 사진을 가져오는데 실패했습니다:`, error);
+                                // 오류 발생 시 기본 이미지 사용
+                                salon.photos = [
+                                    {
+                                        photoId: 1,
+                                        photoUrl: salon1Image,
+                                        photoOrder: 1
+                                    }
+                                ];
+                            }
+                            return salon;
+                        })
+                    );
 
                     setSalons(salonsWithPhotos);
                 } else {

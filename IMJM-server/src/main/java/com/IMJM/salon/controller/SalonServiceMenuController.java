@@ -15,13 +15,13 @@ public class SalonServiceMenuController {
 
     private final SalonServiceMenuService salonServiceMenuService;
 
-    @GetMapping("/salons/{salonId}/menu")
+    @GetMapping("/salon/{salonId}/menu")
     public ResponseEntity<List<SalonServiceMenuDto>> getServiceMenusBySalonId(@PathVariable String salonId) {
         List<SalonServiceMenuDto> serviceMenus = salonServiceMenuService.getServiceMenusBySalonId(salonId);
         return ResponseEntity.ok(serviceMenus);
     }
 
-    @GetMapping("/salons/{salonId}/menu/types/{serviceType}")
+    @GetMapping("/salon/{salonId}/menu/types/{serviceType}")
     public ResponseEntity<List<SalonServiceMenuDto>> getServiceMenusByType(
             @PathVariable String salonId,
             @PathVariable String serviceType) {

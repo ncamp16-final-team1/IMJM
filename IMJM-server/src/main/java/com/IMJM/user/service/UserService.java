@@ -114,4 +114,21 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
+    public UserDto convertToDto(Users user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setNickname(user.getNickname());
+        dto.setProfile(user.getProfile());
+        dto.setLanguage(user.getLanguage());
+        dto.setGender(user.getGender());
+        dto.setBirthday(user.getBirthday().toString());
+        dto.setRegion(user.getRegion());
+        dto.setPoint(user.getPoint());
+        dto.setNotification(user.isNotification());
+        return dto;
+    }
+
 }

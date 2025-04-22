@@ -22,6 +22,8 @@ public class SalonController {
     @GetMapping("/salon/{id}")
     public ResponseEntity<?> getSalonById(@PathVariable String id) {
         SalonDto salon = salonService.getSalonById(id);
+        System.out.println(salon.getId());
+        System.out.println(salon.getName());
         return salon != null
                 ? ResponseEntity.ok(salon)
                 : ResponseEntity.notFound().build();

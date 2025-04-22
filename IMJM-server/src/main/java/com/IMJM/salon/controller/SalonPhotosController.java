@@ -1,7 +1,7 @@
 package com.IMJM.salon.controller;
 
-import com.IMJM.salon.dto.ReviewDto;
-import com.IMJM.salon.service.ReviewService;
+import com.IMJM.admin.dto.SalonPhotoDto;
+import com.IMJM.admin.service.SalonPhotosService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,14 +14,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class ReviewController {
+public class SalonPhotosController {
 
-    private final ReviewService reviewService;
+    private final SalonPhotosService salonPhotosService;
 
-    @GetMapping("/salon/{salonId}/reviews")
-    public ResponseEntity<List<ReviewDto>> getSalonReviews(@PathVariable String salonId) {
-        List<ReviewDto> reviews = reviewService.getSalonReviews(salonId);
-        return ResponseEntity.ok(reviews);
+    @GetMapping("salon/{salonId}/photos")
+    public ResponseEntity<List<SalonPhotoDto>> getSalonPhotos(@PathVariable String salonId) {
+        List<SalonPhotoDto> photos = salonPhotosService.getSalonPhotosBySalonId(salonId);
+        return ResponseEntity.ok(photos);
     }
-
 }

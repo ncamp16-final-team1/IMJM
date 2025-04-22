@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import {useState, useEffect} from 'react';
+import {useParams, Link} from 'react-router-dom';
 import axios from 'axios';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -13,26 +13,16 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PersonIcon from '@mui/icons-material/Person';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import salon1Image from "../../assets/images/salon1.jpeg";
-import salon2Image from "../../assets/images/salon2.png";
-import salon3Image from "../../assets/images/salon3.png";
-import hair1Image from "../../assets/images/hair1.png";
-import hair2Image from "../../assets/images/hair2.png";
-import reviewData from "../../data/review.json";
-import reviewPhotoData from "../../data/review_photos.json";
-import userData from "../../data/user.json";
 
 import './SalonDetail.css';
 
 
-// 네이버 맵 타입 정의
 declare global {
     interface Window {
         naver: any;
     }
 }
 
-// 인터페이스 정의
 interface SalonPhoto {
     photoId: number;
     photoUrl: string;
@@ -49,17 +39,16 @@ interface Salon {
     id: string;
     name: string;
     address: string;
-    call_number: string;
+    callNumber: string;
     introduction: string;
-    holiday_mask: number;
-    start_time: string;
-    end_time: string;
-    score: number;
+    holidayMask: number;
+    startTime: string;
+    endTime: string;
+    score: number | null;
     latitude: number;
     longitude: number;
-    photoUrl: string;
-    detail_address?: string; // detail_address 추가
-    // 추가로 사용하는 속성
+    photoUrl?: string;
+    detailAddress?: string;
     likes?: number;
     photos: SalonPhoto[];
     businessHours?: BusinessHour[];
@@ -71,14 +60,14 @@ interface Stylist {
     name: string;
     salon_id: number | string;
     introduction?: string;
+    profile?: string;
 }
 
 interface ReviewPhoto {
-    photo_id: number;
-    review_id: number;
-    photo_url: string;
-    photo_order: number;
-    upload_date: string;
+    photoId: number;
+    photoUrl: string;
+    photoOrder: number;
+    uploadDate: string;
 }
 
 interface Review {
@@ -107,7 +96,7 @@ function SalonDetail() {
     const [salon, setSalon] = useState<Salon | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
     const [showAllHours, setShowAllHours] = useState<boolean>(false);
     const [showMapModal, setShowMapModal] = useState<boolean>(false);
@@ -126,13 +115,10 @@ function SalonDetail() {
         return (holidayMask & bitValue) !== 0;
     };
 
-
-    // 지도 표시 함수
     const showMap = () => {
         setShowMapModal(true);
     };
 
-    // 지도 모달 닫기 함수
     const closeMapModal = () => {
         setShowMapModal(false);
     };
@@ -141,7 +127,6 @@ function SalonDetail() {
         setShowAllHours(!showAllHours);
     };
 
-    // 서비스 타입 변경 핸들러 추가
     const handleServiceTypeChange = (type: string) => {
         setSelectedServiceType(type);
     };
@@ -151,42 +136,67 @@ function SalonDetail() {
         const fetchSalonDetail = async () => {
             try {
                 setLoading(true);
-
                 // 미용실 정보 가져오기
                 const response = await axios.get(`/api/salon/${id}`);
                 const salonData = response.data;
 
-                // 이미지 매핑
-                const imageMap: Record<string, string> = {
-                    'salon1.jpeg': salon1Image,
-                    'salon2.png': salon2Image,
-                    'salon3.png': salon3Image,
-                    'hair1.png' : hair1Image,
-                    'hair2.png' : hair2Image
-                };
-
                 if (salonData) {
                     const salonWithDetails: Salon = {
                         ...salonData,
-                        photos: [
-                            {photoId: 1, photoUrl: imageMap[salonData.photoUrl] || salon1Image, photoOrder: 1},
-                            {photoId: 2, photoUrl: salon2Image, photoOrder: 2},
-                            {photoId: 3, photoUrl: salon3Image, photoOrder: 3}
-                        ],
+                        photos: [], // 빈 배열로 초기화
                         businessHours: [
-                            { day: "월", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
-                            { day: "화", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
-                            { day: "수", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
-                            { day: "목", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
-                            { day: "금", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
-                            { day: "토", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time },
-                            { day: "일", open: salonData.startTime || salonData.start_time, close: salonData.endTime || salonData.end_time }
+                            {
+                                day: "월",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            },
+                            {
+                                day: "화",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            },
+                            {
+                                day: "수",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            },
+                            {
+                                day: "목",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            },
+                            {
+                                day: "금",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            },
+                            {
+                                day: "토",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            },
+                            {
+                                day: "일",
+                                open: salonData.startTime,
+                                close: salonData.endTime
+                            }
                         ]
                     };
 
+                    try {
+                        const photosResponse = await axios.get(`/api/salon/${id}/photos`);
+                        if (photosResponse.status === 200 && photosResponse.data.length > 0) {
+                            // 사진 정보 매핑
+                            salonWithDetails.photos = photosResponse.data.map((photo: any) => ({
+                                photoId: photo.photoId,
+                                photoUrl: photo.photoUrl,
+                                photoOrder: photo.photoOrder
+                            })).sort((a: SalonPhoto, b: SalonPhoto) => a.photoOrder - b.photoOrder);
+                        }
+                    } catch (photoError) {
+                        console.error('미용실 사진을 불러오는데 실패했습니다:', photoError);
+                    }
                     setSalon(salonWithDetails);
-
-                    // 스타일리스트 정보 가져오기
                     try {
                         const stylistsResponse = await axios.get(`/api/hairsalon/stylists/${id}`);
                         if (stylistsResponse.status === 200) {
@@ -195,24 +205,22 @@ function SalonDetail() {
                                 stylist_id: stylist.id || stylist.stylistId,
                                 name: stylist.name,
                                 salon_id: stylist.salonId || id,
-                                introduction: stylist.introduction
+                                introduction: stylist.introduction,
+                                profile: stylist.profile
                             }));
                             setStylists(stylistsData);
                         } else {
-                            // 스타일리스트 정보가 없을 경우
                             setStylists([]);
                         }
                     } catch (stylistError) {
                         console.error('스타일리스트 정보를 불러오는데 실패했습니다:', stylistError);
+                        setStylists([]);
                     }
-
-                    // 서비스 메뉴 정보 API로 가져오기
                     try {
-                        const serviceMenuResponse = await axios.get(`/api/salons/${id}/menu`);
+                        const serviceMenuResponse = await axios.get(`/api/salon/${id}/menu`);
                         if (serviceMenuResponse.status === 200) {
                             const serviceMenus = serviceMenuResponse.data;
 
-                            // 서비스 타입 목록 추출 (중복 제거)
                             const typeSet = new Set<string>();
                             serviceMenus.forEach(menu => typeSet.add(menu.serviceType));
                             const types = ['전체', ...Array.from(typeSet)];
@@ -226,25 +234,49 @@ function SalonDetail() {
                         console.error('서비스 메뉴 정보를 불러오는데 실패했습니다:', serviceMenuError);
                         setServiceMenus([]);
                     }
+                    try {
+                        const reviewResponse = await axios.get(`/api/salon/${id}/reviews`);
+                        if (reviewResponse.status === 200) {
+                            const reviewsData = reviewResponse.data.map((review: any) => {
+                                return {
+                                    id: review.id,
+                                    user_id: review.userId,
+                                    salon_id: review.salonId,
+                                    reg_date: review.regDate,
+                                    score: review.score,
+                                    content: review.content,
+                                    review_tag: review.reviewTag,
+                                    reservation_id: review.reservationId,
+                                    user_nickname: '사용자',
+                                    photos: []
+                                };
+                            });
 
+                            const reviewsWithPhotos = await Promise.all(reviewsData.map(async (review) => {
+                                try {
+                                    const photosResponse = await axios.get(`/api/review/${review.id}/photos`);
+                                    if (photosResponse.status === 200) {
+                                        review.photos = photosResponse.data;
+                                    }
+                                } catch (error) {
+                                    console.error(`리뷰 ${review.id}의 사진을 가져오는데 실패했습니다:`, error);
+                                }
+                                return review;
+                            }));
 
+                            const sortedReviews = reviewsWithPhotos.sort((a: Review, b: Review) =>
+                                new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime()
+                            );
 
-
-                    // 리뷰 정보 - 아직 API가 없으므로 임시 데이터 사용
-                    const salonReviews = reviewData.filter(review => review.salon_id === id)
-                        .map(review => {
-                            const reviewPhotos = reviewPhotoData.filter(photo => photo.review_id === review.id);
-                            const user = userData.find(user => user.id === review.user_id);
-                            const userNickname = user ? user.nickname : '익명';
-                            return {
-                                ...review,
-                                photos: reviewPhotos,
-                                user_nickname: userNickname
-                            };
-                        })
-                        .sort((a, b) => new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime());
-
-                    setReviews(salonReviews);
+                            setReviews(sortedReviews);
+                        } else {
+                            setReviews([]);
+                        }
+                    } catch (reviewError) {
+                        console.error('리뷰 정보를 불러오는데 실패했습니다:', reviewError);
+                        setReviews([]);
+                        setLoading(false);
+                    }
                     setLoading(false);
                 } else {
                     setError(`ID: ${id}에 해당하는 살롱을 찾을 수 없습니다.`);
@@ -255,58 +287,7 @@ function SalonDetail() {
                 console.error('살롱 상세 정보 불러오기 오류:', err);
                 setLoading(false);
 
-                // // 오류 발생 시 더미 데이터 사용 (개발 중에만)
-                // // TODO: 프로덕션에서는 제거할 것
-                // const dummySalon: Salon = {
-                //     id: id || "SALON001",
-                //     name: "뷰티살롱",
-                //     address: "서울시 강남구 테헤란로 123",
-                //     call_number: "02-555-1234",
-                //     introduction: "최고의 미용 서비스를 제공합니다.",
-                //     holiday_mask: 1,
-                //     start_time: "09:00:00",
-                //     end_time: "20:00:00",
-                //     score: 4.7,
-                //     latitude: 37.50637483,
-                //     longitude: 127.05838392,
-                //     photoUrl: "salon1.jpeg",
-                //     detail_address: "4층 402호",
-                //     photos: [
-                //         {photoId: 1, photoUrl: salon1Image, photoOrder: 1},
-                //         {photoId: 2, photoUrl: salon2Image, photoOrder: 2},
-                //         {photoId: 3, photoUrl: salon3Image, photoOrder: 3}
-                //     ],
-                //     businessHours: [
-                //         { day: "월", open: "09:00:00", close: "20:00:00" },
-                //         { day: "화", open: "09:00:00", close: "20:00:00" },
-                //         { day: "수", open: "09:00:00", close: "20:00:00" },
-                //         { day: "목", open: "09:00:00", close: "20:00:00" },
-                //         { day: "금", open: "09:00:00", close: "20:00:00" },
-                //         { day: "토", open: "09:00:00", close: "20:00:00" },
-                //         { day: "일", open: "09:00:00", close: "20:00:00" }
-                //     ]
-                // };
-                // setSalon(dummySalon);
-
-                // const salonStylists = stylistData.filter(stylist => stylist.salon_id === id);
-                // setStylists(salonStylists);
-
-
-                const salonReviews = reviewData.filter(review => review.salon_id === id)
-                    .map(review => {
-                        const reviewPhotos = reviewPhotoData.filter(photo => photo.review_id === review.id);
-                        const user = userData.find(user => user.id === review.user_id);
-                        const userNickname = user ? user.nickname : '익명';
-                        return {
-                            ...review,
-                            photos: reviewPhotos,
-                            user_nickname: userNickname
-                        };
-                    })
-                    .sort((a, b) => new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime());
-
-                setReviews(salonReviews);
-                setLoading(false);
+                setReviews([]);
             }
         };
 
@@ -385,19 +366,18 @@ function SalonDetail() {
         return (
             <div className="stars-container">
                 {[...Array(fullStars)].map((_, i) => (
-                    <StarIcon key={`full-${i}`} className="star-icon filled" sx={{ color: '#FFD700' }} />
+                    <StarIcon key={`full-${i}`} className="star-icon filled" sx={{color: '#FFD700'}}/>
                 ))}
                 {hasHalfStar && (
-                    <StarHalfIcon className="star-icon half" sx={{ color: '#FFD700' }} />
+                    <StarHalfIcon className="star-icon half" sx={{color: '#FFD700'}}/>
                 )}
                 {[...Array(emptyStars)].map((_, i) => (
-                    <StarBorderIcon key={`empty-${i}`} className="star-icon empty" sx={{ color: '#FFD700' }} />
+                    <StarBorderIcon key={`empty-${i}`} className="star-icon empty" sx={{color: '#FFD700'}}/>
                 ))}
             </div>
         );
     };
 
-    // 시간 형식화 함수 (n시간 전, n일 전 등)
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -422,7 +402,6 @@ function SalonDetail() {
             return `${years}년 전`;
         }
     };
-
 
 
     if (loading) {
@@ -453,9 +432,8 @@ function SalonDetail() {
 
     return (
         <div className="salon-detail-container">
-            {/* 이미지 갤러리 */}
             <div className="salon-gallery">
-                {salon.photos && salon.photos.length > 0 && (
+                {salon.photos && salon.photos.length > 0 ? (
                     <>
                         <div className="gallery-image">
                             <img
@@ -463,20 +441,24 @@ function SalonDetail() {
                                 alt={`${salon.name} 이미지 ${currentImageIndex + 1}`}
                             />
                             <button className="gallery-nav prev" onClick={prevImage}>
-                                <ArrowBackIosNewIcon />
+                                <ArrowBackIosNewIcon/>
                             </button>
                             <button className="gallery-nav next" onClick={nextImage}>
-                                <ArrowForwardIosIcon />
+                                <ArrowForwardIosIcon/>
                             </button>
                         </div>
                     </>
+                ) : (
+                    <div className="no-photos">
+                        <p>등록된 사진이 없습니다.</p>
+                    </div>
                 )}
             </div>
 
             <div className="salon-header">
                 <h1>{salon.name}</h1>
                 <div className="salon-rating">
-                    <StarIcon sx={{ color: '#FFD700' }} />
+                    <StarIcon sx={{color: '#FFD700'}}/>
                     <span>{salon.score} / 5</span>
                 </div>
             </div>
@@ -490,46 +472,44 @@ function SalonDetail() {
                 </button>
             </div>
 
-            {/* 영업 시간 */}
             <div className="info-section">
                 <div className="info-header" onClick={toggleBusinessHours}>
-                    <AccessTimeIcon />
-                    <h2>운영 시간 | {salon.start_time} ~ {salon.end_time}</h2>
-                    <KeyboardArrowDownIcon className={showAllHours ? "rotated" : ""} />
+                    <AccessTimeIcon/>
+                    <h2>운영 시간 | {salon.startTime} ~ {salon.endTime}</h2>
+                    <KeyboardArrowDownIcon className={showAllHours ? "rotated" : ""}/>
                 </div>
                 {showAllHours && (
                     <div className="business-hours-detail">
                         {salon.businessHours && salon.businessHours.map((hour, index) => (
                             <div key={index} className="hour-row">
-                                <span className="day">{hour.day}</span>
-                                {isDayOff(dayToIndex[hour.day], salon.holiday_mask) ? (
-                                    <span className="holiday">휴무</span>
-                                ) : (
-                                    <span className="time">{hour.open} ~ {hour.close}</span>
-                                )}
+                                <span className="day">{hour.day}
+                                    {isDayOff(dayToIndex[hour.day], salon.holidayMask) ? (
+                                        <span className="holiday">휴무</span>
+                                    ) : (
+                                        <span className="time">{hour.open} ~ {hour.close}</span>
+                                    )}
+                                    </span>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* 상세 주소 정보 추가 */}
-            {salon.detail_address && (
+            {salon.detailAddress && (
                 <div className="info-section">
                     <div className="info-header">
-                        <LocationOnIcon />
+                        <LocationOnIcon/>
                         <h2>상세 위치</h2>
                     </div>
                     <div className="detail-address-info">
-                        <p>{salon.detail_address}</p>
+                        <p>{salon.detailAddress}</p>
                     </div>
                 </div>
             )}
 
-            {/* 매장 정보 */}
             <div className="info-section">
                 <div className="info-header">
-                    <InfoIcon />
+                    <InfoIcon/>
                     <h2>매장 정보</h2>
                 </div>
                 <div className="store-info">
@@ -562,7 +542,7 @@ function SalonDetail() {
                             <div key={stylist.stylist_id} className="stylist-item">
                                 <div className="stylist-avatar">
                                     <img
-                                        src={salon3Image}
+                                        src={stylist.profile}
                                         alt={stylist.name}
                                         className="stylist-profile-image"
                                     />
@@ -583,17 +563,12 @@ function SalonDetail() {
                 </div>
             </div>
 
-            {/* 서비스 메뉴 섹션 추가 */}
             <div className="info-section service-menu-section">
                 <div className="info-header service-menu-header">
-                    <InfoIcon />
+                    <InfoIcon/>
                     <h2>서비스 메뉴</h2>
-                    <Link to={`/services/${salon.id}`} className="view-all-link">
-                        모두보기 <KeyboardArrowRightIcon/>
-                    </Link>
                 </div>
 
-                {/* 서비스 타입 필터 추가 */}
                 <div className="service-type-filter">
                     {serviceTypes.map((type, index) => (
                         <button
@@ -633,7 +608,7 @@ function SalonDetail() {
             {/* 리뷰 섹션 추가 */}
             <div className="info-section reviews-section">
                 <div className="info-header reviews-header">
-                    <StarIcon />
+                    <StarIcon/>
                     <h2>리뷰</h2>
                     <Link to={`/reviews/${salon.id}`} className="view-all-link">
                         모두보기 <KeyboardArrowRightIcon/>
@@ -659,15 +634,10 @@ function SalonDetail() {
                                 {review.photos && review.photos.length > 0 && (
                                     <div className="review-photos">
                                         {review.photos.map((photo) => (
-                                            <div key={photo.photo_id} className="review-photo">
+                                            <div key={photo.photoId} className="review-photo">
                                                 <img
-                                                    src={photo.photo_url}
-                                                    alt={`리뷰 사진 ${photo.photo_id}`}
-                                                    onError={(e) => {
-                                                        // 이미지 로드 실패 시 대체 이미지 설정
-                                                        const target = e.target as HTMLImageElement;
-                                                        target.src = salon1Image;
-                                                    }}
+                                                    src={photo.photoUrl}
+                                                    alt={`리뷰 사진 ${photo.photoId}`}
                                                 />
                                             </div>
                                         ))}
@@ -687,7 +657,6 @@ function SalonDetail() {
                                 <div className="review-salon-reply">
                                     <div className="salon-reply-header">
                                         <strong>{salon.name}</strong>
-                                        <span className="reply-time">1 hour ago</span>
                                     </div>
                                 </div>
                             </div>
@@ -706,7 +675,6 @@ function SalonDetail() {
                             <button className="close-btn" onClick={closeMapModal}>×</button>
                         </div>
                         <div className="map-container" id="map">
-                            {/* 네이버 지도가 로드될 div */}
                         </div>
                         <div className="map-address">
                             <p>{salon.address}</p>

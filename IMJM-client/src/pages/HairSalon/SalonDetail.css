@@ -142,11 +142,12 @@
 }
 
 .day {
-    width: 30px;
+    width: 200px;
     font-weight: 500;
 }
 
 .time {
+    margin-left: 20px;
     flex: 1;
 }
 
@@ -182,6 +183,7 @@
 }
 
 .holiday {
+    margin-left: 20px;
     color: #e53935;
     font-weight: 500;
 }
