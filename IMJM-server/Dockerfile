@@ -1,7 +1,10 @@
-FROM openjdk:17-jdk-slim
-ENV TZ=Asia/Seoul
+FROM eclipse-temurin:17-jdk-alpine as build
 WORKDIR /app
-# 정확한 JAR 파일 이름 사용
-COPY build/libs/IMJM-0.0.1-SNAPSHOT.jar app.jar
+COPY . .
+RUN ./gradlew bootJar -x test
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
