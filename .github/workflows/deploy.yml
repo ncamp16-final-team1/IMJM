@@ -49,9 +49,12 @@ jobs:
         username: ${{ secrets.NCP_USERNAME }}
         key: ${{ secrets.NCP_SSH_KEY }}
         script: |
+          echo "Starting SSH connection"
+          ssh -v root@223.130.150.215  # 여기서 verbose 모드로 SSH 연결 시도
           cd /path/to/deployment
           docker-compose down
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/imjm-client:latest
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/imjm-admin:latest
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/imjm-server:latest
           docker-compose up -d
+
