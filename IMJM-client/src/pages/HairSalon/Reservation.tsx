@@ -16,7 +16,7 @@ import ServiceMenus from '../../components/reservation/ServiceMenus';
 import { useStylistSchedule } from '../../hooks/reservation/useStylistSchedule';
 import { useTimeSlots } from '../../hooks/reservation/useTimeSlots';
 import { useServiceTypes } from '../../hooks/reservation/useServiceTypes';
-import { useReservation } from '../../hooks/reservation/useReservation';
+import { useReservation } from '../../hooks/reservation/useDispatch';
 
 
 import { isHoliday, isAM } from '../../utils/reservation/dateUtils';
@@ -76,7 +76,6 @@ const Reservation = () => {
     handleDateSelect: baseHandleDateSelect,
     handleMenuSelect: baseHandleMenuSelect,
   } = useReservation();
-
 
   const resetMenu = () => {
     setSelectedTime(null);
@@ -155,6 +154,17 @@ const Reservation = () => {
       setSelectedMenuName
     );
   };
+
+  // 초기 날짜 설정 및 가용 시간대 불러오기
+  useEffect(() => {
+    if (stylistSchedule && !selectedDate) {
+      // 기본 날짜로 오늘 설정
+      handleDateSelect(dayjs());
+    } else if (stylistSchedule && selectedDate) {
+      // 이미 날짜가 선택된 경우, 해당 날짜의 가용 시간대 불러오기
+      fetchAvailableTimes(selectedDate);
+    }
+  }, [stylistSchedule]);
 
   useEffect(() => {
     if (stylistSchedule && !selectedDate) {

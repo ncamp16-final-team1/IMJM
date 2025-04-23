@@ -29,6 +29,7 @@ public class SalonDto {
     private BigDecimal score;
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private String detail_address;
 
     @Builder
     public SalonDto(Salon salon) {
@@ -47,6 +48,7 @@ public class SalonDto {
         this.score = salon.getScore();
         this.latitude = salon.getLatitude();
         this.longitude = salon.getLongitude();
+        this.detail_address = salon.getDetailAddress();
     }
 
     public static SalonDto from(Salon salon) {

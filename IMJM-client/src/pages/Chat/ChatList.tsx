@@ -23,9 +23,10 @@ const ChatList: React.FC = () => {
     useEffect(() => {
         const fetchChatRooms = async () => {
             try {
-                // 현재 로그인한 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
-                const userId = 'user2'; // 테스트용 사용자 ID
-                const rooms = await ChatService.getUserChatRooms(userId);
+                // 쿠키 확인 로깅 추가
+                console.log('Current Cookies:', document.cookie);
+                
+                const rooms = await ChatService.getUserChatRooms(); // 파라미터 제거
                 setChatRooms(rooms);
                 setLoading(false);
             } catch (error) {

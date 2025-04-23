@@ -1,9 +1,17 @@
 package com.IMJM.reservation.service;
 
 import com.IMJM.admin.repository.CouponRepository;
+<<<<<<< HEAD
 import com.IMJM.admin.repository.PaymentRepository;
 import com.IMJM.admin.repository.ReservationCouponRepository;
 import com.IMJM.common.entity.*;
+=======
+import com.IMJM.admin.repository.ReservationCouponRepository;
+import com.IMJM.common.entity.AdminStylist;
+import com.IMJM.common.entity.Coupon;
+import com.IMJM.common.entity.ReservationCoupon;
+import com.IMJM.common.entity.ServiceMenu;
+>>>>>>> main
 import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
 import com.IMJM.reservation.repository.PointUsageRepository;
@@ -162,18 +170,13 @@ public class ReservationStylistService {
         return new UserPointDto(user.getId(), user.getPoint());
     }
 
-// ============================================
 
+    // 예약처리..
     @Transactional
     public ReservationRequestDto completeReservation(ReservationRequestDto request, String userId) {
         log.info("예약 완료 처리 시작: {}", request);
 
         try {
-            // 현재 사용자 ID 가져오기 (실제 구현에서는 인증 정보에서 가져옴)
-//            String userId = getCurrentUserId();
-            // 기존 로직에서 userId 파라미터 사용
-
-
 
             // 1. 사용자, 스타일리스트, 서비스 메뉴 조회
             Users user = userRepository.findById(userId)
@@ -215,11 +218,6 @@ public class ReservationStylistService {
         }
     }
 
-//    private String getCurrentUserId() {
-//        // 실제 구현에서는 Spring Security에서 인증 정보를 가져옴
-//        // 예시 목적으로 임의의 값 반환
-//        return "user-123";
-//    }
 
     private Reservation createReservation(ReservationRequestDto request, Users user, AdminStylist stylist, ServiceMenu serviceMenu) {
         var reservationData = request.getPaymentRequest().getReservation();

@@ -44,6 +44,10 @@ public class CustomSalonDetails implements UserDetails {
         return salon.getId();
     }
 
+    public String getSalonId() {
+        return salon.getId();
+    }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
