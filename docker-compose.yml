@@ -23,5 +23,6 @@ services:
     ports:
       - "8080:8080"
     restart: always
-    # environment:
-    #   - SPRING_PROFILES_ACTIVE=prod
+    environment:
+      # - SPRING_PROFILES_ACTIVE=prod
+      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
