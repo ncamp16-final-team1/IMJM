@@ -1,31 +1,25 @@
 package com.IMJM.reservation.service;
 
 import com.IMJM.admin.repository.CouponRepository;
-<<<<<<< HEAD
-import com.IMJM.admin.repository.PaymentRepository;
+
 import com.IMJM.admin.repository.ReservationCouponRepository;
 import com.IMJM.common.entity.*;
-=======
-import com.IMJM.admin.repository.ReservationCouponRepository;
 import com.IMJM.common.entity.AdminStylist;
 import com.IMJM.common.entity.Coupon;
 import com.IMJM.common.entity.ReservationCoupon;
 import com.IMJM.common.entity.ServiceMenu;
->>>>>>> main
 import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
+import com.IMJM.reservation.repository.PaymentRepository;
 import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.admin.repository.ServiceMenuRepository;
 import com.IMJM.user.repository.UserRepository;
-import com.IMJM.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;

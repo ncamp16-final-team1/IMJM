@@ -1,0 +1,183 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    max-height: 75vh;
+    width: 90%;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.header {
+    padding: 12px 16px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.messagesContainer {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background-color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.messageWrapper {
+    display: flex;
+    margin-bottom: 16px;
+    align-items: flex-end;
+}
+
+.userMessageWrapper {
+    justify-content: flex-start;
+}
+
+.salonMessageWrapper {
+    justify-content: flex-end;
+}
+
+.avatar {
+    margin: 0 8px;
+    width: 36px !important;
+    height: 36px !important;
+    background-color: #FF9080 !important;
+}
+
+.messageBubble {
+    max-width: 70%;
+    padding: 12px;
+    border-radius: 12px;
+    position: relative;
+    word-break: break-word;
+}
+
+.userMessage {
+    background-color: white;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+
+.salonMessage {
+    background-color: #FDC7BF;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+    color: #333;
+}
+
+.messageText {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.messageTime {
+    font-size: 11px;
+    color: #888;
+    text-align: right;
+    margin-top: 4px;
+}
+
+.imageContainer {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.messageImage {
+    border-radius: 8px;
+    cursor: pointer;
+    object-fit: cover;
+}
+
+.singleImage {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+.multipleImage {
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.translateButton {
+    font-size: 12px !important;
+    padding: 0 !important;
+    min-width: auto !important;
+    color: #777 !important;
+    text-transform: none !important;
+    margin: 4px 0 !important;
+}
+
+.translatedText {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px dashed #ddd;
+}
+
+.translationError {
+    font-size: 12px;
+    color: #e57373;
+    margin-top: 4px;
+}
+
+.inputContainer {
+    background-color: #fff;
+    border-top: 1px solid #eee;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+}
+
+.messageInput {
+    margin-right: 8px;
+}
+
+.attachButton, .imageButton, .sendButton {
+    color: #888;
+}
+
+.sendButton {
+    color: #FF9080 !important;
+}
+
+.previewContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #fff;
+    border-top: 1px solid #eee;
+}
+
+.previewItem {
+    position: relative;
+    width: 64px;
+    height: 64px;
+}
+
+.previewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.removeButton {
+    position: absolute !important;
+    top: -8px;
+    right: -8px;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    color: white !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+    padding: 0 !important;
+}

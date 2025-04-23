@@ -189,7 +189,7 @@ function HairSalon() {
                 setLoading(true);
 
                 try {
-                    const userResponse = await axios.get('/api/user/me');
+                    const userResponse = await axios.get('/api/user/location');
                     if (userResponse.status === 200) {
                         const userData = userResponse.data;
 

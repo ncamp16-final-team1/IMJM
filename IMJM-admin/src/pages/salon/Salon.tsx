@@ -107,45 +107,43 @@ function Salon() {
     };
   
     loadScripts();
-  
-    axios
-      .get("/api/admin/salons/my", { withCredentials: true })
-      .then((res) => {
-        const data = res.data;
-        
-        setForm({
-          introduction: data.introduction || "",
-          startTime: data.startTime || "",
-          endTime: data.endTime || "",
-          timeUnit: data.timeUnit?.toString() || "30",
-          address: data.address || "",
-          detailAddress: data.detailAddress || "",
-        });
-
-        const holidayMask = data.holidayMask ?? 0;
-        const holidayObj: { [key: string]: boolean } = {};
-        defaultDays.forEach((day, i) => {
-          holidayObj[day] = (holidayMask & (1 << i)) > 0;
-        });
-        setHolidays(holidayObj);
-
-        axios.get(`/api/admin/salon-photos`).then((res) => {
-          setPreviews(res.data);
-        });
-
-        axios.get(`/api/admin/stylist/stylists`).then((res) => {
-          setStylists(res.data);
-        });
-
-        axios.get(`/api/admin/salon/designs`).then((res) => {
-          setDesigns(res.data);
-        });
-      })
-      
-      .catch((err) => {
-        console.error("미용실 정보를 불러오는 데 실패했습니다:", err);
-      });
+    fetchSalonInfo();
   }, []);
+
+  const fetchSalonInfo = async () => {
+    try {
+      const res = await axios.get("/api/admin/salons/my", { withCredentials: true });
+      const data = res.data;
+  
+      setForm({
+        introduction: data.introduction || "",
+        startTime: data.startTime || "",
+        endTime: data.endTime || "",
+        timeUnit: data.timeUnit?.toString() || "30",
+        address: data.address || "",
+        detailAddress: data.detailAddress || "",
+      });
+  
+      const holidayMask = data.holidayMask ?? 0;
+      const holidayObj: { [key: string]: boolean } = {};
+      defaultDays.forEach((day, i) => {
+        holidayObj[day] = (holidayMask & (1 << i)) > 0;
+      });
+      setHolidays(holidayObj);
+  
+      const [photosRes, stylistRes, designsRes] = await Promise.all([
+        axios.get(`/api/admin/salon-photos`),
+        axios.get(`/api/admin/stylist/stylists`),
+        axios.get(`/api/admin/salon/designs`)
+      ]);
+  
+      setPreviews(photosRes.data);
+      setStylists(stylistRes.data);
+      setDesigns(designsRes.data);
+    } catch (err) {
+      console.error("미용실 정보를 불러오는 데 실패했습니다:", err);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -250,6 +248,7 @@ function Salon() {
       });
   
       alert('미용실 정보가 저장되었습니다.');
+      fetchSalonInfo();
     } catch (error) {
       console.error('미용실 정보 저장 실패:', error);
     }
@@ -268,6 +267,7 @@ function Salon() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(rows),
     });
+    fetchSalonInfo();
   };
 
   const handleStylistAddOpen = () => {
@@ -291,6 +291,7 @@ function Salon() {
       console.error(err);
       alert("삭제에 실패했습니다.");
     }
+    fetchSalonInfo();
   };
 
   return (
@@ -549,6 +550,7 @@ function Salon() {
                 open={open}
                 handleClose={() => setOpen(false)}
                 stylist={selectedStylist}
+                onSave={fetchSalonInfo}
             />
             
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: 420, mt: 4 }}>
