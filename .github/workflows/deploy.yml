@@ -56,5 +56,6 @@ jobs:
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/imjm-client:latest
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/imjm-admin:latest
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/imjm-server:latest
+          export JASYPT_ENCRYPTOR_PASSWORD=${{ secrets.JASYPT_ENCRYPTOR_PASSWORD }}
           docker-compose up -d
 
