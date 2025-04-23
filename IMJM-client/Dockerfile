@@ -1,6 +1,7 @@
 FROM node:18-alpine as build
 WORKDIR /app
 COPY package*.json ./
+RUN chmod +x ./gradlew
 RUN npm ci
 COPY . .
 RUN npm run build
