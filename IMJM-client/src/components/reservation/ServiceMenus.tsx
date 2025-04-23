@@ -36,12 +36,12 @@ const ServiceMenus = ({
         selectedDate: selectedDate,
         selectedTime: selectedTime, 
         selectedType: selectedType,
-        userId: '', 
         selectedMenu: selectedMenu
           ? {
               serviceName: selectedMenu.serviceName,
               serviceDescription: selectedMenu.serviceDescription,
               price: selectedMenu.price,
+              id: selectedMenu.id,
             }
           : null,
       },

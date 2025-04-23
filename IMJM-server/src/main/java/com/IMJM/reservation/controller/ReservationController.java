@@ -1,23 +1,27 @@
 package com.IMJM.reservation.controller;
 
-import com.IMJM.reservation.dto.ReservationServiceMenuDto;
-import com.IMJM.reservation.dto.SalonCouponDto;
-import com.IMJM.reservation.dto.StylistAndSalonDetailsDto;
-import com.IMJM.reservation.dto.ReservationStylistDto;
+import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.service.ReservationStylistService;
+import com.IMJM.user.dto.CustomOAuth2UserDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/salon")
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationController {
 
     private final ReservationStylistService reservationStylistService;
@@ -69,11 +73,11 @@ public class ReservationController {
     @GetMapping("/reservation/coupons")
     public ResponseEntity<List<SalonCouponDto>> getCoupons(
             @RequestParam String salonId,
-            @RequestParam String totalAmount
-//      @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+            @RequestParam String totalAmount,
+      @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
     ) {
-//    String userId = customOAuth2UserDto.getId();
-        String userId = "user001";
+    String userId = customOAuth2UserDto.getId();
+//        String userId = "user001";
         try {
             int totalAmountInt = Integer.parseInt(totalAmount);
 
@@ -86,4 +90,55 @@ public class ReservationController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    // 사용자의 사용가능한 포인트 조회
+    @GetMapping("/points/available")
+    public ResponseEntity<?> getUserPoint(
+        @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+    ) {
+        String userId = customOAuth2UserDto.getId();
+
+        try {
+            UserPointDto userPointDto = reservationStylistService.getUserPoint(userId);
+            return ResponseEntity.ok(userPointDto);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "User not found with id: " + userId));
+        } catch (Exception e) {
+            // 기타 예외 처리
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error retrieving user points: " + e.getMessage()));
+        }
+    }
+
+    // 결제 완료후 디비 저장?
+    @PostMapping("/reservation/complete")
+    public ResponseEntity<?> completeReservation(@RequestBody ReservationRequestDto  request,
+        @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+    ) {
+        try {
+            String userId = customOAuth2UserDto.getId();
+            log.info("예약 완료 요청: {}", request);
+
+            reservationStylistService.completeReservation(request, userId);
+
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("message", "예약이 성공적으로 완료되었습니다.");
+            // 필요한 경우 추가 정보를 응답에 포함
+
+            return ResponseEntity.ok(successResponse);
+        } catch (Exception e) {
+            log.error("예약 처리 중 오류 발생", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "예약 처리 중 오류가 발생했습니다.");
+            errorResponse.put("error", e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
+
 }

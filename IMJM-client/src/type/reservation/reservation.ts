@@ -32,6 +32,7 @@ export interface ReservationInfo {
     serviceName: string;
     serviceDescription?: string;
     price: number;
+    id: number;
   } | null;
 }
 
