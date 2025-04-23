@@ -131,7 +131,7 @@ public class ReservationStylistService {
 
         LocalDate now = LocalDate.now();
 
-        return coupons.stream()
+        List<SalonCouponDto> couponDtos = coupons.stream()
                 .map(coupon -> {
                     boolean meetsMinPurchase = coupon.getMinimumPurchase() <= totalAmount;
                     boolean isActive = coupon.getIsActive();
@@ -155,6 +155,11 @@ public class ReservationStylistService {
                             .build();
                 })
                 .collect(Collectors.toList());
+
+        // 사용 가능한 쿠폰을 위로, 사용 불가능한 쿠폰을 아래로 정렬
+        couponDtos.sort((a, b) -> Boolean.compare(b.getIsAvailable(), a.getIsAvailable()));
+
+        return couponDtos;
     }
 
     // 유저의 사용가능한 포인트 조회
