@@ -20,7 +20,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import GooglePay from '../../assets/images/google-pay.svg';
 import applePay from '../../assets/images/apple-pay.svg';
-import ApplePayButton from 'react-apple-pay-button';
+// import ApplePayButton from 'react-apple-pay-button';
 import GooglePayButton from '@google-pay/button-react';
 
 import {
