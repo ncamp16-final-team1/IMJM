@@ -1,4 +1,3 @@
-
 import { Box, Button, Typography, Divider } from '@mui/material';
 import {
   KeyboardArrowLeft as KeyboardArrowLeftIcon,
@@ -72,7 +71,6 @@ const ServiceTypes = ({
             </Box>
           )}
           
-
           <Box
             ref={sliderRef}
             sx={{
@@ -133,7 +131,6 @@ const ServiceTypes = ({
             )}
           </Box>
           
-
           {showRightArrow && (
             <Box
               sx={{

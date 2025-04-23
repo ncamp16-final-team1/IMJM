@@ -1,22 +1,27 @@
 package com.IMJM.reservation.service;
 
 import com.IMJM.admin.repository.CouponRepository;
+
 import com.IMJM.admin.repository.ReservationCouponRepository;
+import com.IMJM.common.entity.*;
 import com.IMJM.common.entity.AdminStylist;
 import com.IMJM.common.entity.Coupon;
 import com.IMJM.common.entity.ReservationCoupon;
 import com.IMJM.common.entity.ServiceMenu;
 import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
+import com.IMJM.reservation.repository.PaymentRepository;
+import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.admin.repository.ServiceMenuRepository;
+import com.IMJM.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -35,6 +40,13 @@ public class ReservationStylistService {
     private final CouponRepository couponRepository;
 
     private final ReservationCouponRepository reservationCouponRepository;
+
+    private final UserRepository userRepository;
+
+    private final PaymentRepository paymentRepository;
+
+    private final PointUsageRepository pointUsageRepository;
+
 
     @Transactional(readOnly = true)
     public List<ReservationStylistDto> getStylistsBySalon(String salonId) {
@@ -119,7 +131,7 @@ public class ReservationStylistService {
 
         LocalDate now = LocalDate.now();
 
-        return coupons.stream()
+        List<SalonCouponDto> couponDtos = coupons.stream()
                 .map(coupon -> {
                     boolean meetsMinPurchase = coupon.getMinimumPurchase() <= totalAmount;
                     boolean isActive = coupon.getIsActive();
@@ -143,5 +155,141 @@ public class ReservationStylistService {
                             .build();
                 })
                 .collect(Collectors.toList());
+
+        couponDtos.sort((a, b) -> Boolean.compare(b.getIsAvailable(), a.getIsAvailable()));
+
+        return couponDtos;
+    }
+
+    // 유저의 사용가능한 포인트 조회
+    public UserPointDto getUserPoint(String userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(userId));
+        return new UserPointDto(user.getId(), user.getPoint());
+    }
+
+
+    // 예약처리..
+    @Transactional
+    public ReservationRequestDto completeReservation(ReservationRequestDto request, String userId) {
+        log.info("예약 완료 처리 시작: {}", request);
+
+        try {
+
+            Users user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+            AdminStylist stylist = adminStylistRepository.findById(request.getPaymentRequest().getReservation().getStylist_id())
+                    .orElseThrow(() -> new RuntimeException("스타일리스트를 찾을 수 없습니다."));
+
+            ServiceMenu serviceMenu = serviceMenuRepository.findById(request.getPaymentRequest().getReservation().getService_menu_id())
+                    .orElseThrow(() -> new RuntimeException("서비스 메뉴를 찾을 수 없습니다."));
+
+            Reservation reservation = createReservation(request, user, stylist, serviceMenu);
+            Reservation savedReservation = reservationRepository.save(reservation);
+            log.info("예약 정보 저장 완료. 예약 ID: {}", savedReservation.getId());
+
+            Payment payment = createPayment(request, savedReservation);
+            Payment savedPayment = paymentRepository.save(payment);
+            log.info("결제 정보 저장 완료. 결제 ID: {}", savedPayment.getId());
+
+            if (request.getPayment_info().getPoint_used() > 0) {
+                processPointUsage(request, user);
+
+                updateUserPoints(user, request.getPayment_info().getPoint_used());
+            }
+
+            if (request.getPaymentRequest().getCouponData() != null) {
+                processCouponUsage(request, savedReservation);
+            }
+
+            return request;
+        } catch (Exception e) {
+            log.error("예약 처리 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("예약 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+
+    private Reservation createReservation(ReservationRequestDto request, Users user, AdminStylist stylist, ServiceMenu serviceMenu) {
+        var reservationData = request.getPaymentRequest().getReservation();
+
+        // LocalDate와 LocalTime으로 변환
+        LocalDate reservationDate = LocalDate.parse(reservationData.getReservation_date());
+        LocalTime reservationTime = LocalTime.parse(reservationData.getReservation_time());
+
+        return Reservation.builder()
+                .user(user)
+                .stylist(stylist)
+                .serviceMenu(serviceMenu)
+                .reservationDate(reservationDate)
+                .reservationTime(reservationTime)
+                .reservationServiceType(serviceMenu.getServiceType()) // 서비스 메뉴에서 가져옴
+                .reservationServiceName(serviceMenu.getServiceName()) // 서비스 메뉴에서 가져옴
+                .reservationPrice(serviceMenu.getPrice()) // 서비스 메뉴의 원래 가격 사용
+                .isPaid(true) // 항상 true로 설정
+                .requirements(reservationData.getRequirements())
+                .build();
+    }
+
+    private Payment createPayment(ReservationRequestDto request, Reservation reservation) {
+        return Payment.builder()
+                .reservation(reservation)
+                .price(request.getPaymentRequest().getPrice().intValue())
+                .paymentMethod(request.getPayment_method())
+                .paymentStatus(request.getPayment_status())
+                .transactionId("TRANS_" + System.currentTimeMillis()) // 트랜잭션 ID 생성
+                .paymentDate(LocalDateTime.now())
+                .isCanceled(false)
+                .isRefunded(false)
+                .build();
+    }
+
+    private void processPointUsage(ReservationRequestDto request, Users user) {
+        var pointUsageData = request.getPaymentRequest().getPointUsage();
+
+        PointUsage pointUsage = PointUsage.builder()
+                .user(user)
+                .usageType(pointUsageData.getUsage_type())
+                .price(pointUsageData.getPrice())
+                .useDate(LocalDateTime.now())
+                .content(pointUsageData.getContent())
+                .build();
+
+        pointUsageRepository.save(pointUsage);
+        log.info("포인트 사용 내역 저장 완료. 사용 포인트: {}", pointUsageData.getPrice());
+    }
+
+    private void updateUserPoints(Users user, int usedPoints) {
+        // Users 엔티티에 setPoint 메서드가 없어 리포지토리에서 직접 업데이트 필요
+        int currentPoints = user.getPoint();
+        int newPoints = currentPoints - usedPoints;
+
+        // 음수 포인트 방지 체크
+        if (newPoints < 0) {
+            throw new IllegalArgumentException("사용 가능한 포인트보다 많은 포인트를 사용할 수 없습니다.");
+        }
+
+        // 포인트 업데이트
+        userRepository.updatePoints(user.getId(), newPoints);
+
+        log.info("사용자 포인트 업데이트: {} -> {}", currentPoints, newPoints);
+    }
+
+    private void processCouponUsage(ReservationRequestDto request, Reservation reservation) {
+        var couponData = request.getPaymentRequest().getCouponData();
+
+        Coupon coupon = couponRepository.findById(couponData.getCoupon_id())
+                .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다: " + couponData.getCoupon_id()));
+
+        ReservationCoupon reservationCoupon = ReservationCoupon.builder()
+                .reservation(reservation)
+                .coupon(coupon)
+                .discountAmount(couponData.getDiscount_amount().intValue())
+                .build();
+
+        reservationCouponRepository.save(reservationCoupon);
+        log.info("쿠폰 사용 내역 저장 완료. 쿠폰 ID: {}, 할인 금액: {}",
+                couponData.getCoupon_id(), couponData.getDiscount_amount());
     }
 }
