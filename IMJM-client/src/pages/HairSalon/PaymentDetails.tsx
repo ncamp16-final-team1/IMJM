@@ -27,12 +27,7 @@ import {
   ReservationRequest,
   PointUsageRequest,
   CouponUsageRequest,
-  // PaymentInfo,
   GooglePayRequest,
-  // AllowedPaymentMethod,
-  // MerchantInfo,
-  // TransactionInfo,
-  // PaymentOptions,
 } from '../../type/reservation/payment';
 
 // 인터페이스 정의
@@ -69,7 +64,6 @@ export interface ReservationWithPointUsageRequest {
 }
 
 function PaymentDetails() {
-  // 네비게이션 및 라우터 상태
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -82,30 +76,25 @@ function PaymentDetails() {
     salonId
   } = location.state || {};
 
-  // 데이터 상태
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [userPoint, setUserPoint] = useState<number>(0);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [usedPoints, setUsedPoints] = useState<number>(0);
   const [requirements, setRequirements] = useState<string>('');
 
-  // UI 상태
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pointError, setPointError] = useState("");
   const [isSafariBrowser, setIsSafariBrowser] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<'google' | 'apple' | null>(null);
   
-  // 약관 동의 상태
   const [termsChecked, setTermsChecked] = useState(false);
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [refundPolicyChecked, setRefundPolicyChecked] = useState(false);
   const [agreeAll, setAgreeAllChecked] = useState(false);
   
-  // 계산된 값들
   const totalAmount = selectedMenu?.price || 0;
 
-   // 완료 모달 상태
    const [successModalOpen, setSuccessModalOpen] = useState(false);
   
   const couponDiscountAmount = selectedCoupon
@@ -120,10 +109,8 @@ function PaymentDetails() {
       : totalAmount - selectedCoupon.discountValue) - usedPoints
     : totalAmount - usedPoints;
 
-  // 모든 체크박스가 체크되었는지 확인
   const allChecked = termsChecked && privacyChecked && refundPolicyChecked;
 
-  // 예약 정보 객체
   const reservationData: ReservationRequest = {
     stylist_id: stylistId,
     reservation_date: selectedDate,
@@ -134,20 +121,7 @@ function PaymentDetails() {
     salonId: salonId,
   };
 
-  // 포인트 정보 객체
-  // const usageData: PointUsageRequest = {
-  //   usage_type: 'USE',
-  //   price: usedPoints,
-  //   content: "결제에 사용된 포인트",
-  // };
 
-  // 선택된 쿠폰 정보 객체
-  // const couponData: CouponUsageRequest = {
-  //   coupon_id: selectedCoupon?.couponId || 0,
-  //   discount_amount: couponDiscountAmount,
-  // };
-
-  // 서버에 필요한 데이터터
   const paymentRequest: PaymentRequest = {
     price: finalAmount,
     pointUsage: usedPoints > 0 ? {
@@ -162,7 +136,6 @@ function PaymentDetails() {
     reservation: reservationData,
   };
 
-  // 구글 페이 요청 객체
   const googlePayRequest: GooglePayRequest = {
     apiVersion: 2,
     apiVersionMinor: 0,
@@ -195,9 +168,8 @@ function PaymentDetails() {
   
   console.log('reservationData:', JSON.stringify(googlePayRequest, null, 2));
 
-  // ===== 이벤트 핸들러 =====
   
-  // 체크박스 변경 핸들러
+  
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     switch(type) {
       case 'terms':
@@ -214,7 +186,6 @@ function PaymentDetails() {
     }
   };
 
-  // 전체 동의 체크박스 핸들러
   const handleAgreeAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setAgreeAllChecked(checked);
@@ -223,13 +194,10 @@ function PaymentDetails() {
     setRefundPolicyChecked(checked);
   };
 
-  // 쿠폰 선택 핸들러
   const handleSelectCoupon = (coupon: Coupon) => {
     if (!coupon.isAvailable) return;
     setSelectedCoupon(coupon === selectedCoupon ? null : coupon);
   };
-
-  // 포인트 변경 핸들러
   const handlePointChange = (e) => {
     const value = parseInt(e.target.value, 10);
     
@@ -239,14 +207,13 @@ function PaymentDetails() {
       return;
     }
     
-    // 최대값 검증
     if (value > userPoint) {
       setUsedPoints(userPoint);
       setPointError('사용 가능한 포인트를 초과했습니다.');
       return;
     }
     
-    // 10단위 검증
+  
     if (value % 10 !== 0) {
       setUsedPoints(value);
       setPointError('10단위로 입력해주세요.');
@@ -257,25 +224,23 @@ function PaymentDetails() {
     setPointError('');
   };
 
-  // 결제 과정 건너뛰고 직접 결제 성공 시뮬레이션 함수
-// 파라미터를 받을 수 있도록 수정
 const handlePaymentSuccess = async (paymentData: any) => {
   try {
-    // Google Pay 결제 데이터 확인
+    
     let paymentMethod = '구글페이';
     let paymentToken = null;
     let transactionId = 'TEST_' + Date.now();
     
-    // 실제 Google Pay 결제인 경우 토큰 추출
+    
     if (paymentData && paymentData.paymentMethodData) {
       paymentToken = paymentData.paymentMethodData.tokenizationData?.token;
-      // 실제 Google Pay 응답에서 transactionId가 있다면 사용
+      
       if (paymentData.transactionId) {
         transactionId = paymentData.transactionId;
       }
     }
     
-    // 결제 데이터와 예약 정보를 서버로 전달
+    
     const reservationData = {
       price: finalAmount,
       payment_method: paymentMethod,
@@ -286,13 +251,13 @@ const handlePaymentSuccess = async (paymentData: any) => {
         point_used: usedPoints, 
         currency: 'KRW',
       },
-      payment_token: paymentToken, // Google Pay 토큰 추가
+      payment_token: paymentToken, 
       paymentRequest,
     };
     
-    console.log('===================reservationData:', JSON.stringify(reservationData, null, 2));
+    
 
-    // 요청 헤더에 인증 정보 추가 (필요한 경우)
+   
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -304,15 +269,15 @@ const handlePaymentSuccess = async (paymentData: any) => {
     const response = await axios.post('/api/salon/reservation/complete', reservationData, config);
 
     if (response.status === 200) {
-     // 성공 모달 표시
+
      setSuccessModalOpen(true);
-     // 모달 닫히면 이동하도록 핸들러에서 처리
+  
     } else {
       alert('예약 처리 실패: ' + (response.data?.message || '알 수 없는 오류'));
     }
   } catch (error) {
     console.error('서버 요청 오류:', error);
-    // Axios 오류에서 응답 세부 정보 추출
+
     if (axios.isAxiosError(error) && error.response) {
       console.error('응답 상태:', error.response.status);
       console.error('응답 데이터:', error.response.data);
@@ -358,18 +323,11 @@ const handlePaymentSuccess = async (paymentData: any) => {
   //   }
   // };
 
-
-
-
-
-  
-  // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}`;
   };
 
-  // 비활성화된 쿠폰 메시지 반환 함수
   const getDisabledMessage = (coupon: Coupon): string => {
     if (!coupon.isActive) return '이 쿠폰은 현재 비활성화 상태입니다.';
     if (coupon.minimumPurchase > totalAmount) return `최소 주문 금액(${coupon.minimumPurchase.toLocaleString()}원)을 충족하지 않습니다.`;
@@ -384,9 +342,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
     return '이미 사용한 쿠폰입니다.';
   };
 
-  // ===== 부수 효과 =====
   
-  // 쿠폰 및 포인트 데이터 로딩
   useEffect(() => {
     if (!salonId || !totalAmount) {
       setError("예약 정보가 올바르지 않습니다.");
@@ -438,7 +394,6 @@ const handlePaymentSuccess = async (paymentData: any) => {
     setIsSafariBrowser(isSafari());
   }, []);
 
-  // 약관 전체 동의 상태 업데이트
   useEffect(() => {
     if (termsChecked && privacyChecked && refundPolicyChecked) {
       setAgreeAllChecked(true);
@@ -447,9 +402,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
     }
   }, [termsChecked, privacyChecked, refundPolicyChecked]);
 
-  // ===== 컴포넌트 렌더링 =====
   
-  // 로딩 중 상태 렌더링
   if (loading) {
     return (
       <Box sx={{ maxWidth: 400, mx: 'auto', p: 2 }}>
@@ -471,7 +424,6 @@ const handlePaymentSuccess = async (paymentData: any) => {
     );
   }
 
-  // 에러 상태
   if (error) {
     return (
       <Box 
@@ -907,24 +859,6 @@ const handlePaymentSuccess = async (paymentData: any) => {
               buttonColor="black"
               style={{ width: '300px', height: '50px' }}
             />
-              // Google Pay 버튼 대신 사용할 테스트용 버튼
-          // { <Button 
-          //   variant="contained"
-          //   onClick={() => {
-          //     // 테스트용 결제 데이터 생성
-          //     const testPaymentData = {
-          //       totalPrice: finalAmount.toString(),
-          //       paymentMethod: 'google_pay',
-          //       transactionId: 'TEST_' + Date.now(),
-          //     };
-              
-          //     // 결제 성공 핸들러 호출
-          //     handlePaymentSuccess(testPaymentData);
-          //   }}
-          //   sx={{ width: '300px', height: '50px', backgroundColor: '#000', color: '#fff' }}
-          // >
-          //   테스트 결제 진행
-          // </Button> 
             )}
             
             {selectedPayment === 'apple' && isSafariBrowser && (
@@ -932,14 +866,12 @@ const handlePaymentSuccess = async (paymentData: any) => {
                 onClick={() => {
                   console.log('애플 페이 결제 시작');
                   
-                  // 테스트를 위한 가상 결제 데이터
                   const mockPaymentData = {
                     totalPrice: finalAmount.toString(),
                     paymentMethod: 'apple',
                     transactionId: `apple-${Date.now()}`,
                   };
                   
-                  // 2초 후 결제 완료 시뮬레이션
                   setTimeout(() => {
                     handlePaymentSuccess(mockPaymentData);
                   }, 2000);
@@ -952,7 +884,6 @@ const handlePaymentSuccess = async (paymentData: any) => {
           </Box>
         )}
         
-        {/* 안내 메시지 */}
         {!(selectedPayment && allChecked) && (
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
@@ -966,7 +897,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
         )}
 
 
-<Dialog
+      <Dialog
         open={successModalOpen}
         onClose={() => {
           setSuccessModalOpen(false);

@@ -156,7 +156,6 @@ public class ReservationStylistService {
                 })
                 .collect(Collectors.toList());
 
-        // 사용 가능한 쿠폰을 위로, 사용 불가능한 쿠폰을 아래로 정렬
         couponDtos.sort((a, b) -> Boolean.compare(b.getIsAvailable(), a.getIsAvailable()));
 
         return couponDtos;
@@ -177,7 +176,6 @@ public class ReservationStylistService {
 
         try {
 
-            // 1. 사용자, 스타일리스트, 서비스 메뉴 조회
             Users user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
@@ -187,25 +185,20 @@ public class ReservationStylistService {
             ServiceMenu serviceMenu = serviceMenuRepository.findById(request.getPaymentRequest().getReservation().getService_menu_id())
                     .orElseThrow(() -> new RuntimeException("서비스 메뉴를 찾을 수 없습니다."));
 
-            // 2. 예약 정보 생성 및 저장
             Reservation reservation = createReservation(request, user, stylist, serviceMenu);
             Reservation savedReservation = reservationRepository.save(reservation);
             log.info("예약 정보 저장 완료. 예약 ID: {}", savedReservation.getId());
 
-            // 3. 결제 정보 생성 및 저장
             Payment payment = createPayment(request, savedReservation);
             Payment savedPayment = paymentRepository.save(payment);
             log.info("결제 정보 저장 완료. 결제 ID: {}", savedPayment.getId());
 
-            // 4. 포인트 사용 처리 (포인트를 사용했다면)
             if (request.getPayment_info().getPoint_used() > 0) {
                 processPointUsage(request, user);
 
-                // 사용자 포인트 차감
                 updateUserPoints(user, request.getPayment_info().getPoint_used());
             }
 
-            // 5. 쿠폰 사용 처리 (쿠폰을 사용했다면)
             if (request.getPaymentRequest().getCouponData() != null) {
                 processCouponUsage(request, savedReservation);
             }
@@ -272,8 +265,13 @@ public class ReservationStylistService {
         int currentPoints = user.getPoint();
         int newPoints = currentPoints - usedPoints;
 
-        // 포인트 업데이트 메서드 추가 필요 (예: userRepository.updatePoints(user.getId(), newPoints))
-        // 이 예시에서는 이미 Users 엔티티에 setter가 없으므로 리포지토리 수준에서 업데이트해야 함
+        // 음수 포인트 방지 체크
+        if (newPoints < 0) {
+            throw new IllegalArgumentException("사용 가능한 포인트보다 많은 포인트를 사용할 수 없습니다.");
+        }
+
+        // 포인트 업데이트
+        userRepository.updatePoints(user.getId(), newPoints);
 
         log.info("사용자 포인트 업데이트: {} -> {}", currentPoints, newPoints);
     }
