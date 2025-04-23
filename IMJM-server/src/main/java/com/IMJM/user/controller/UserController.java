@@ -39,6 +39,12 @@ public class UserController {
         return userService.checkLogin(request);
     }
 
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomOAuth2UserDto auth2UserDto) {
+        userService.deleteAccount(auth2UserDto.getId());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/location")
     public ResponseEntity<?> getUserLocation(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
         try {

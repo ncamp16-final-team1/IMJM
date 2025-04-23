@@ -14,7 +14,7 @@ const Login = () => {
         const isSafari = ua.includes('safari') && !ua.includes('chrome');
 
         if (!isSafari) {
-            alert('애플 로그인은 Safari 브라우저에서만 지원됩니다.\nSafari에서 다시 시도해 주세요.');
+            alert('애플 로그인은 Safari 브라우저에서만 지원됩니다.\nSafari에서 다시 시도해 주세요.\n비싸서 못삼...');
             return;
         }
 

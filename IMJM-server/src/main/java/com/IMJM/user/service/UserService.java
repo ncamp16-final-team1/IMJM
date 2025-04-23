@@ -135,4 +135,7 @@ public class UserService {
                 .build();
     }
 
+    public void deleteAccount(String id) {
+        userRepository.deleteById(id);
+    }
 }
