@@ -25,12 +25,7 @@ public class SalonPhotosService {
     public List<SalonPhotoDto> getSalonPhotosBySalonId(String salonId) {
         return salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(salonId)
                 .stream()
-                .map(photo -> SalonPhotoDto.builder()
-                        .salonId(photo.getSalon().getId())
-                        .photoUrl(photo.getPhotoUrl())
-                        .photoOrder(photo.getPhotoOrder())
-                        .uploadDate(photo.getUploadDate())
-                        .build())
+                .map(SalonPhotoDto::getSalonPhoto)
                 .collect(Collectors.toList());
     }
 }
