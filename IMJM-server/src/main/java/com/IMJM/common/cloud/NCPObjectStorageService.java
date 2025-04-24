@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class NCPObjectStorageService implements StorageService {
@@ -97,6 +99,19 @@ public class NCPObjectStorageService implements StorageService {
             s3.deleteObject(bucketName, filePath);
         } catch (Exception e) {
             throw new StorageServiceException(e);
+        }
+    }
+
+    public void deleteFolder(String prefix) {
+        List<String> keys = s3.listObjects(bucketName, prefix).getObjectSummaries()
+                .stream()
+                .map(S3ObjectSummary::getKey)
+                .toList();
+
+        if (!keys.isEmpty()) {
+            DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest(bucketName)
+                    .withKeys(keys.toArray(new String[0]));
+            s3.deleteObjects(deleteRequest);
         }
     }
 }

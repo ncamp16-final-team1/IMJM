@@ -25,7 +25,7 @@ function Footer(): React.ReactElement {
         { id: 'archive', path: '/archive', icon: <PhotoCamera />, label: 'archive' },
         { id: 'community', path: '/community', icon: <PeopleIcon />, label: 'community' },
         { id: 'home', path: '/', icon: <HomeIcon />, label: 'home' },
-        { id: 'hairSalon', path: '/hairSalon', icon: <ContentCutIcon />, label: 'hair salon' },
+        { id: 'hairSalon', path: '/salon', icon: <ContentCutIcon />, label: 'hair salon' },
         { id: 'myPage', path: '/myPage', icon: <PersonIcon />, label: 'my page' }
     ];
 

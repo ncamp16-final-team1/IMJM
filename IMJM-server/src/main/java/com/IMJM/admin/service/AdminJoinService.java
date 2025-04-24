@@ -14,18 +14,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class JoinService {
+public class AdminJoinService {
 
     private final SalonRepository salonRepository;
     private final SalonPhotosRepository salonPhotosRepository;
@@ -111,5 +109,9 @@ public class JoinService {
                 }
             }
         }
+    }
+
+    public boolean checkId(String id) {
+        return !salonRepository.existsById(id);
     }
 }

@@ -2,7 +2,7 @@ package com.IMJM.admin.controller;
 
 import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.admin.dto.SalonDto;
-import com.IMJM.admin.service.JoinService;
+import com.IMJM.admin.service.AdminJoinService;
 import com.IMJM.admin.service.SalonPhotosService;
 import com.IMJM.jwt.JWTUtil;
 import jakarta.servlet.http.Cookie;
@@ -17,21 +17,27 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
-public class JoinController {
+public class AdminJoinController {
 
-    private final JoinService joinService;
+    private final AdminJoinService adminJoinService;
     private final SalonPhotosService salonPhotosService;
     private final JWTUtil jwtUtil;
 
     @PostMapping(value = "/join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> joinProcess(@RequestPart SalonDto joinDTO,
                                          @RequestPart List<MultipartFile> photos) {
-        joinService.joinProcess(joinDTO, photos);
+        adminJoinService.joinProcess(joinDTO, photos);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/check-id")
+    public ResponseEntity<Map<String, Boolean>> checkId(@RequestParam String id) {
+        return ResponseEntity.ok(Map.of("available", adminJoinService.checkId(id)));
     }
 
     @GetMapping("/check-login")
@@ -58,7 +64,7 @@ public class JoinController {
     @GetMapping("/salons/my")
     public ResponseEntity<SalonDto> getMySalon(@AuthenticationPrincipal CustomSalonDetails salonDetails) {
 
-        return ResponseEntity.ok(joinService.selectSalonById(salonDetails));
+        return ResponseEntity.ok(adminJoinService.selectSalonById(salonDetails));
     }
 
     @PostMapping("/logout")
@@ -82,7 +88,7 @@ public class JoinController {
     public ResponseEntity<?> salonUpdate(@AuthenticationPrincipal CustomSalonDetails salonDetails,
                                          @RequestPart SalonDto salonUpdateDto,
                                          @RequestPart(required = false) List<MultipartFile> newPhotos) {
-        joinService.updateProcess(salonDetails.getSalon().getId(), salonUpdateDto, newPhotos);
+        adminJoinService.updateProcess(salonDetails.getSalon().getId(), salonUpdateDto, newPhotos);
         return ResponseEntity.ok().build();
     }
 }

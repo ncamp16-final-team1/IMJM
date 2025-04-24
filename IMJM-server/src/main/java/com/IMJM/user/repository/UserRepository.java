@@ -11,8 +11,9 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<Users, String> {
     Optional<Users> findById(String id);
 
-
     @Modifying
     @Query("UPDATE Users u SET u.point = :newPoints WHERE u.id = :userId")
     void updatePoints(@Param("userId") String userId, @Param("newPoints") int newPoints);
+
+    boolean existsByNickname(String nickname);
 }

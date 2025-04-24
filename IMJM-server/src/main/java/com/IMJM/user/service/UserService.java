@@ -1,11 +1,13 @@
 package com.IMJM.user.service;
 
-import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.common.cloud.StorageService;
+import com.IMJM.common.entity.ClientStylist;
 import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
+import com.IMJM.user.dto.LocationDto;
 import com.IMJM.user.dto.UserDto;
+import com.IMJM.user.repository.ClientStylistRepository;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,16 +37,19 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final ClientStylistRepository stylistRepository;
     private final JWTUtil jwtUtil;
+    private final ClientStylistRepository clientStylistRepository;
+
+    private static final String ANONYMOUS_USER = "anonymous";
+    private static final BigDecimal LAT = new BigDecimal("37.498297");
+    private static final BigDecimal LON = new BigDecimal("127.027733");
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
 
     @Transactional
-    public void completeMemberRegistration(UserDto dto, MultipartFile profileFile) {
-
-        log.info("전달된 userDto: {}", dto);
-        log.info("전달된 프로필 파일: {}", profileFile != null ? profileFile.getOriginalFilename() : "없음");
+    public void completeMemberRegistration(UserDto dto, MultipartFile profileFile, MultipartFile licenseFile) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
@@ -53,13 +58,19 @@ public class UserService {
 
         if (principal instanceof CustomOAuth2UserDto users) {
             usersId = users.getId();
-            log.info("일반 사용자 ID: {}", users.getUser().getId());
-        } else if (principal instanceof CustomSalonDetails salon) {
-            log.info("관리자 ID: {}", salon.getSalon().getId());
         }
 
         Users user = userRepository.findById(Objects.requireNonNull(usersId))
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+        if (dto.getUserType().equals("STYLIST")){
+            ClientStylist clientStylist = ClientStylist.builder()
+                    .userId(user.getId())
+                    .license(uploadProfileImage(usersId, licenseFile))
+                    .salonName(dto.getSalonName())
+                    .build();
+            stylistRepository.save(clientStylist);
+        }
 
         String profileUrl = uploadProfileImage(user.getId(), profileFile);
 
@@ -115,24 +126,64 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
-    public UserDto getUserLocation(String userID) {
+    public LocationDto getUserLocation(String userID) {
+        // 로그인하지 않은 유저
+        if (ANONYMOUS_USER.equals(userID)) {
+            return LocationDto.builder()
+                    .userId(userID)
+                    .latitude(LAT)
+                    .longitude(LON)
+                    .build();
+        }
 
+        // 로그인했는데 위치값이 없는 경우
         Users user = userRepository.findById(userID)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
 
         BigDecimal latitude = user.getLatitude();
         BigDecimal longitude = user.getLongitude();
-
-        // 로그인하지 않은 사용자(anonymous) 처리
-        if (user.getId() == null || latitude == null || longitude == null) {
-            latitude = BigDecimal.valueOf(37.498297);
-            longitude = BigDecimal.valueOf(127.027733);
+        if (latitude == null || longitude == null) {
+            return LocationDto.builder()
+                    .userId(userID)
+                    .latitude(LAT)
+                    .longitude(LON)
+                    .build();
         }
 
-        return UserDto.builder()
+        return LocationDto.builder()
+                .userId(userID)
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
     }
 
+    public void updateUserLocation(String userId, BigDecimal latitude, BigDecimal longitude) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+        user.updateLocation(latitude, longitude);
+        userRepository.save(user);
+    }
+
+    public void deleteAccount(String userid) {
+        Users user = userRepository.findById(userid)
+                .orElseThrow(() -> new RuntimeException("not found user"));
+
+        String prefix = "user/" + userid + "/";
+        try {
+            storageService.deleteFolder(prefix);
+        } catch (Exception e) {
+            log.warn("S3 사용자 폴더 삭제 실패: {}", prefix, e);
+        }
+
+        if (user.getUserType().equals("STYLIST")) {
+            clientStylistRepository.deleteById(userid);
+        }
+
+        user.deleteAccount();
+    }
+
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
 }
