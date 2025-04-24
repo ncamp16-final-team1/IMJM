@@ -142,11 +142,12 @@
 }
 
 .day {
-    width: 30px;
+    width: 200px;
     font-weight: 500;
 }
 
 .time {
+    margin-left: 20px;
     flex: 1;
 }
 
@@ -182,6 +183,7 @@
 }
 
 .holiday {
+    margin-left: 20px;
     color: #e53935;
     font-weight: 500;
 }
@@ -330,4 +332,263 @@
     text-align: center;
     color: #999;
     padding: 20px 0;
+}
+
+/* 서비스 메뉴 스타일 */
+.service-menu-section {
+    margin-top: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.service-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.service-menu-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.service-menu-list {
+    margin-top: 15px;
+    padding-left: 10px;
+}
+
+.service-menu-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.service-menu-item:last-child {
+    border-bottom: none;
+}
+
+.service-info {
+    flex: 1;
+}
+
+.service-name {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.service-type {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.service-description {
+    margin: 0;
+    font-size: 14px;
+    color: #888;
+    line-height: 1.4;
+}
+
+.service-price {
+    min-width: 100px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.service-price p {
+    margin: 0;
+}
+
+.no-services {
+    text-align: center;
+    color: #999;
+    padding: 20px 0;
+}
+
+.service-type-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 15px 0;
+    padding-left: 10px;
+}
+
+.type-filter-btn {
+    background-color: #f5f5f5;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.type-filter-btn.active {
+    background-color: #f5989d;
+    color: white;
+    border-color: #f5989d;
+}
+
+.type-filter-btn:hover:not(.active) {
+    background-color: #eaeaea;
+}
+
+/* 리뷰 섹션 스타일 */
+.reviews-section {
+    margin-top: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.reviews-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.reviews-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.reviews-list {
+    padding: 0;
+}
+
+.review-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.review-title {
+    display: flex;
+    align-items: center;
+}
+
+.stars-container {
+    display: flex;
+}
+
+.star-icon {
+    font-size: 20px;
+    margin-right: 2px;
+}
+
+.review-user {
+    font-size: 14px;
+    color: #777;
+}
+
+.review-content {
+    margin-bottom: 12px;
+}
+
+.review-content p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.review-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.review-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.review-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.review-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.review-tag {
+    font-size: 12px;
+    background-color: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 20px;
+    color: #666;
+}
+
+.review-salon-reply {
+    background-color: #f9f9f9;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.salon-reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.reply-time {
+    font-size: 12px;
+    color: #888;
+}
+
+.review-salon-reply p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.no-reviews {
+    text-align: center;
+    color: #999;
+    padding: 20px 0;
+}
+
+/* 상세 주소 스타일 */
+.detail-address-info {
+    margin-top: 10px;
+    padding-left: 34px;
+}
+
+.detail-address-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
 }

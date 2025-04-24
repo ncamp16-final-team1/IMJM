@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home/Home';
@@ -16,6 +16,7 @@ import MyPage from './pages/MyPage/MyPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
     return (
@@ -44,9 +45,13 @@ function App() {
                         } />
                         <Route path="/salon/:salonId/reservation/:stylistId/paymentDetails" element={
                             <ProtectedRoute>
+                            <>
+                                <ScrollToTop />
                                 <PaymentDetails />
+                            </>
                             </ProtectedRoute>
-                        } />
+                        }
+                        />
                         <Route path="/chat/*" element={
                             <ProtectedRoute>
                                 <ChatMain />

@@ -7,6 +7,7 @@ import com.IMJM.jwt.UserJWTFilter;
 import com.IMJM.jwt.UserSuccessHandler;
 import com.IMJM.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +27,12 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${app.client.domain}")
+    private String clientDomain;
+
+    @Value("${app.admin.domain}")
+    private String adminDomain;
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final UserSuccessHandler userSuccessHandler;
@@ -66,7 +73,7 @@ public class SecurityConfig {
 
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3030"));
+                                configuration.setAllowedOrigins(List.of(clientDomain, adminDomain));
                                 configuration.setAllowedMethods(List.of("*"));
                                 configuration.setAllowedHeaders(List.of("*"));
                                 configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));

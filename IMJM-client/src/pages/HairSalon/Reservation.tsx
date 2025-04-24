@@ -4,7 +4,7 @@ import { Container, Paper, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 
-// 컴포넌트 임포트
+
 import ProfileSection from '../../components/reservation/ProfileSection';
 import CalendarSection from '../../components/reservation/CalendarSection';
 import HolidayNotice from '../../components/reservation/HolidayNotice';
@@ -12,29 +12,29 @@ import TimeSlotsSection from '../../components/reservation/TimeSlotsSection';
 import ServiceTypes from '../../components/reservation/ServiceTypes';
 import ServiceMenus from '../../components/reservation/ServiceMenus';
 
-// 훅 임포트
+
 import { useStylistSchedule } from '../../hooks/reservation/useStylistSchedule';
 import { useTimeSlots } from '../../hooks/reservation/useTimeSlots';
 import { useServiceTypes } from '../../hooks/reservation/useServiceTypes';
 import { useReservation } from '../../hooks/reservation/useDispatch';
 
-// 유틸리티 임포트
+
 import { isHoliday, isAM } from '../../utils/reservation/dateUtils';
 
 const Reservation = () => {
   const { stylistId } = useParams<{ stylistId: string; salonId: string }>();
   
-  // 선택된 메뉴 로컬 상태 관리
+ 
   const [selectedMenuObj, setSelectedMenuObj] = useState(null);
   
-  // 스타일리스트 정보 관련 훅
+ 
   const { 
     stylistSchedule, 
     isSelectedDateHoliday, 
     setIsSelectedDateHoliday 
   } = useStylistSchedule(stylistId);
   
-  // 시간대 관련 훅
+  
   const { 
     allTimeSlots, 
     selectedTime, 
@@ -44,7 +44,7 @@ const Reservation = () => {
     isTimeSlotAvailable: checkTimeAvailability
   } = useTimeSlots(stylistId);
   
-  // 서비스 타입 관련 훅
+  
   const {
     showServiceType,
     setShowServiceType,
@@ -69,7 +69,7 @@ const Reservation = () => {
     handleArrowClick
   } = useServiceTypes();
   
-  // 예약 정보 관련 훅
+  
   const {
     selectedDate,
     reservationInfo,
@@ -77,7 +77,6 @@ const Reservation = () => {
     handleMenuSelect: baseHandleMenuSelect,
   } = useReservation();
 
-  // 메뉴 초기화 함수
   const resetMenu = () => {
     setSelectedTime(null);
     setShowServiceType(false);
@@ -87,20 +86,18 @@ const Reservation = () => {
     setSelectedMenuObj(null); 
   };
 
-  // 시간대가 예약 가능한지 확인하는 함수
+ 
   const isTimeSlotAvailable = (time: string, isHoliday: boolean, date: dayjs.Dayjs | null) => {
     return checkTimeAvailability(time, isHoliday, date);
   };
 
-  // 시간대 선택 핸들러
+
   const handleTimeSelect = (time: string, isHoliday: boolean, date: dayjs.Dayjs | null) => {
     if (isTimeSlotAvailable(time, isHoliday, date)) {
-      // 이미 선택된 시간을 다시 클릭하면 선택 취소
       if (selectedTime === time) {
         setSelectedTime(null);
         resetMenu(); 
       } else {
-        // 새로운 시간 선택
         setSelectedTime(time);
         setShowServiceType(true);
         setSelectedType(null); 
@@ -114,7 +111,6 @@ const Reservation = () => {
     }
   };
 
-  // 날짜 선택 핸들러
   const handleDateSelect = (date: dayjs.Dayjs | null) => {
     const resetTimeSelection = () => {
       setSelectedTime(null);
@@ -125,7 +121,7 @@ const Reservation = () => {
       setSelectedType(null);
       setServiceMenus([]);
       setSelectedMenuName(null);
-      setSelectedMenuObj(null); // 메뉴 객체 초기화
+      setSelectedMenuObj(null); 
     };
 
     baseHandleDateSelect(
@@ -138,14 +134,13 @@ const Reservation = () => {
     );
   };
 
-  // 메뉴 선택 핸들러
   const handleMenuSelect = (menu: any) => {
     if (menu === null) {
       setSelectedMenuName(null);
-      setSelectedMenuObj(null); // 메뉴 객체 초기화
+      setSelectedMenuObj(null); 
     } else {
       setSelectedMenuName(menu.serviceName);
-      setSelectedMenuObj(menu); // 선택된 메뉴 객체 저장
+      setSelectedMenuObj(menu); 
     }
 
     baseHandleMenuSelect(
@@ -172,6 +167,14 @@ const Reservation = () => {
   }, [stylistSchedule]);
 
   useEffect(() => {
+    if (stylistSchedule && !selectedDate) {
+      handleDateSelect(dayjs());
+    } else if (stylistSchedule && selectedDate) {
+      fetchAvailableTimes(selectedDate);
+    }
+  }, [stylistSchedule]);
+
+  useEffect(() => {
     if (selectedDate && stylistSchedule) {
       handleDateSelect(selectedDate);
     }
@@ -182,10 +185,8 @@ const Reservation = () => {
   return (
     <Container disableGutters maxWidth="sm" sx={{ p: 0 }}>
       <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        {/* 프로필 섹션 */}
         <ProfileSection stylistSchedule={stylistSchedule} />
 
-        {/* 캘린더 섹션 */}
         <CalendarSection
           stylistSchedule={stylistSchedule}
           selectedDate={selectedDate}
@@ -194,10 +195,8 @@ const Reservation = () => {
         />
       </Paper>
 
-      {/* 휴무일 안내 */}
       <HolidayNotice isSelectedDateHoliday={isSelectedDateHoliday} />
 
-      {/* 시간대 선택 섹션 */}
       <TimeSlotsSection
         isSelectedDateHoliday={isSelectedDateHoliday}
         selectedDate={selectedDate}
@@ -209,7 +208,6 @@ const Reservation = () => {
         isAM={isAM}
       />
 
-      {/* 서비스 타입 선택 섹션 */}
       <ServiceTypes
         showServiceType={showServiceType}
         isMenuLoading={isMenuLoading}
@@ -227,7 +225,6 @@ const Reservation = () => {
         onArrowClick={handleArrowClick}
       />
 
-      {/* 서비스 메뉴 선택 섹션 - 필요한 모든 속성 전달 */}
       <ServiceMenus
         selectedType={selectedType}
         isMenuLoading={isMenuLoading}

@@ -1,0 +1,28 @@
+services:
+  client:
+    build: ./IMJM-client
+    container_name: imjm-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    restart: always
+
+  admin:
+    build: ./IMJM-admin
+    container_name: imjm-admin
+    ports:
+      - "3030:80"
+    depends_on:
+      - server
+    restart: always
+
+  server:
+    build: ./IMJM-server
+    container_name: imjm-server
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      # - SPRING_PROFILES_ACTIVE=prod
+      - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
