@@ -16,6 +16,7 @@ import MyPage from './pages/MyPage/MyPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
+import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -77,6 +78,9 @@ function App() {
                                 <UserTypeSelect />
                         } />
                         <Route path="/user/register/step1" element={
+                                <RegisterStep1 />
+                        } />
+                        <Route path="/user/register/step2" element={
                                 <UserDetailRegister />
                         } />
                         <Route path="/user/final" element={

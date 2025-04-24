@@ -2,12 +2,10 @@ package com.IMJM.admin.controller;
 
 import com.IMJM.admin.dto.CouponDto;
 import com.IMJM.admin.dto.CustomSalonDetails;
-import com.IMJM.admin.service.CouponService;
-import com.IMJM.common.entity.Coupon;
+import com.IMJM.admin.service.AdminCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,14 +13,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/coupon")
 @RequiredArgsConstructor
-public class CouponController {
+public class AdminCouponController {
 
-    private final CouponService couponService;
+    private final AdminCouponService adminCouponService;
 
     @GetMapping("/list")
     public ResponseEntity<List<CouponDto>> couponList(@AuthenticationPrincipal CustomSalonDetails salonDetails) {
         String salonId = salonDetails.getSalon().getId();
-        List<CouponDto> couponDtos = couponService.couponList(salonId);
+        List<CouponDto> couponDtos = adminCouponService.couponList(salonId);
 
         return ResponseEntity.ok(couponDtos);
     }
@@ -31,7 +29,7 @@ public class CouponController {
     public ResponseEntity<?> createCoupon(@AuthenticationPrincipal CustomSalonDetails salonDetails,
                                           @RequestBody CouponDto couponDto) {
         String salonId = salonDetails.getSalon().getId();
-        couponService.createCoupon(salonId, couponDto);
+        adminCouponService.createCoupon(salonId, couponDto);
 
         return ResponseEntity.ok().build();
     }
@@ -39,7 +37,7 @@ public class CouponController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCoupon(@PathVariable Long id){
 
-        couponService.deleteCoupon(id);
+        adminCouponService.deleteCoupon(id);
 
         return ResponseEntity.ok().build();
     }
@@ -48,7 +46,7 @@ public class CouponController {
     public ResponseEntity<?> updateCoupon(@PathVariable Long id,
                                           @RequestBody CouponDto couponDto){
 
-        couponService.updateCoupon(id, couponDto);
+        adminCouponService.updateCoupon(id, couponDto);
 
         return ResponseEntity.ok().build();
     }

@@ -11,8 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import java.math.BigDecimal;
 
@@ -26,12 +30,15 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto,
-                                          @RequestPart(value = "profile", required = false) MultipartFile profile) {
-
-        if(userDto.getUserType().equals("MEMBER")) {
-            userService.completeMemberRegistration(userDto ,profile);
-        }
+                                          @RequestPart(value = "profile", required = false) MultipartFile profile,
+                                          @RequestPart(value = "license", required = false) MultipartFile license) {
+        userService.completeMemberRegistration(userDto ,profile, license);
         return ResponseEntity.ok("회원가입 완료");
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Map<String, Boolean>> checkNickname(@RequestParam String nickname) {
+        return ResponseEntity.ok(Map.of("available", userService.isNicknameAvailable(nickname)));
     }
 
     @PostMapping("/logout")
@@ -42,6 +49,12 @@ public class UserController {
     @GetMapping("/check-login")
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
         return userService.checkLogin(request);
+    }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomOAuth2UserDto auth2UserDto) {
+        userService.deleteAccount(auth2UserDto.getId());
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/location")

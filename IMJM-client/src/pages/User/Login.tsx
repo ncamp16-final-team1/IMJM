@@ -2,11 +2,12 @@ import { Container, Button, Box } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import logoImage from '../../assets/images/logo.png';
+import { API_BASE_URL } from '../../config';
 
 const Login = () => {
 
     const handleGoogleLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
     };
 
     const handleAppleLogin = () => {
@@ -14,11 +15,11 @@ const Login = () => {
         const isSafari = ua.includes('safari') && !ua.includes('chrome');
 
         if (!isSafari) {
-            alert('애플 로그인은 Safari 브라우저에서만 지원됩니다.\nSafari에서 다시 시도해 주세요.');
+            alert('애플 로그인은 Safari 브라우저에서만 지원됩니다.\nSafari에서 다시 시도해 주세요.\n비싸서 못삼...');
             return;
         }
 
-        window.location.href = 'http://localhost:8080/oauth2/authorization/apple';
+        window.location.href = `${API_BASE_URL}/oauth2/authorization/apple`;
     };
 
     return (
