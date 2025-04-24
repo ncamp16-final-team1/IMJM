@@ -1,11 +1,12 @@
 package com.IMJM.user.service;
 
-import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.common.cloud.StorageService;
+import com.IMJM.common.entity.ClientStylist;
 import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.UserDto;
+import com.IMJM.user.repository.ClientStylistRepository;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,16 +36,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final ClientStylistRepository stylistRepository;
     private final JWTUtil jwtUtil;
+    private final ClientStylistRepository clientStylistRepository;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
 
     @Transactional
-    public void completeMemberRegistration(UserDto dto, MultipartFile profileFile) {
-
-        log.info("전달된 userDto: {}", dto);
-        log.info("전달된 프로필 파일: {}", profileFile != null ? profileFile.getOriginalFilename() : "없음");
+    public void completeMemberRegistration(UserDto dto, MultipartFile profileFile, MultipartFile licenseFile) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
@@ -53,13 +53,19 @@ public class UserService {
 
         if (principal instanceof CustomOAuth2UserDto users) {
             usersId = users.getId();
-            log.info("일반 사용자 ID: {}", users.getUser().getId());
-        } else if (principal instanceof CustomSalonDetails salon) {
-            log.info("관리자 ID: {}", salon.getSalon().getId());
         }
 
         Users user = userRepository.findById(Objects.requireNonNull(usersId))
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+        if (dto.getUserType().equals("STYLIST")){
+            ClientStylist clientStylist = ClientStylist.builder()
+                    .userId(user.getId())
+                    .license(uploadProfileImage(usersId, licenseFile))
+                    .salonName(dto.getSalonName())
+                    .build();
+            stylistRepository.save(clientStylist);
+        }
 
         String profileUrl = uploadProfileImage(user.getId(), profileFile);
 
@@ -135,7 +141,25 @@ public class UserService {
                 .build();
     }
 
-    public void deleteAccount(String id) {
-        userRepository.deleteById(id);
+    public void deleteAccount(String userid) {
+        Users user = userRepository.findById(userid)
+                .orElseThrow(() -> new RuntimeException("not found user"));
+
+        String prefix = "user/" + userid + "/";
+        try {
+            storageService.deleteFolder(prefix);
+        } catch (Exception e) {
+            log.warn("S3 사용자 폴더 삭제 실패: {}", prefix, e);
+        }
+
+        if (user.getUserType().equals("STYLIST")) {
+            clientStylistRepository.deleteById(userid);
+        }
+
+        user.deleteAccount();
+    }
+
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
     }
 }

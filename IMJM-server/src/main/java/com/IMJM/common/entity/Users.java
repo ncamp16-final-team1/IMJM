@@ -95,4 +95,14 @@ public class Users {
         this.isNotification = isNotification;
         this.termsAgreed = termsAgreed;
     }
+
+    public void deleteAccount() {
+        this.gender = null;
+        this.nickname = null;
+        this.profile = null;
+        this.birthday = null;
+        this.region = null;
+        this.isNotification = false;
+        this.termsAgreed = false;
+    }
 }

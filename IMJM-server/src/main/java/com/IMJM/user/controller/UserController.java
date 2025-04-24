@@ -9,8 +9,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,12 +25,15 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto,
-                                          @RequestPart(value = "profile", required = false) MultipartFile profile) {
-
-        if(userDto.getUserType().equals("MEMBER")) {
-            userService.completeMemberRegistration(userDto ,profile);
-        }
+                                          @RequestPart(value = "profile", required = false) MultipartFile profile,
+                                          @RequestPart(value = "license", required = false) MultipartFile license) {
+        userService.completeMemberRegistration(userDto ,profile, license);
         return ResponseEntity.ok("회원가입 완료");
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Map<String, Boolean>> checkNickname(@RequestParam String nickname) {
+        return ResponseEntity.ok(Map.of("available", userService.isNicknameAvailable(nickname)));
     }
 
     @PostMapping("/logout")
@@ -46,9 +53,10 @@ public class UserController {
     }
 
     @GetMapping("/location")
-    public ResponseEntity<?> getUserLocation(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+    public ResponseEntity<?> getUserLocation() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         try {
-            UserDto userDto = userService.getUserLocation(userDetails.getId());
+            UserDto userDto = userService.getUserLocation(userId);
             return ResponseEntity.ok(userDto);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증되지 않은 사용자");
