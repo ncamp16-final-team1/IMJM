@@ -13,6 +13,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PersonIcon from '@mui/icons-material/Person';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 import './SalonDetail.css';
 
@@ -100,18 +101,18 @@ function SalonDetail() {
     const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
     const [showAllHours, setShowAllHours] = useState<boolean>(false);
     const [showMapModal, setShowMapModal] = useState<boolean>(false);
-    const [stylists, setStylists] = useState<Stylist[]>([]); // 스타일리스트 상태 추가
-    const [serviceMenus, setServiceMenus] = useState<ServiceMenu[]>([]); // 서비스 메뉴 상태 추가
-    const [reviews, setReviews] = useState<Review[]>([]); // 리뷰 상태 추가
+    const [showPhoneModal, setShowPhoneModal] = useState<boolean>(false);
+    const [stylists, setStylists] = useState<Stylist[]>([]);
+    const [serviceMenus, setServiceMenus] = useState<ServiceMenu[]>([]);
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [reviewsLoading, setReviewsLoading] = useState<boolean>(false);
+    const [reviewPage, setReviewPage] = useState<number>(0);
+    const [hasMoreReviews, setHasMoreReviews] = useState<boolean>(true);
     const [selectedServiceType, setSelectedServiceType] = useState<string>('전체');
     const [serviceTypes, setServiceTypes] = useState<string[]>(['전체']);
 
     const isDayOff = (dayIndex: number, holidayMask: number) => {
-
         const bitValue = 1 << dayIndex;
-
-        console.log(`요일 인덱스: ${dayIndex}, 비트값: ${bitValue}, 휴일마스크: ${holidayMask}, 결과: ${(holidayMask & bitValue) !== 0}`);
-
         return (holidayMask & bitValue) !== 0;
     };
 
@@ -123,6 +124,15 @@ function SalonDetail() {
         setShowMapModal(false);
     };
 
+    // 전화번호 모달 열기/닫기 함수 추가
+    const showPhone = () => {
+        setShowPhoneModal(true);
+    };
+
+    const closePhoneModal = () => {
+        setShowPhoneModal(false);
+    };
+
     const toggleBusinessHours = () => {
         setShowAllHours(!showAllHours);
     };
@@ -131,6 +141,62 @@ function SalonDetail() {
         setSelectedServiceType(type);
     };
 
+    // 리뷰를 불러오는 함수
+    const fetchReviews = async (page: number = 0) => {
+        try {
+            setReviewsLoading(true);
+            const reviewResponse = await axios.get(`/api/salon/${id}/reviews?page=${page}&size=10`);
+
+            if (reviewResponse.status === 200) {
+                const newReviews = reviewResponse.data.contents;
+
+                // 리뷰 사진 가져오기
+                const reviewsWithPhotos = await Promise.all(newReviews.map(async (review: any) => {
+                    try {
+                        const photosResponse = await axios.get(`/api/review/${review.id}/photos`);
+                        if (photosResponse.status === 200) {
+                            review.photos = photosResponse.data;
+                        }
+                    } catch (error) {
+                        console.error(`리뷰 ${review.id}의 사진을 가져오는데 실패했습니다:`, error);
+                        review.photos = [];
+                    }
+                    return {
+                        id: review.id,
+                        user_id: review.userId,
+                        salon_id: review.salonId,
+                        reg_date: review.regDate,
+                        score: review.score,
+                        content: review.content,
+                        review_tag: review.reviewTag,
+                        reservation_id: review.reservationId,
+                        user_nickname: '사용자',
+                        photos: review.photos || []
+                    };
+                }));
+
+                // 기존 리뷰에 새 리뷰 추가 (페이지가 0이면 초기화)
+                setReviews(prevReviews =>
+                    page === 0 ? reviewsWithPhotos : [...prevReviews, ...reviewsWithPhotos]
+                );
+
+                // 더 불러올 리뷰가 있는지 확인
+                setHasMoreReviews(!reviewResponse.data.last);
+                setReviewPage(page);
+            }
+        } catch (error) {
+            console.error('리뷰 정보를 불러오는데 실패했습니다:', error);
+        } finally {
+            setReviewsLoading(false);
+        }
+    };
+
+    // 더 많은 리뷰 불러오기
+    const loadMoreReviews = () => {
+        if (!reviewsLoading && hasMoreReviews) {
+            fetchReviews(reviewPage + 1);
+        }
+    };
 
     useEffect(() => {
         const fetchSalonDetail = async () => {
@@ -186,7 +252,6 @@ function SalonDetail() {
                     try {
                         const photosResponse = await axios.get(`/api/salon/${id}/photos`);
                         if (photosResponse.status === 200 && photosResponse.data.length > 0) {
-                            // 사진 정보 매핑
                             salonWithDetails.photos = photosResponse.data.map((photo: any) => ({
                                 photoId: photo.photoId,
                                 photoUrl: photo.photoUrl,
@@ -198,9 +263,8 @@ function SalonDetail() {
                     }
                     setSalon(salonWithDetails);
                     try {
-                        const stylistsResponse = await axios.get(`/api/hairsalon/stylists/${id}`);
+                        const stylistsResponse = await axios.get(`/api/salon/stylists/${id}`);
                         if (stylistsResponse.status === 200) {
-                            // 스타일리스트 데이터 형식 변환 (필요시)
                             const stylistsData = stylistsResponse.data.map((stylist: any) => ({
                                 stylist_id: stylist.id || stylist.stylistId,
                                 name: stylist.name,
@@ -234,49 +298,10 @@ function SalonDetail() {
                         console.error('서비스 메뉴 정보를 불러오는데 실패했습니다:', serviceMenuError);
                         setServiceMenus([]);
                     }
-                    try {
-                        const reviewResponse = await axios.get(`/api/salon/${id}/reviews`);
-                        if (reviewResponse.status === 200) {
-                            const reviewsData = reviewResponse.data.map((review: any) => {
-                                return {
-                                    id: review.id,
-                                    user_id: review.userId,
-                                    salon_id: review.salonId,
-                                    reg_date: review.regDate,
-                                    score: review.score,
-                                    content: review.content,
-                                    review_tag: review.reviewTag,
-                                    reservation_id: review.reservationId,
-                                    user_nickname: '사용자',
-                                    photos: []
-                                };
-                            });
 
-                            const reviewsWithPhotos = await Promise.all(reviewsData.map(async (review) => {
-                                try {
-                                    const photosResponse = await axios.get(`/api/review/${review.id}/photos`);
-                                    if (photosResponse.status === 200) {
-                                        review.photos = photosResponse.data;
-                                    }
-                                } catch (error) {
-                                    console.error(`리뷰 ${review.id}의 사진을 가져오는데 실패했습니다:`, error);
-                                }
-                                return review;
-                            }));
+                    // 리뷰 로드 (페이징 처리)
+                    fetchReviews(0);
 
-                            const sortedReviews = reviewsWithPhotos.sort((a: Review, b: Review) =>
-                                new Date(b.reg_date).getTime() - new Date(a.reg_date).getTime()
-                            );
-
-                            setReviews(sortedReviews);
-                        } else {
-                            setReviews([]);
-                        }
-                    } catch (reviewError) {
-                        console.error('리뷰 정보를 불러오는데 실패했습니다:', reviewError);
-                        setReviews([]);
-                        setLoading(false);
-                    }
                     setLoading(false);
                 } else {
                     setError(`ID: ${id}에 해당하는 살롱을 찾을 수 없습니다.`);
@@ -286,7 +311,6 @@ function SalonDetail() {
                 setError('살롱 상세 정보를 불러오는데 실패했습니다.');
                 console.error('살롱 상세 정보 불러오기 오류:', err);
                 setLoading(false);
-
                 setReviews([]);
             }
         };
@@ -294,7 +318,17 @@ function SalonDetail() {
         fetchSalonDetail();
     }, [id]);
 
-    // 지도 api
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.scrollHeight - 100) {
+                loadMoreReviews();
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [reviewPage, reviewsLoading, hasMoreReviews]);
+
     useEffect(() => {
         if (showMapModal && salon) {
             const script = document.createElement('script');
@@ -362,7 +396,6 @@ function SalonDetail() {
         const hasHalfStar = score - fullStars >= 0.5;
         const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
-
         return (
             <div className="stars-container">
                 {[...Array(fullStars)].map((_, i) => (
@@ -402,7 +435,6 @@ function SalonDetail() {
             return `${years}년 전`;
         }
     };
-
 
     if (loading) {
         return <div className="loading-container">살롱 정보 로딩 중...</div>;
@@ -465,17 +497,23 @@ function SalonDetail() {
 
             <div className="reservation-buttons">
                 <button className="reservation-btn calendar">
-                    <span className="icon">📅</span> Reservation
+                    <CalendarTodayIcon className="btn-icon" />
+                    <span>예약하기</span>
                 </button>
-                <button className="reservation-btn phone">
-                    <span className="icon">📞</span> Reservation
+                <button className="reservation-btn phone" onClick={showPhone}>
+                    <PhoneIcon className="btn-icon" />
+                    <span>전화</span>
+                </button>
+                <button className="reservation-btn location" onClick={showMap}>
+                    <LocationOnIcon className="btn-icon" />
+                    <span>위치 보기</span>
                 </button>
             </div>
 
             <div className="info-section">
                 <div className="info-header" onClick={toggleBusinessHours}>
                     <AccessTimeIcon/>
-                    <h2>운영 시간 | {salon.startTime} ~ {salon.endTime}</h2>
+                    <h2>운영 시간 | {salon.startTime.slice(0, 5)} ~ {salon.endTime.slice(0, 5)}</h2>
                     <KeyboardArrowDownIcon className={showAllHours ? "rotated" : ""}/>
                 </div>
                 {showAllHours && (
@@ -486,7 +524,7 @@ function SalonDetail() {
                                     {isDayOff(dayToIndex[hour.day], salon.holidayMask) ? (
                                         <span className="holiday">휴무</span>
                                     ) : (
-                                        <span className="time">{hour.open} ~ {hour.close}</span>
+                                        <span className="time">{hour.open.slice(0, 5)} ~ {hour.close.slice(0, 5)}</span>
                                     )}
                                     </span>
                             </div>
@@ -516,25 +554,12 @@ function SalonDetail() {
                     <p dangerouslySetInnerHTML={{__html: salon.introduction.replace(/\n/g, '<br>')}}></p>
                 </div>
             </div>
-            <div className="information-nav">
-                <div className="nav-item" onClick={showMap}>
-                    <LocationOnIcon/>
-                    <span>location</span>
-                </div>
-                <div className="nav-item">
-                    <PhoneIcon/>
-                    <span>phone call</span>
-                </div>
-            </div>
 
             {/* 스타일리스트 섹션 추가 */}
             <div className="info-section stylists-section">
                 <div className="info-header stylists-header">
                     <PersonIcon/>
                     <h2>스타일리스트</h2>
-                    <Link to="/salon/stylists/SALON001" className="view-all-link">
-                        모두보기 <KeyboardArrowRightIcon/>
-                    </Link>
                 </div>
                 <div className="stylists-list">
                     {stylists.length > 0 ? (
@@ -616,57 +641,75 @@ function SalonDetail() {
                 </div>
                 <div className="reviews-list">
                     {reviews.length > 0 ? (
-                        reviews.slice(0, 3).map((review) => (
-                            <div key={review.id} className="review-item">
-                                <div className="review-header">
-                                    <div className="review-title">
-                                        {renderStars(review.score)}
+                        <>
+                            {reviews.map((review) => (
+                                <div key={review.id} className="review-item">
+                                    <div className="review-header">
+                                        <div className="review-title">
+                                            {renderStars(review.score)}
+                                        </div>
+                                        <div className="review-user">
+                                            {review.user_nickname} | {formatTimeAgo(review.reg_date)}
+                                        </div>
                                     </div>
-                                    <div className="review-user">
-                                        {review.user_nickname} | {formatTimeAgo(review.reg_date)}
+
+                                    <div className="review-content">
+                                        <p>{review.content}</p>
+                                    </div>
+
+                                    {review.photos && review.photos.length > 0 && (
+                                        <div className="review-photos">
+                                            {review.photos.map((photo) => (
+                                                <div key={photo.photoId} className="review-photo">
+                                                    <img
+                                                        src={photo.photoUrl}
+                                                        alt={`리뷰 사진 ${photo.photoId}`}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {review.review_tag && (
+                                        <div className="review-tags">
+                                            {review.review_tag.split(',').map((tag, index) => (
+                                                <span key={index} className="review-tag">
+                                                    #{tag.trim()}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="review-salon-reply">
+                                        <div className="salon-reply-header">
+                                            <strong>{salon.name}</strong>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div className="review-content">
-                                    <p>{review.content}</p>
+                            ))}
+                            {reviewsLoading && (
+                                <div className="loading-more">리뷰 더 불러오는 중...</div>
+                            )}
+                            {!reviewsLoading && hasMoreReviews && (
+                                <div className="load-more-container">
+                                    <button
+                                        className="load-more-button"
+                                        onClick={() => loadMoreReviews()}
+                                    >
+                                        더 보기
+                                    </button>
                                 </div>
-
-                                {review.photos && review.photos.length > 0 && (
-                                    <div className="review-photos">
-                                        {review.photos.map((photo) => (
-                                            <div key={photo.photoId} className="review-photo">
-                                                <img
-                                                    src={photo.photoUrl}
-                                                    alt={`리뷰 사진 ${photo.photoId}`}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {review.review_tag && (
-                                    <div className="review-tags">
-                                        {review.review_tag.split(',').map((tag, index) => (
-                                            <span key={index} className="review-tag">
-                                                #{tag.trim()}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div className="review-salon-reply">
-                                    <div className="salon-reply-header">
-                                        <strong>{salon.name}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
+                            )}
+                        </>
                     ) : (
-                        <p className="no-reviews">등록된 리뷰가 없습니다.</p>
+                        <p className="no-reviews">
+                            {reviewsLoading ? "리뷰 불러오는 중..." : "등록된 리뷰가 없습니다."}
+                        </p>
                     )}
                 </div>
             </div>
 
+            {/* 지도 모달 */}
             {showMapModal && (
                 <div className="map-modal">
                     <div className="map-modal-content">
@@ -678,6 +721,27 @@ function SalonDetail() {
                         </div>
                         <div className="map-address">
                             <p>{salon.address}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 전화번호 모달 추가 */}
+            {showPhoneModal && (
+                <div className="phone-modal">
+                    <div className="phone-modal-content">
+                        <div className="phone-header">
+                            <h3>{salon.name} 연락처</h3>
+                            <button className="close-btn" onClick={closePhoneModal}>×</button>
+                        </div>
+                        <div className="phone-number">
+                            <PhoneIcon className="phone-icon" />
+                            <p>{salon.callNumber}</p>
+                        </div>
+                        <div className="phone-actions">
+                            <a href={`tel:${salon.callNumber}`} className="call-button">
+                                전화 걸기
+                            </a>
                         </div>
                     </div>
                 </div>

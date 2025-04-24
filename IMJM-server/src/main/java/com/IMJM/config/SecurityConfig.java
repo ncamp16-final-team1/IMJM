@@ -5,6 +5,7 @@ import com.IMJM.jwt.JWTUtil;
 import com.IMJM.jwt.AdminLoginFilter;
 import com.IMJM.jwt.UserJWTFilter;
 import com.IMJM.jwt.UserSuccessHandler;
+import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
@@ -32,14 +33,18 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final CustomOAuth2UserService customOAuth2UserService;
 
+    private final UserRepository userRepository;
+
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration,
                           UserSuccessHandler userSuccessHandler,
                           JWTUtil jwtUtil,
-                          CustomOAuth2UserService customOAuth2UserService) {
+                          CustomOAuth2UserService customOAuth2UserService,
+                          UserRepository userRepository) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.userSuccessHandler = userSuccessHandler;
         this.jwtUtil = jwtUtil;
         this.customOAuth2UserService = customOAuth2UserService;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -101,8 +106,8 @@ public class SecurityConfig {
 
         http
                 .addFilterBefore(new AdminJWTFilter(jwtUtil), AdminLoginFilter.class)
-                .addFilterBefore(new UserJWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new UserJWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class)
+                .addFilterBefore(new UserJWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new UserJWTFilter(jwtUtil, userRepository), OAuth2LoginAuthenticationFilter.class)
                 .addFilterAt(new AdminLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         http

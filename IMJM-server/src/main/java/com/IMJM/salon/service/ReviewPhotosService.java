@@ -15,22 +15,10 @@ public class ReviewPhotosService {
 
     private final ReviewPhotosRepository reviewPhotosRepository;
 
-    public List<String> getPhotoUrlsByReviewId(Long reviewId) {
-        return reviewPhotosRepository.findByReview_IdOrderByPhotoOrderAsc(reviewId)
-                .stream()
-                .map(ReviewPhotos::getPhotoUrl)
-                .collect(Collectors.toList());
-    }
-
     public List<ReviewPhotosDto> getReviewPhotosByReviewId(Long reviewId) {
         return reviewPhotosRepository.findByReview_IdOrderByPhotoOrderAsc(reviewId)
                 .stream()
-                .map(photo -> ReviewPhotosDto.builder()
-                        .photoId(photo.getPhotoId())
-                        .photoUrl(photo.getPhotoUrl())
-                        .photoOrder(photo.getPhotoOrder())
-                        .uploadDate(photo.getUploadDate())
-                        .build())
+                .map(ReviewPhotosDto::getReviewPhotos)
                 .collect(Collectors.toList());
     }
 }
