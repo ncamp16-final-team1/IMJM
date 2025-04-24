@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: IMJM
+  datasource:
+    url: jdbc:postgresql://localhost:5432/imjm
+    username: postgres
+    password: 0817
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: imjm
+    show-sql: true
+  web:
+    resources:
+      static-locations: classpath:/static/
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: imjm
+    default-schema: imjm
+    baseline-version: 0
+    validate-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+
+jasypt:
+  encryptor:
+    bean: jasyptEncryptor
+    password: ${JASYPT_KEY}
+
+jwt:
+  secret:
+    key: ENC(P5VtdDcx3wZP132xwQgfW2v4vht3Bn7SfrCKxw6mJ7jkIsTcBUN3NZkzT5eKPoqqSQgqRP6yyKM=)
+
+ncp:
+  end-point: ENC(XlMl/6AGqbbWN6lF8+Cf/iSIWwW4ajrmo8HyJYeXCtr1Qugi1Pg/YfVEVWpCIBzH)
+  region-name: ENC(zyUgEYXdPuMn5ZBJzPhI+QcJqS16MsoD)
+  access-key: ENC(3dxh0Lma8YlSI3ZhR9RV8OOTAZSFx82ylkoTXi4/iPktQPnBebmtHw==)
+  secret-key: ENC(qvBnQYNSmalRQTIuUq5CSUAkG1TYQJPQgGAITXQ6AGvMfp9c4krVnNHOkA2XaBdzTSFpzh2UuUU=)
+  bucket-name: ENC(6zQUtJUN2CulvBcAjhbTY+XI6d6KgP+P)
+
+hyperclovax:
+  api:
+    url: ENC(fD8d0nPxCKGCLr/Nhl/B28qoSCjUo2jR+aEtSBtehckrZiugcyLhe98JVCU+X1WiIz1SP//Am4y5IkO5PFdcZuf6Fn4Y5tWHTh4gQ4AwOm1RcqpSRcF7vg==)
+    key: ENC(9kWWqdu8IfPdUPglFq2pdTjd6FBYHcObwkSP/2GWe1V85H4v9E4tmcBiiHjt5vr/)
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
