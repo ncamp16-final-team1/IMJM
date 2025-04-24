@@ -30,6 +30,7 @@ public class SalonDto {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String detail_address;
+    private BigDecimal distance;
 
     @Builder
     public SalonDto(Salon salon) {
@@ -49,6 +50,7 @@ public class SalonDto {
         this.latitude = salon.getLatitude();
         this.longitude = salon.getLongitude();
         this.detail_address = salon.getDetailAddress();
+        this.distance=getDistance();
     }
 
     public static SalonDto from(Salon salon) {

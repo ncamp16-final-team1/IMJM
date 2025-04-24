@@ -5,13 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import StarIcon from '@mui/icons-material/Star';
 import StarHalfIcon from '@mui/icons-material/StarHalf';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
-import salon1Image from "../../assets/images/salon1.jpeg";
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 import './HairSalon.css';
 
 declare global {
     interface Window {
         naver: any;
+        daum: any;
+        kakao: any;
     }
 }
 
@@ -48,6 +51,7 @@ interface User {
     name?: string;
     latitude: number;
     longitude: number;
+    address?: string;
 }
 
 function HairSalon() {
@@ -57,11 +61,15 @@ function HairSalon() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [nearbySalons, setNearbySalons] = useState<Salon[]>([]);
     const [mapLoaded, setMapLoaded] = useState<boolean>(false);
+    const [isScriptsLoaded, setIsScriptsLoaded] = useState<boolean>(false);
+    const [currentPage, setCurrentPage] = useState<number>(0);
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const [hasMore, setHasMore] = useState<boolean>(true);
+    const [currentAddress, setCurrentAddress] = useState<string>("주소를 설정해주세요");
     const mapRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
     const handleSalonClick = (salonId: string): void => {
-        console.log('Selected Salon ID:', salonId);
         navigate(`/salon/${salonId}`);
     };
 
@@ -86,36 +94,12 @@ function HairSalon() {
         return stars;
     };
 
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-        const R = 6371; // 지구 반경 (km)
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a =
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = R * c;
-        return distance;
-    };
-
-    const findNearbySalons = (userLocation: UserLocation, salons: Salon[]): Salon[] => {
-        const maxDistance =5;
-
-        return salons.filter(salon => {
-            const distance = calculateDistance(
-                userLocation.latitude,
-                userLocation.longitude,
-                salon.latitude,
-                salon.longitude
-            );
-            salon.distance = distance;
-            return distance <= maxDistance;
-        }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    };
-
-    const initMap = (userLocation: UserLocation, salonsWithPhotos: Salon[]): void => {
+    const initMap = (userLocation: UserLocation, nearbyList: Salon[]): void => {
         if (!window.naver || !mapRef.current) return;
+
+        if (mapRef.current) {
+            mapRef.current.innerHTML = '';
+        }
 
         const mapOptions = {
             center: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
@@ -128,53 +112,371 @@ function HairSalon() {
 
         const map = new window.naver.maps.Map(mapRef.current, mapOptions);
 
-        new window.naver.maps.Marker({
+        // 사용자 위치 마커 생성 (nearbyList가 비어있어도 생성)
+        const userMarker = new window.naver.maps.Marker({
             position: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
             map: map,
             icon: {
-                content: '<div class="user-marker"><LocationOnIcon style="color: blue; font-size: 32px;" /></div>',
+                content: '<div class="user-marker"><svg viewBox="0 0 24 24" fill="#FF0000" width="32px" height="32px" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></svg></div>',
                 anchor: new window.naver.maps.Point(16, 32)
             },
-            title: '내 위치'
+            title: '내 위치',
+            zIndex: 100
         });
 
-        const nearby = findNearbySalons(userLocation, salonsWithPhotos);
-        setNearbySalons(nearby);
+        if (nearbyList && nearbyList.length > 0) {
+            nearbyList.forEach(salon => {
+                if (!salon.latitude || !salon.longitude) return;
 
-        nearby.forEach(salon => {
-            const marker = new window.naver.maps.Marker({
-                position: new window.naver.maps.LatLng(salon.latitude, salon.longitude),
-                map: map,
-                title: salon.name
+                const marker = new window.naver.maps.Marker({
+                    position: new window.naver.maps.LatLng(salon.latitude, salon.longitude),
+                    map: map,
+                    title: salon.name
+                });
+
+                const infoContent = `
+                    <div style="padding: 10px; width: 200px;">
+                        <h3 style="margin-top: 0;">${salon.name}</h3>
+                        <p>${salon.address || '주소 정보 없음'}</p>
+                        <p>평점: ${salon.score || 'N/A'}</p>
+                        <p>거리: ${salon.distance?.toFixed(1)}km</p>
+                    </div>
+                `;
+
+                const infoWindow = new window.naver.maps.InfoWindow({
+                    content: infoContent,
+                    maxWidth: 250,
+                    backgroundColor: "#fff",
+                    borderColor: "#888",
+                    borderWidth: 1,
+                    anchorSize: new window.naver.maps.Size(10, 10),
+                    pixelOffset: new window.naver.maps.Point(10, -10)
+                });
+
+                window.naver.maps.Event.addListener(marker, 'click', () => {
+                    if (infoWindow.getMap()) {
+                        infoWindow.close();
+                    } else {
+                        infoWindow.open(map, marker);
+                    }
+                });
             });
+        }
+    };
 
-            const infoContent = `
-                <div style="padding: 10px; width: 200px;">
-                    <h3 style="margin-top: 0;">${salon.name}</h3>
-                    <p>${salon.address || '주소 정보 없음'}</p>
-                    <p>평점: ${salon.score || 'N/A'}</p>
-                    <p>거리: ${salon.distance?.toFixed(1)}km</p>
-                </div>
-            `;
+    const saveUserLocation = async (latitude: number, longitude: number) => {
+        return axios.put(`/api/user/location?latitude=${latitude}&longitude=${longitude}`);
+    };
 
-            const infoWindow = new window.naver.maps.InfoWindow({
-                content: infoContent,
-                maxWidth: 250,
-                backgroundColor: "#fff",
-                borderColor: "#888",
-                borderWidth: 1,
-                anchorSize: new window.naver.maps.Size(10, 10),
-                pixelOffset: new window.naver.maps.Point(10, -10)
-            });
+    // 주소 기반 좌표 가져오기
+    const getAddressFromCoords = async (latitude: number, longitude: number) => {
+        if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
+            return "주소를 불러올 수 없습니다";
+        }
 
-            window.naver.maps.Event.addListener(marker, 'click', () => {
-                if (infoWindow.getMap()) {
-                    infoWindow.close();
+        return new Promise<string>((resolve) => {
+            const geocoder = new window.kakao.maps.services.Geocoder();
+
+            geocoder.coord2Address(longitude, latitude, (result: any, status: any) => {
+                if (status === window.kakao.maps.services.Status.OK) {
+                    if (result[0].road_address) {
+                        resolve(result[0].road_address.address_name);
+                    } else if (result[0].address) {
+                        resolve(result[0].address.address_name);
+                    } else {
+                        resolve("주소를 불러올 수 없습니다");
+                    }
                 } else {
-                    infoWindow.open(map, marker);
+                    resolve("주소를 불러올 수 없습니다");
                 }
             });
         });
+    };
+
+    // 카카오 주소 API 스크립트 로드
+    useEffect(() => {
+        const loadScripts = () => {
+            let postcodeLoaded = false;
+            let kakaoScriptAppended = false;
+
+            const checkAllReady = () => {
+                if (postcodeLoaded && kakaoScriptAppended) {
+                    if ((window as any).kakao && (window as any).kakao.maps) {
+                        (window as any).kakao.maps.load(() => {
+                            setIsScriptsLoaded(true);
+                        });
+                    }
+                }
+            };
+
+            const postcodeScript = document.createElement('script');
+            postcodeScript.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+            postcodeScript.async = true;
+            postcodeScript.onload = () => {
+                postcodeLoaded = true;
+                checkAllReady();
+            };
+
+            const kakaoScript = document.createElement('script');
+            kakaoScript.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=02f33a38e876dff501b53646bfead0d7&autoload=false&libraries=services`;
+            kakaoScript.async = true;
+            kakaoScript.onload = () => {
+                kakaoScriptAppended = true;
+                checkAllReady();
+            };
+
+            document.body.appendChild(postcodeScript);
+            document.body.appendChild(kakaoScript);
+        };
+
+        loadScripts();
+
+        return () => {
+            const postcodeScript = document.querySelector('script[src*="postcode"]');
+            const kakaoScript = document.querySelector('script[src*="dapi.kakao.com"]');
+
+            if (postcodeScript && postcodeScript.parentNode) {
+                postcodeScript.parentNode.removeChild(postcodeScript);
+            }
+
+            if (kakaoScript && kakaoScript.parentNode) {
+                kakaoScript.parentNode.removeChild(kakaoScript);
+            }
+        };
+    }, []);
+
+    const handleAddressSearch = () => {
+        const { daum, kakao } = window as any;
+
+        if (!isScriptsLoaded || !daum?.Postcode || !kakao?.maps?.services) {
+            return;
+        }
+
+        new daum.Postcode({
+            oncomplete: async function (data: any) {
+                let fullAddress = data.address;
+                let extraAddress = '';
+
+                if (data.addressType === 'R') {
+                    if (data.bname) extraAddress += data.bname;
+                    if (data.buildingName) {
+                        extraAddress += (extraAddress ? ', ' : '') + data.buildingName;
+                    }
+                    if (extraAddress) {
+                        fullAddress += ` (${extraAddress})`;
+                    }
+                }
+
+                // 주소 업데이트 전에 로딩 상태 설정
+                setLoading(true);
+
+                // 주소 업데이트
+                setCurrentAddress(fullAddress);
+
+                const geocoder = new kakao.maps.services.Geocoder();
+
+                geocoder.addressSearch(fullAddress, async function (result: any, status: any) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        const latitude = parseFloat(result[0].y);
+                        const longitude = parseFloat(result[0].x);
+
+                        if (currentUser) {
+                            const updatedUser = {
+                                ...currentUser,
+                                latitude,
+                                longitude,
+                                address: fullAddress
+                            };
+                            setCurrentUser(updatedUser);
+
+                            console.log("위치정보를 업데이트합니다.");
+                            try {
+                                await saveUserLocation(latitude, longitude);
+                                console.log("위치정보 저장 완료");
+                            } catch (error) {
+                                console.error("위치정보 저장 실패:", error);
+                            }
+                        }
+
+                        if (mapLoaded && mapRef.current) {
+                            const userLocation = { latitude, longitude };
+
+                            initMap(userLocation, []);
+                        }
+
+                        try {
+                            setCurrentPage(0);
+                            setHasMore(true);
+
+                            const params: any = {
+                                page: 0,
+                                size: 10,
+                                userId: currentUser?.id || 'guest',
+                                latitude,
+                                longitude
+                            };
+
+                            const response = await axios.get('/api/salon', { params });
+
+                            if (response.status === 200) {
+                                const responseData = response.data;
+                                const salonsList = responseData.content.map((salon: any) => ({
+                                    id: salon.id,
+                                    name: salon.name,
+                                    address: salon.address,
+                                    call_number: salon.callNumber || salon.call_number,
+                                    introduction: salon.introduction,
+                                    holiday_mask: salon.holidayMask || salon.holiday_mask,
+                                    start_time: salon.startTime || salon.start_time,
+                                    end_time: salon.endTime || salon.end_time,
+                                    score: salon.score,
+                                    latitude: salon.latitude,
+                                    longitude: salon.longitude,
+                                    distance: salon.distance,
+                                    photos: []
+                                }));
+
+                                setTotalPages(responseData.totalPages);
+                                setCurrentPage(responseData.number);
+                                setHasMore(!responseData.last);
+
+                                setSalons(salonsList);
+                                setNearbySalons(salonsList);
+
+                                const salonsWithPhotos = await Promise.all(
+                                    salonsList.map(async (salon: Salon) => {
+                                        try {
+                                            const photosResponse = await axios.get(`/api/salon/${salon.id}/photos`);
+                                            if (photosResponse.status === 200 && photosResponse.data.length > 0) {
+                                                salon.photos = photosResponse.data.map((photo: any) => ({
+                                                    photoId: photo.photoId,
+                                                    photoUrl: photo.photoUrl,
+                                                    photoOrder: photo.photoOrder
+                                                }));
+                                            }
+                                        } catch (error) {
+                                            console.warn(`${salon.id} 미용실의 사진을 가져오는데 실패했습니다:`, error);
+                                        }
+                                        return salon;
+                                    })
+                                );
+
+                                setSalons(salonsWithPhotos);
+                                setNearbySalons(salonsWithPhotos);
+
+                                if (mapLoaded && mapRef.current) {
+                                    const userLocation = { latitude, longitude };
+                                    initMap(userLocation, salonsWithPhotos);
+                                }
+                            }
+
+                        } catch{
+                            setError("새 위치에서 미용실을 검색하는데 실패했습니다.");
+                        } finally {
+                            setLoading(false);
+                        }
+                    } else {
+                        setLoading(false);
+                        setError("주소 좌표를 가져오는데 실패했습니다.");
+                    }
+                });
+            },
+        }).open();
+    };
+
+    const fetchNearbySalons = async (userId: string, latitude?: number, longitude?: number, page: number = 0) => {
+        try {
+            setLoading(true);
+
+            const params: any = {
+                page,
+                size: 10
+            };
+
+            if (userId) {
+                params.userId = userId;
+            }
+
+            if (latitude !== undefined && longitude !== undefined) {
+                params.latitude = latitude;
+                params.longitude = longitude;
+            }
+
+            const response = await axios.get('/api/salon', { params });
+
+            if (response.status === 200) {
+                const responseData = response.data;
+                console.log(`총 미용실 수: ${responseData.content.length}, 총 페이지: ${responseData.totalPages}`);
+
+                const salonsList = responseData.content.map((salon: any) => ({
+                    id: salon.id,
+                    name: salon.name,
+                    address: salon.address,
+                    call_number: salon.callNumber || salon.call_number,
+                    introduction: salon.introduction,
+                    holiday_mask: salon.holidayMask || salon.holiday_mask,
+                    start_time: salon.startTime || salon.start_time,
+                    end_time: salon.endTime || salon.end_time,
+                    score: salon.score,
+                    latitude: salon.latitude,
+                    longitude: salon.longitude,
+                    distance: salon.distance,
+                    photos: []
+                }));
+
+                setTotalPages(responseData.totalPages);
+                setCurrentPage(responseData.number);
+                setHasMore(!responseData.last);
+
+                if (page === 0) {
+                    setSalons(salonsList);
+                    setNearbySalons(salonsList); // 첫 페이지는 가까운 미용실로 설정
+                } else {
+                    setSalons(prev => [...prev, ...salonsList]);
+                }
+
+                const salonsWithPhotos = await Promise.all(
+                    salonsList.map(async (salon: Salon) => {
+                        try {
+                            const photosResponse = await axios.get(`/api/salon/${salon.id}/photos`);
+                            if (photosResponse.status === 200 && photosResponse.data.length > 0) {
+                                salon.photos = photosResponse.data.map((photo: any) => ({
+                                    photoId: photo.photoId,
+                                    photoUrl: photo.photoUrl,
+                                    photoOrder: photo.photoOrder
+                                }));
+                            }
+                        } catch (error) {
+                            console.warn(`${salon.id} 미용실의 사진을 가져오는데 실패했습니다:`, error);
+                        }
+                        return salon;
+                    })
+                );
+
+                if (page === 0) {
+                    setSalons(salonsWithPhotos);
+                    setNearbySalons(salonsWithPhotos);
+
+                    if (mapLoaded && mapRef.current && currentUser) {
+                        const userLocation = {
+                            latitude: currentUser.latitude,
+                            longitude: currentUser.longitude
+                        };
+                        initMap(userLocation, salonsWithPhotos);
+                    }
+                } else {
+                    setSalons(prev => {
+                        const prevWithoutNew = prev.filter(p => !salonsWithPhotos.some(s => s.id === p.id));
+                        return [...prevWithoutNew, ...salonsWithPhotos];
+                    });
+                }
+
+            }
+            setLoading(false);
+        } catch{
+            setError('미용실 데이터를 불러오는데 실패했습니다.');
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -193,93 +495,30 @@ function HairSalon() {
                     if (userResponse.status === 200) {
                         const userData = userResponse.data;
 
-                        setCurrentUser({
-                            id: userData.id,
+                        const user = {
+                            id: userData.id || 'guest',
                             name: userData.firstName || '게스트',
                             latitude: userData.latitude,
                             longitude: userData.longitude
-                        });
+                        };
+
+                        setCurrentUser(user);
+
+                        await fetchNearbySalons(user.id, user.latitude, user.longitude);
+
+                        if (isScriptsLoaded && window.kakao?.maps?.services) {
+                            const address = await getAddressFromCoords(user.latitude, user.longitude);
+                            setCurrentAddress(address);
+                        }
                     }
-                } catch (error) {
-                    console.error('사용자 정보를 가져오는데 실패했습니다:', error);
+                } catch{
                     setError('사용자 정보를 불러오는데 실패했습니다.');
                 }
 
-                const salonsResponse = await axios.get('/api/salon');
-
-                if (salonsResponse.status === 200) {
-                    const salonsData = salonsResponse.data.map((salon: any) => ({
-                        id: salon.id,
-                        name: salon.name,
-                        address: salon.address,
-                        call_number: salon.callNumber || salon.call_number,
-                        introduction: salon.introduction,
-                        holiday_mask: salon.holidayMask || salon.holiday_mask,
-                        start_time: salon.startTime || salon.start_time,
-                        end_time: salon.endTime || salon.end_time,
-                        score: salon.score,
-                        latitude: salon.latitude,
-                        longitude: salon.longitude,
-                        photos: [] // 초기에는 빈 배열로 설정
-                    }));
-
-                    // 3. 각 미용실의 사진 정보를 추가로 가져오기
-                    const salonsWithPhotos = await Promise.all(
-                        salonsData.map(async (salon: Salon) => {
-                            try {
-                                // 새로 만든 API 호출
-                                const photosResponse = await axios.get(`/api/salon/${salon.id}/photos`);
-
-                                if (photosResponse.status === 200 && photosResponse.data.length > 0) {
-                                    // 사진 정보 매핑
-                                    salon.photos = photosResponse.data.map((photo: any) => ({
-                                        photoId: photo.photoId,
-                                        photoUrl: photo.photoUrl,
-                                        photoOrder: photo.photoOrder
-                                    }));
-                                } else {
-                                    // 사진이 없는 경우 기본 이미지 사용
-                                    salon.photos = [
-                                        {
-                                            photoId: 1,
-                                            photoUrl: salon1Image,
-                                            photoOrder: 1
-                                        }
-                                    ];
-                                }
-                            } catch (error) {
-                                console.warn(`${salon.id} 미용실의 사진을 가져오는데 실패했습니다:`, error);
-                                // 오류 발생 시 기본 이미지 사용
-                                salon.photos = [
-                                    {
-                                        photoId: 1,
-                                        photoUrl: salon1Image,
-                                        photoOrder: 1
-                                    }
-                                ];
-                            }
-                            return salon;
-                        })
-                    );
-
-                    setSalons(salonsWithPhotos);
-                } else {
-                    throw new Error('미용실 데이터를 가져오는데 실패했습니다.');
-                }
-
                 setLoading(false);
-            } catch (err) {
-                console.error('데이터 불러오기 오류:', err);
+            } catch{
                 setError('데이터를 불러오는데 실패했습니다.');
                 setLoading(false);
-
-                // 기본 사용자 설정
-                setCurrentUser({
-                    id: 'guest',
-                    name: '게스트',
-                    latitude: 37.5665,
-                    longitude: 126.9780
-                });
             }
         };
 
@@ -292,24 +531,66 @@ function HairSalon() {
         };
     }, []);
 
-    // 지도 초기화 (API 로드 후)
+    // 스크립트 로드 후 주소정보 업데이트
     useEffect(() => {
-        if (mapLoaded && salons.length > 0 && currentUser) {
-            initMap(currentUser, salons);
+        if (isScriptsLoaded && currentUser && currentUser.latitude && currentUser.longitude) {
+            getAddressFromCoords(currentUser.latitude, currentUser.longitude)
+                .then(address => setCurrentAddress(address));
         }
-    }, [mapLoaded, salons, currentUser]);
+    }, [isScriptsLoaded, currentUser]);
 
-    if (loading) {
+    // 무한 스크롤 처리 함수
+    const loadMoreSalons = () => {
+        if (hasMore && !loading && currentUser) {
+            fetchNearbySalons(currentUser.id, currentUser.latitude, currentUser.longitude, currentPage + 1);
+        }
+    };
+
+    // 스크롤 이벤트 리스너
+    useEffect(() => {
+        const handleScroll = () => {
+            if (
+                window.innerHeight + document.documentElement.scrollTop >=
+                document.documentElement.scrollHeight - 100 &&
+                !loading &&
+                hasMore
+            ) {
+                loadMoreSalons();
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading, hasMore, currentPage, currentUser]);
+
+    useEffect(() => {
+        if (mapLoaded && mapRef.current && currentUser && currentUser.latitude && currentUser.longitude) {
+            const locationData = nearbySalons.length > 0 ? nearbySalons : [];
+            initMap(currentUser, locationData);
+        }
+    }, [mapLoaded, nearbySalons, currentUser]);
+
+    if (loading && salons.length === 0) {
         return <div className="loading">미용실 검색 중...</div>;
     }
 
-    if (error) {
+    if (error && salons.length === 0) {
         return <div className="error">{error}</div>;
     }
 
     return (
         <div className="hair-salon-container">
-            {/* 네이버 지도 영역 */}
+            <div className="location-header">
+                <div className="location-info">
+                    <LocationOnIcon className="location-icon" />
+                    <div className="current-address">{currentAddress}</div>
+                </div>
+                <button className="location-change-btn" onClick={handleAddressSearch}>
+                    위치변경
+                    <ArrowDropDownIcon />
+                </button>
+            </div>
+
             <div className="map-container">
                 <h2>내 주변 미용실</h2>
                 <div ref={mapRef} className="map"></div>
@@ -382,6 +663,8 @@ function HairSalon() {
                     ))}
                 </div>
             )}
+
+            {loading && <div className="loading-more">더 많은 미용실 불러오는 중...</div>}
         </div>
     );
 }

@@ -17,6 +17,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import RegisterStep1 from './pages/User/RegisterStep1';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
     return (
@@ -27,7 +28,7 @@ function App() {
                     <Routes>
                         {/* 로그인 여부와 상관없이 접근 가능한 경로 */}
                         <Route path="/" element={<Home />} />
-                        <Route path="/hairSalon" element={<HairSalon />} />
+                        <Route path="/salon" element={<HairSalon />} />
                         <Route path="/archive" element={<div>Archive Page (준비 중)</div>} />
                         <Route path="/community" element={<div>Community Page (준비 중)</div>} />
                         <Route path="/salon/:id" element={<SalonDetail />} />
@@ -45,9 +46,13 @@ function App() {
                         } />
                         <Route path="/salon/:salonId/reservation/:stylistId/paymentDetails" element={
                             <ProtectedRoute>
+                            <>
+                                <ScrollToTop />
                                 <PaymentDetails />
+                            </>
                             </ProtectedRoute>
-                        } />
+                        }
+                        />
                         <Route path="/chat/*" element={
                             <ProtectedRoute>
                                 <ChatMain />

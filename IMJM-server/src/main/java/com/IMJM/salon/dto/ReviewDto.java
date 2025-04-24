@@ -24,12 +24,12 @@ public class ReviewDto {
     @Builder
     public ReviewDto (Review review){
         this.id = review.getId();
-        this.userId = review.getUser().getId();
-        this.salonId = review.getSalon().getId();
+        this.userId = review.getUser() != null ? review.getUser().getId() : null;
+        this.salonId = review.getSalon() != null ? review.getSalon().getId() : null;
         this.regDate = review.getRegDate();
         this.score = review.getScore();
         this.content = review.getContent();
         this.reviewTag = review.getReviewTag();
-        this.reservationId = review.getReservation().getId();
+        this.reservationId = review.getReservation() != null ? review.getReservation().getId() : null;
     }
 }

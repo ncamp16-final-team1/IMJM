@@ -51,12 +51,10 @@ public class ServiceMenuService {
 
         for (ServiceMenuDto dto : menuDtos) {
             if (dto.getId() != null && menuMap.containsKey(dto.getId())) {
-                // 수정
                 ServiceMenu menu = menuMap.get(dto.getId());
                 menu.serviceMenuUpdate(dto.getServiceType(), dto.getServiceName(), dto.getServiceDescription(), dto.getPrice());
                 updatedIds.add(menu.getId());
             } else {
-                // 새로 추가
                 ServiceMenu newMenu = ServiceMenu.builder()
                         .serviceType(dto.getServiceType())
                         .serviceName(dto.getServiceName())

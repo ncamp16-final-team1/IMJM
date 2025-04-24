@@ -5,6 +5,7 @@ import com.IMJM.common.entity.ClientStylist;
 import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
+import com.IMJM.user.dto.LocationDto;
 import com.IMJM.user.dto.UserDto;
 import com.IMJM.user.repository.ClientStylistRepository;
 import com.IMJM.user.repository.UserRepository;
@@ -39,6 +40,10 @@ public class UserService {
     private final ClientStylistRepository stylistRepository;
     private final JWTUtil jwtUtil;
     private final ClientStylistRepository clientStylistRepository;
+
+    private static final String ANONYMOUS_USER = "anonymous";
+    private static final BigDecimal LAT = new BigDecimal("37.498297");
+    private static final BigDecimal LON = new BigDecimal("127.027733");
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -121,24 +126,43 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
-    public UserDto getUserLocation(String userID) {
+    public LocationDto getUserLocation(String userID) {
+        // 로그인하지 않은 유저
+        if (ANONYMOUS_USER.equals(userID)) {
+            return LocationDto.builder()
+                    .userId(userID)
+                    .latitude(LAT)
+                    .longitude(LON)
+                    .build();
+        }
 
+        // 로그인했는데 위치값이 없는 경우
         Users user = userRepository.findById(userID)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
 
         BigDecimal latitude = user.getLatitude();
         BigDecimal longitude = user.getLongitude();
-
-        // 로그인하지 않은 사용자(anonymous) 처리
-        if (user.getId() == null || latitude == null || longitude == null) {
-            latitude = BigDecimal.valueOf(37.498297);
-            longitude = BigDecimal.valueOf(127.027733);
+        if (latitude == null || longitude == null) {
+            return LocationDto.builder()
+                    .userId(userID)
+                    .latitude(LAT)
+                    .longitude(LON)
+                    .build();
         }
 
-        return UserDto.builder()
+        return LocationDto.builder()
+                .userId(userID)
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
+    }
+
+    public void updateUserLocation(String userId, BigDecimal latitude, BigDecimal longitude) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+        user.updateLocation(latitude, longitude);
+        userRepository.save(user);
     }
 
     public void deleteAccount(String userid) {

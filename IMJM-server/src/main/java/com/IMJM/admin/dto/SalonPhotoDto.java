@@ -1,5 +1,6 @@
 package com.IMJM.admin.dto;
 
+import com.IMJM.common.entity.SalonPhotos;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,4 +16,15 @@ public class SalonPhotoDto {
     private int photoOrder;
     private LocalDateTime uploadDate;
 
+    public static SalonPhotoDto getSalonPhoto(SalonPhotos photo) {
+        return SalonPhotoDto.builder()
+                .salonId(photo.getSalon().getId())
+                .photoUrl(photo.getPhotoUrl())
+                .photoOrder(photo.getPhotoOrder())
+                .uploadDate(photo.getUploadDate())
+                .build();
+    }
+
 }
+
+

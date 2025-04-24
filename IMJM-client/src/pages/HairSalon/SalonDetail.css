@@ -26,7 +26,6 @@
     width: 100%;
     height: 100%;
     position: relative;
-
 }
 
 .gallery-image img {
@@ -81,6 +80,7 @@
     margin-right: 4px;
 }
 
+/* 수정된 예약 버튼 스타일 */
 .reservation-buttons {
     display: flex;
     padding: 16px;
@@ -89,20 +89,45 @@
 
 .reservation-btn {
     flex: 1;
-    padding: 12px;
+    padding: 12px 8px;
     border-radius: 8px;
     border: none;
     background-color: #f9f9f9;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.reservation-btn .icon {
-    margin-right: 8px;
+.reservation-btn:hover {
+    background-color: #f1f1f1;
+}
+
+.reservation-btn .btn-icon {
+    margin-bottom: 5px;
+    font-size: 20px;
+    color: #555;
+}
+
+.reservation-btn {
+    background-color: #f9f9f9;
+    color: #555;
+}
+
+.reservation-btn .btn-icon {
+    color: #555;
+}
+
+.reservation-btn:hover {
+    background-color: #FDC7BF;
+}
+
+.reservation-btn span {
+    white-space: nowrap;
 }
 
 .info-section {
@@ -161,34 +186,12 @@
     white-space: pre-line;
 }
 
-.information-nav {
-    display: flex;
-    background-color: white;
-    border-top: 1px solid #eee;
-    padding: 12px 0;
-    margin-top: 20px;
-}
-
-.nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-.nav-item svg {
-    margin-bottom: 4px;
-}
-
 .holiday {
     margin-left: 20px;
     color: #e53935;
     font-weight: 500;
 }
 
-/*지도api*/
 /* 지도 모달 스타일 */
 .map-modal {
     position: fixed;
@@ -248,8 +251,81 @@
     color: #666;
 }
 
-/* 스타일리스트 섹션 추가 CSS - 기존 SalonDetail.css 파일에 추가하세요 */
+/* 전화번호 모달 스타일 추가 */
+.phone-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
 
+.phone-modal-content {
+    background-color: white;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.phone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.phone-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.phone-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 15px;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.phone-icon {
+    margin-right: 10px;
+    color: #f5989d;
+}
+
+.phone-actions {
+    padding: 0 15px 20px 15px;
+    display: flex;
+    justify-content: center;
+}
+
+.call-button {
+    background-color: #f5989d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.2s ease;
+}
+
+.call-button:hover {
+    background-color: #e77a80;
+}
+
+/* 스타일리스트 섹션 CSS */
 .stylists-section {
     margin-bottom: 20px;
 }
@@ -326,7 +402,6 @@
     text-overflow: ellipsis;
     max-width: 200px;
 }
-
 
 .no-stylists {
     text-align: center;
@@ -591,4 +666,32 @@
     font-size: 14px;
     color: #555;
     line-height: 1.5;
+}
+
+/* 더 보기 버튼 스타일 */
+.load-more-container {
+    text-align: center;
+    padding: 15px 0;
+}
+
+.load-more-button {
+    background-color: #FDC7BF;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.load-more-button:hover {
+    background-color: #eaeaea;
+}
+
+.loading-more {
+    text-align: center;
+    color: #888;
+    padding: 15px 0;
+    font-size: 14px;
 }

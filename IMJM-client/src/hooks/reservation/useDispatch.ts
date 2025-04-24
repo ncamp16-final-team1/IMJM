@@ -1,17 +1,14 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import dayjs, { Dayjs } from 'dayjs';
 import { Menu, ReservationInfo, StylistSchedule } from '../../type/reservation/reservation';
 import { isHoliday } from '../../utils/reservation/dateUtils';
-import { setReservationInfo } from '../../components/features/reservation/reservationSlice';
 
 export const useReservation = () => {
-  const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-
+  const [reservationInfo, setReservationInfo] = useState<ReservationInfo | null>(null);
 
   const handleDateSelect = (
-    date: Dayjs | null, 
+    date: Dayjs | null,
     stylistSchedule: StylistSchedule | null,
     resetTimeSelection: () => void,
     resetServiceSelection: () => void,
@@ -32,10 +29,9 @@ export const useReservation = () => {
     }
   };
 
-
   const handleMenuSelect = (
     salonId: string,
-    menu: Menu | null, 
+    menu: Menu | null,
     stylistId: number | null,
     stylistName: string,
     selectedDate: Dayjs | null,
@@ -43,13 +39,11 @@ export const useReservation = () => {
     selectedType: string | null,
     setSelectedMenuName: (name: string) => void
   ) => {
-    // menu가 null인 경우 (취소 버튼 클릭 시)
     if (!menu) {
       setSelectedMenuName('');
       return;
     }
 
-    // selectedDate 타입 체크 및 안전한 형식 변환
     let formattedDate = '없음';
     if (selectedDate && typeof selectedDate.format === 'function') {
       try {
@@ -60,7 +54,7 @@ export const useReservation = () => {
     }
 
     const updatedReservationInfo: ReservationInfo = {
-      salonId: salonId || "아이디값이없습니다.",
+      salonId: salonId || '아이디값이없습니다.',
       stylistId: stylistId,
       stylistName: stylistName || '이름 없음',
       selectedDate: formattedDate,
@@ -70,16 +64,18 @@ export const useReservation = () => {
       selectedMenu: {
         serviceName: menu.serviceName,
         serviceDescription: menu.serviceDescription,
-        price: menu.price
+        price: menu.price,
+        id: menu.id
       }
     };
 
-    dispatch(setReservationInfo(updatedReservationInfo));
+    setReservationInfo(updatedReservationInfo); 
     setSelectedMenuName(menu.serviceName);
   };
 
   return {
     selectedDate,
+    reservationInfo, 
     handleDateSelect,
     handleMenuSelect
   };
