@@ -2,11 +2,12 @@ import { Container, Button, Box } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import logoImage from '../../assets/images/logo.png';
+import { API_BASE_URL } from '../../config';
 
 const Login = () => {
 
     const handleGoogleLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
     };
 
     const handleAppleLogin = () => {
@@ -18,7 +19,7 @@ const Login = () => {
             return;
         }
 
-        window.location.href = 'http://localhost:8080/oauth2/authorization/apple';
+        window.location.href = `${API_BASE_URL}/oauth2/authorization/apple`;
     };
 
     return (
