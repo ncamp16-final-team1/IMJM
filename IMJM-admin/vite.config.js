@@ -8,7 +8,7 @@ export default defineConfig({
     port: 3030,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://api.imjm-hair.com',
         changeOrigin: true
       }
     }
