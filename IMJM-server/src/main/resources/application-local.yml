@@ -20,6 +20,6 @@ app:
   client:
     domain: http://localhost:3000
   admin:
-    domain: http://localhost:5173
+    domain: http://localhost:3030
   server:
     domain: http://localhost:8080

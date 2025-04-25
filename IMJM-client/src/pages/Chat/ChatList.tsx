@@ -1,6 +1,6 @@
-// IMJM-client/src/pages/Chat/ChatList.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
     List,
     ListItem,
@@ -24,25 +24,27 @@ const ChatList: React.FC = () => {
     const [userId, setUserId] = useState<string | null>(null);
 
     useEffect(() => {
-        // 사용자 정보를 가져오는 로직 (임시로 하드코딩)
-        const currentUserId = 'user1';
-        setUserId(currentUserId);
-
-        // RabbitMQ 연결 초기화
-        RabbitMQService.initialize(currentUserId);
-
-        const fetchChatRooms = async () => {
+        const fetchUserAndChatRooms = async () => {
             try {
+                // 현재 로그인된 사용자 정보 가져오기
+                const userResponse = await axios.get('/api/chat/user/current');
+                const currentUserId = userResponse.data.id;
+                setUserId(currentUserId);
+
+                // RabbitMQ 연결 초기화
+                RabbitMQService.initialize(currentUserId);
+
+                // 채팅방 목록 가져오기
                 const rooms = await ChatService.getUserChatRooms();
                 setChatRooms(rooms);
                 setLoading(false);
             } catch (error) {
-                console.error('채팅방 목록을 불러오는데 실패했습니다:', error);
+                console.error('사용자 정보 또는 채팅방 목록을 불러오는데 실패했습니다:', error);
                 setLoading(false);
             }
         };
 
-        fetchChatRooms();
+        fetchUserAndChatRooms();
 
         // 새 메시지 수신 시 채팅방 목록 업데이트
         const handleNewMessage = async () => {
@@ -54,12 +56,16 @@ const ChatList: React.FC = () => {
             }
         };
 
-        RabbitMQService.addListener('message', handleNewMessage);
+        if (userId) {
+            RabbitMQService.addListener('message', handleNewMessage);
+        }
 
         return () => {
-            RabbitMQService.removeListener('message', handleNewMessage);
+            if (userId) {
+                RabbitMQService.removeListener('message', handleNewMessage);
+            }
         };
-    }, []);
+    }, [userId]);
 
     const handleChatRoomClick = (roomId: number, salonId: string) => {
         navigate(`/chat/${roomId}/${salonId}`);
