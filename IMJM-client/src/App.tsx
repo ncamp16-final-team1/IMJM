@@ -17,6 +17,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import ScrollToTop from './components/ScrollToTop';
+import Archive from "./pages/Archive/Archive";
 
 function App() {
     return (
@@ -28,7 +29,7 @@ function App() {
                         {/* 로그인 여부와 상관없이 접근 가능한 경로 */}
                         <Route path="/" element={<Home />} />
                         <Route path="/salon" element={<HairSalon />} />
-                        <Route path="/archive" element={<div>Archive Page (준비 중)</div>} />
+                        <Route path="/archive" element={<Archive />} />
                         <Route path="/community" element={<div>Community Page (준비 중)</div>} />
                         <Route path="/salon/:id" element={<SalonDetail />} />
 
@@ -62,8 +63,6 @@ function App() {
                                 <MyPage />
                             </ProtectedRoute>
                         } />
-                        
-
                         {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
                         <Route path="/login" element={
                             <PublicRoute>
