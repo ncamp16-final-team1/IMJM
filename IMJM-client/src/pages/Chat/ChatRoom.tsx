@@ -14,8 +14,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
 import styles from './ChatRoom.module.css';
-import ChatService, { ChatMessage, ChatPhoto } from '../../services/chat/ChatService';
-import WebSocketService from '../../services/chat/WebSocketService';
+import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
+import RabbitMQService from '../../services/chat/RabbitMQService';
 import TranslationService from '../../services/chat/TranslationService';
 import FileUploadService from '../../services/chat/FileUploadService';
 
@@ -36,7 +36,7 @@ interface TranslationState {
 
 const ChatRoom: React.FC = () => {
     const { roomId, salonId } = useParams<{ roomId: string; salonId: string }>();
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [messages, setMessages] = useState<ChatMessageDto[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
     const [chatRoom, setChatRoom] = useState<ChatRoomInfo | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -50,47 +50,60 @@ const ChatRoom: React.FC = () => {
     const navigate = useNavigate();
     const [userId] = useState<string>('user1'); // 테스트용 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
 
-    // 웹소켓 연결 및 메시지 수신 설정
+    // RabbitMQ 연결 및 메시지 수신 설정
     useEffect(() => {
-        // 웹소켓 초기화
-        WebSocketService.initialize(userId);
+        if (!roomId) return;
+
+        // RabbitMQ 초기화
+        RabbitMQService.initialize(userId);
+
+        // 특정 채팅방 구독
+        RabbitMQService.subscribeToRoom(Number(roomId));
 
         // 메시지 수신 리스너 등록
-        const handleNewMessage = (messageData: ChatMessage) => {
+        const handleNewMessage = (messageData: ChatMessageDto) => {
+            console.log("새 메시지 수신:", messageData);
+
+            // 현재 채팅방과 관련된 메시지인지 확인
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prev => {
-                    // 이미 같은 메시지가 있는지 확인 (임시 ID로 추가한 메시지)
+                    // 이미 같은 메시지가 있는지 확인
                     const messageExists = prev.some(msg =>
-                        msg.message === messageData.message &&
-                        msg.senderType === messageData.senderType &&
-                        msg.translationStatus === messageData.translationStatus &&
-                        msg.translatedMessage === messageData.translatedMessage &&
-                        Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000
+                        msg.id === messageData.id ||
+                        (msg.message === messageData.message &&
+                            msg.senderType === messageData.senderType &&
+                            Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000)
                     );
 
                     if (messageExists) {
-                        // 기존 메시지를 새 메시지로 업데이트
+                        // ID가 있는 메시지로 임시 메시지 교체
                         return prev.map(msg =>
-                            msg.message === messageData.message &&
-                            msg.senderType === messageData.senderType &&
-                            msg.translationStatus === messageData.translationStatus &&
-                            msg.translatedMessage === messageData.translatedMessage &&
-                            Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000
+                            (msg.id === messageData.id ||
+                                (msg.message === messageData.message &&
+                                    msg.senderType === messageData.senderType &&
+                                    Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000))
                                 ? messageData : msg
                         );
                     } else {
                         // 새 메시지 추가
+                        console.log("새 메시지 추가:", messageData);
                         return [...prev, messageData];
                     }
                 });
+
+                // 메시지 읽음 처리 - 본인이 보낸 메시지가 아닌 경우만
+                if (messageData.senderType !== 'USER') {
+                    ChatService.markMessagesAsRead(Number(roomId), 'USER')
+                        .catch(err => console.error("메시지 읽음 처리 실패:", err));
+                }
             }
         };
 
-        WebSocketService.addListener('message', handleNewMessage);
+        RabbitMQService.addListener('message', handleNewMessage);
 
         // 컴포넌트 언마운트 시 리스너 제거 및 연결 해제
         return () => {
-            WebSocketService.removeListener('message', handleNewMessage);
+            RabbitMQService.removeListener('message', handleNewMessage);
         };
     }, [userId, roomId]);
 
@@ -176,7 +189,7 @@ const ChatRoom: React.FC = () => {
     };
 
     // 번역 요청 및 토글 함수
-    const handleTranslateRequest = async (message: ChatMessage) => {
+    const handleTranslateRequest = async (message: ChatMessageDto) => {
         const messageId = message.id;
 
         // 이미 번역이 로드되었으면 토글 수행
@@ -226,7 +239,7 @@ const ChatRoom: React.FC = () => {
     };
 
     // 실제 번역 요청을 수행하는 함수
-    const requestTranslation = async (message: ChatMessage) => {
+    const requestTranslation = async (message: ChatMessageDto) => {
         if (!chatRoom) return;
 
         const messageId = message.id;
@@ -281,7 +294,7 @@ const ChatRoom: React.FC = () => {
             }
 
             // 임시 메시지 객체 생성 (UI에 즉시 표시용)
-            const tempMessage: ChatMessage = {
+            const tempMessage: ChatMessageDto = {
                 id: Date.now(), // 임시 ID
                 chatRoomId: chatRoom.id,
                 senderType: 'USER',
@@ -297,12 +310,21 @@ const ChatRoom: React.FC = () => {
             // 메시지를 즉시 UI에 추가
             setMessages(prev => [...prev, tempMessage]);
 
-            // 웹소켓으로 메시지 전송 (사진 포함)
-            WebSocketService.sendMessageWithPhotos(
+            // RabbitMQ를 통해 메시지 전송
+            const response = await RabbitMQService.sendMessageWithPhotos(
                 chatRoom.id,
                 newMessage,
                 'USER',
                 photoAttachments
+            );
+
+            console.log("메시지 전송 응답:", response);
+
+            // 서버 응답 후 임시 메시지를 실제 메시지로 업데이트
+            setMessages(prev =>
+                prev.map(msg =>
+                    msg.id === tempMessage.id ? response : msg
+                )
             );
 
             // 입력 필드 및 선택된 파일 초기화
@@ -319,7 +341,7 @@ const ChatRoom: React.FC = () => {
         }
     };
 
-    if (loading) {
+    if (loading && messages.length === 0) {
         return (
             <div className={styles.loading}>
                 <CircularProgress size={40} />

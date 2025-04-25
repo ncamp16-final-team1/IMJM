@@ -1,3 +1,4 @@
+// IMJM-server/src/main/java/com/IMJM/chat/controller/ChatController.java 수정
 package com.IMJM.chat.controller;
 
 import com.IMJM.chat.dto.ChatMessageDto;

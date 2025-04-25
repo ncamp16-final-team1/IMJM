@@ -1,3 +1,4 @@
+// IMJM-client/src/pages/Chat/ChatList.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -6,27 +7,33 @@ import {
     ListItemText,
     ListItemAvatar,
     Avatar,
-    Typography,
     Divider,
     Box,
+    Typography,
     CircularProgress
 } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import styles from './ChatList.module.css';
 import ChatService, { ChatRoom } from '../../services/chat/ChatService';
+import RabbitMQService from '../../services/chat/RabbitMQService';
 
 const ChatList: React.FC = () => {
     const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [userId, setUserId] = useState<string | null>(null);
 
     useEffect(() => {
+        // 사용자 정보를 가져오는 로직 (임시로 하드코딩)
+        const currentUserId = 'user1';
+        setUserId(currentUserId);
+
+        // RabbitMQ 연결 초기화
+        RabbitMQService.initialize(currentUserId);
+
         const fetchChatRooms = async () => {
             try {
-                // 쿠키 확인 로깅 추가
-                console.log('Current Cookies:', document.cookie);
-                
-                const rooms = await ChatService.getUserChatRooms(); // 파라미터 제거
+                const rooms = await ChatService.getUserChatRooms();
                 setChatRooms(rooms);
                 setLoading(false);
             } catch (error) {
@@ -36,6 +43,22 @@ const ChatList: React.FC = () => {
         };
 
         fetchChatRooms();
+
+        // 새 메시지 수신 시 채팅방 목록 업데이트
+        const handleNewMessage = async () => {
+            try {
+                const rooms = await ChatService.getUserChatRooms();
+                setChatRooms(rooms);
+            } catch (error) {
+                console.error('채팅방 목록 업데이트 실패:', error);
+            }
+        };
+
+        RabbitMQService.addListener('message', handleNewMessage);
+
+        return () => {
+            RabbitMQService.removeListener('message', handleNewMessage);
+        };
     }, []);
 
     const handleChatRoomClick = (roomId: number, salonId: string) => {

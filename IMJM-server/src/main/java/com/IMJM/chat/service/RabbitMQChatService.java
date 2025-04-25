@@ -1,4 +1,3 @@
-// IMJM-server/src/main/java/com/IMJM/chat/service/RabbitMQChatService.java
 package com.IMJM.chat.service;
 
 import com.IMJM.chat.dto.ChatMessageDto;
@@ -15,6 +14,8 @@ import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +44,10 @@ public class RabbitMQChatService {
     @Value("${ncp.bucket-name}")
     private String bucketName;
 
-    // 사용자별 큐 생성 메서드
+    @Autowired
+    private SimpleMessageListenerContainer messageListenerContainer;
+
+    // 사용자별 큐 생성 및 구독 메서드
     private void ensureQueueExists(String userId) {
         String queueName = RabbitMQConfig.QUEUE_PREFIX + userId;
         String routingKey = RabbitMQConfig.ROUTING_KEY_PREFIX + userId;
@@ -59,6 +63,18 @@ public class RabbitMQChatService {
                 routingKey,
                 null);
         amqpAdmin.declareBinding(binding);
+
+        // 리스너 컨테이너에 큐 추가 (아직 등록되지 않은 경우)
+        if (!Arrays.asList(messageListenerContainer.getQueueNames()).contains(queueName)) {
+            List<String> updatedQueueNames = new ArrayList<>(Arrays.asList(messageListenerContainer.getQueueNames()));
+            updatedQueueNames.add(queueName);
+            messageListenerContainer.setQueueNames(updatedQueueNames.toArray(new String[0]));
+
+            // 리스너 컨테이너가 실행 중이 아니면 시작
+            if (!messageListenerContainer.isRunning()) {
+                messageListenerContainer.start();
+            }
+        }
     }
 
     // 채팅방 생성 또는 조회
@@ -395,4 +411,5 @@ public class RabbitMQChatService {
                 })
                 .collect(Collectors.toList());
     }
+
 }

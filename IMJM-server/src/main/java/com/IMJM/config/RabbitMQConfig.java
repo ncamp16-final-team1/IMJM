@@ -1,11 +1,16 @@
+// IMJM-server/src/main/java/com/IMJM/config/RabbitMQConfig.java
 package com.IMJM.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.IMJM.chat.service.RabbitMQChatMessageListener;
 
 @Configuration
 public class RabbitMQConfig {
@@ -31,5 +36,23 @@ public class RabbitMQConfig {
         return rabbitTemplate;
     }
 
-    // 개별 사용자/미용실을 위한 큐와 바인딩은 동적으로 생성할 예정입니다.
+    @Bean
+    public SimpleMessageListenerContainer messageListenerContainer(
+            ConnectionFactory connectionFactory,
+            MessageListenerAdapter listenerAdapter) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.setMessageListener(listenerAdapter);
+        // 앱 시작 시에는 큐를 할당하지 않음
+        container.setMissingQueuesFatal(false); // 큐가 없어도 치명적 오류가 아님
+        container.setAutoStartup(false); // 자동 시작 비활성화
+        return container;
+    }
+
+    @Bean
+    public MessageListenerAdapter listenerAdapter(RabbitMQChatMessageListener listener, Jackson2JsonMessageConverter jsonMessageConverter) {
+        MessageListenerAdapter adapter = new MessageListenerAdapter(listener, "receiveMessage");
+        adapter.setMessageConverter(jsonMessageConverter);
+        return adapter;
+    }
 }
