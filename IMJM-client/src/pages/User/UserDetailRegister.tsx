@@ -16,7 +16,9 @@ import AddIcon from '@mui/icons-material/Add';
 const UserDetailRegister: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { userType } = location.state || {};
+  const [nicknameStatus, setNicknameStatus] = useState<'unchecked' | 'checking' | 'available' | 'taken'>('unchecked');
+  const { userType, salonName, license } = location.state || {};
+  const [hasChecked, setHasChecked] = useState(false);
 
   const [form, setForm] = useState({
     language: localStorage.getItem('language') || 'KR',
@@ -33,10 +35,19 @@ const UserDetailRegister: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+  
+    setForm((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+  
+      if (name === 'nickname' && value !== prev.nickname) {
+        setNicknameStatus('unchecked');
+      }
+  
+      return updated;
+    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,55 +62,66 @@ const UserDetailRegister: React.FC = () => {
     }
   };
 
+  const isValidDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return (
+      dateStr.match(/^\d{4}-\d{2}-\d{2}$/) &&
+      date instanceof Date &&
+      !isNaN(date.getTime())
+    );
+  };
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const isValid =
     form.nickname.trim() &&
-    form.birthday &&
+    isValidDate(form.birthday) &&
     form.gender &&
-    form.region;
+    form.region &&
+    nicknameStatus === 'available';
 
   const handleNext = () => {
+    if (nicknameStatus !== 'available') {
+      alert('닉네임 중복 확인을 먼저 완료해주세요.');
+      return;
+    }
+
     navigate("/user/final", {
       state: {
         ...form,
-        userType
+        userType,
+        salonName,
+        license
       },
     });
   };
 
-  // const handleNext = async () => {
-  //   try {
-  //     const formData = new FormData();
-      
-  //     const dto = {
-  //       userType,
-  //       language: form.language,
-  //       gender: form.gender,
-  //       nickname: form.nickname,
-  //       birthday: form.birthday,
-  //       region: form.region,
-  //       is_notification: form.is_notification,
-  //     };
-  
-  //     formData.append("userDto", new Blob([JSON.stringify(dto)], { type: "application/json" }));
-  //     if (form.profile !== null) {
-  //       formData.append("profile", form.profile);
-  //     }
-  
-  //     const response = await axios.post("/api/user/register", formData, {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //       withCredentials: true,
-  //     });
-  
-  //     if (response.status === 200) {
-  //       navigate("/user/final");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("회원가입 실패");
-  //   }
-  // };
+  const checkNickname = async () => {
+    if (!form.nickname.trim()) return;
+
+    setNicknameStatus('checking');
+    setHasChecked(true);
+
+    try {
+      const response = await fetch(`/api/user/check-nickname?nickname=${encodeURIComponent(form.nickname)}`);
+      const result = await response.json();
+
+      if (result.available) {
+        setNicknameStatus('available');
+      } else {
+        setNicknameStatus('taken');
+      }
+    } catch (error) {
+      console.error('닉네임 확인 중 오류 발생:', error);
+      setNicknameStatus('unchecked');
+    }
+  };
 
   return (
     <Box
@@ -114,14 +136,44 @@ const UserDetailRegister: React.FC = () => {
       <Typography fontWeight="bold" fontSize="20px">
         Nickname <span style={{ color: 'salmon', fontSize: '14px' }}>*Required Item</span>
       </Typography>
-      <TextField
-        name="nickname"
-        value={form.nickname}
-        onChange={handleChange}
-        fullWidth
-        sx={{ my: 1 }}
-        size="small"
-      />
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', my: 1 }}>
+        <TextField
+          name="nickname"
+          value={form.nickname}
+          onChange={(e) => {
+            const newNickname = e.target.value;
+            handleChange(e);
+            if (newNickname !== form.nickname) {
+              setNicknameStatus('unchecked');
+            }
+          }}
+          size="small"
+          fullWidth
+        />
+        <Button
+          onClick={checkNickname}
+          variant="outlined"
+          sx={{ height: '40px', minWidth: '120px', fontWeight: 'bold', color: '#FF9080', borderColor: '#FF9080' }}
+        >
+          중복 확인
+        </Button>
+      </Box>
+
+      {nicknameStatus === 'available' && (
+        <Typography color="green">사용 가능한 닉네임입니다.</Typography>
+      )}
+      {nicknameStatus === 'taken' && (
+        <Typography color="red">이미 사용 중인 닉네임입니다.</Typography>
+      )}
+      {nicknameStatus === 'checking' && (
+        <Typography color="gray">확인 중...</Typography>
+      )}
+      {nicknameStatus === 'unchecked' && form.nickname.trim() && !hasChecked && (
+        <Typography color="orange">중복 확인을 해주세요.</Typography>
+      )}
+      {nicknameStatus === 'unchecked' && form.nickname.trim() && hasChecked && (
+        <Typography color="orange">중복 확인을 다시 진행해주세요.</Typography>
+      )}
 
       <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 1 }}>
         Profile
@@ -168,6 +220,10 @@ const UserDetailRegister: React.FC = () => {
         size="small"
         sx={{ my: 1 }}
         InputLabelProps={{ shrink: true }}
+        inputProps={{
+          max: getTodayDate(), // 오늘 날짜까지만 허용
+          min: '1900-01-01',   // 예시로 최소 날짜 설정
+        }}
       />
 
       <Typography fontWeight="bold" fontSize="20px" sx={{ mt: 1 }}>

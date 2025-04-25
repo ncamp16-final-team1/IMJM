@@ -21,6 +21,8 @@ const UserFinalSubmit: React.FC = () => {
     birthday,
     region,
     is_notification,
+    salonName,
+    license,
   } = location.state || {};
 
   const [agreed, setAgreed] = React.useState(false);
@@ -29,7 +31,7 @@ const UserFinalSubmit: React.FC = () => {
     try {
       const formData = new FormData();
 
-      const userDto = {
+      const userDto: any = {
         userType,
         language,
         gender,
@@ -40,13 +42,19 @@ const UserFinalSubmit: React.FC = () => {
         termsAgreed: agreed,
       };
 
+      if (userType === 'STYLIST') {
+        userDto.salonName = salonName;
+      }
+
       formData.append('userDto', new Blob([JSON.stringify(userDto)], { type: 'application/json' }));
+
       if (profile) {
         formData.append('profile', profile);
       }
-      console.log(formData);
-      console.log(userDto);
-      console.log(profile);
+      
+      if (userType === 'STYLIST' && license) {
+        formData.append('license', license);
+      }
       
       const response = await axios.post('/api/user/register', formData, {
         headers: {

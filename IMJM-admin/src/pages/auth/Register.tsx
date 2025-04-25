@@ -35,6 +35,8 @@ const Register: React.FC = () => {
   });
   
   const [isScriptsLoaded, setIsScriptsLoaded] = useState(false);
+  const [idCheckMessage, setIdCheckMessage] = useState('');
+  const [isIdAvailable, setIsIdAvailable] = useState(false);
 
   useEffect(() => {
     const loadScripts = () => {
@@ -142,6 +144,11 @@ const Register: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'id') {
+      setIsIdAvailable(false);
+      setIdCheckMessage('');
+    }
   };
 
   const handleHolidayChange = (day: string) => {
@@ -175,6 +182,11 @@ const Register: React.FC = () => {
       return;
     }
 
+    if (!isIdAvailable) {
+      alert('아이디 중복 확인을 해주세요.');
+      return;
+    }
+
     const formData = new FormData();
     
     formData.append('joinDTO', new Blob([JSON.stringify(form)], { type: 'application/json' }));
@@ -200,6 +212,32 @@ const Register: React.FC = () => {
       alert('서버 오류가 발생했습니다.');
     }
   };
+  const handleCheckId = async () => {
+    if (!form.id) {
+      alert("아이디를 입력해주세요.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/admin/check-id?id=${form.id}`);
+  
+      if (response.ok) {
+        const result = await response.json();
+        if (result.available) {
+          setIsIdAvailable(true);
+          setIdCheckMessage("사용 가능한 아이디입니다.");
+        } else {
+          setIsIdAvailable(false);
+          setIdCheckMessage("이미 사용 중인 아이디입니다.");
+        }
+      } else {
+        setIdCheckMessage("아이디 중복 확인 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error('아이디 중복 확인 에러:', error);
+      setIdCheckMessage("서버 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <Container fixed sx={{ width: 1280, mt: 0, bgcolor: '#FDF6F3', height: 803, py: 4 }} maxWidth="lg">
@@ -214,8 +252,22 @@ const Register: React.FC = () => {
         </Box>
         {/* 왼쪽 영역 */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Typography fontWeight="bold">아이디</Typography>
-          <TextField label="아이디" name="id" value={form.id} onChange={handleInputChange} />
+          <Typography fontWeight="bold">아이디</Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <TextField
+              label="아이디"
+              name="id"
+              value={form.id}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <Button onClick={handleCheckId} sx={{ width: 120 }}>중복확인</Button>
+          </Box>
+          { idCheckMessage && (
+            <Typography color={isIdAvailable ? 'green' : 'red'} fontSize="0.9rem">
+              {idCheckMessage}
+            </Typography>
+          )}
           <Typography fontWeight="bold">비밀번호</Typography>
           <TextField label="비밀번호" name="password" type="password" value={form.password} onChange={handleInputChange} />
           <TextField label="비밀번호 확인" name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleInputChange} />
