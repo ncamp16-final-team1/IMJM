@@ -15,7 +15,7 @@ export interface ChatRoom {
 }
 
 // 메시지 타입
-export interface ChatMessage {
+export interface ChatMessageDto {
     id: number;
     chatRoomId: number;
     senderType: string;
@@ -41,7 +41,7 @@ class ChatService {
     // 사용자 기준 채팅방 목록 조회
     async getUserChatRooms(): Promise<ChatRoom[]> {
         try {
-            const response = await axios.get(`/api/chat/rooms/user`, {
+            const response = await axios.get(`${this.baseUrl}/rooms/user`, {
                 withCredentials: true  // 쿠키 포함
             });
             return response.data;
@@ -76,7 +76,7 @@ class ChatService {
     }
 
     // 채팅방 메시지 목록 조회
-    async getChatMessages(chatRoomId: number): Promise<ChatMessage[]> {
+    async getChatMessages(chatRoomId: number): Promise<ChatMessageDto[]> {
         try {
             const response = await axios.get(`${this.baseUrl}/messages/${chatRoomId}`);
             return response.data;
