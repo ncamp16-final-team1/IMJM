@@ -17,6 +17,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import ScrollToTop from './components/ScrollToTop';
+import AppointmentHistory from './pages/MyPage/Appointments';
 
 function App() {
     return (
@@ -60,6 +61,11 @@ function App() {
                         <Route path="/myPage" element={
                             <ProtectedRoute>
                                 <MyPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/myPage/appointments" element={
+                            <ProtectedRoute>
+                                <AppointmentHistory />
                             </ProtectedRoute>
                         } />
                         

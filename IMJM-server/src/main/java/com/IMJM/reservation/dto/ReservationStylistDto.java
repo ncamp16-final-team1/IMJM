@@ -17,6 +17,7 @@ public class ReservationStylistDto {
     private short holidayMask;
     private String introduction;
     private String profile;
+    private String salonName;
 
     @Builder
     public ReservationStylistDto(AdminStylist adminStylist) {
@@ -26,6 +27,7 @@ public class ReservationStylistDto {
         this.holidayMask = adminStylist.getHolidayMask();
         this.introduction = adminStylist.getIntroduction();
         this.profile = adminStylist.getProfile();
+        this.salonName = adminStylist.getSalon().getName();
     }
 
 }

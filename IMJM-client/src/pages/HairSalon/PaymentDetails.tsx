@@ -68,6 +68,7 @@ function PaymentDetails() {
   const location = useLocation();
   const {
     stylistId,
+    salonName,
     stylistName,
     selectedDate,
     selectedTime,
@@ -76,6 +77,7 @@ function PaymentDetails() {
     salonId
   } = location.state || {};
 
+  console.log('전달받은 정보:', location.state);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [userPoint, setUserPoint] = useState<number>(0);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
@@ -253,6 +255,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
       },
       payment_token: paymentToken, 
       paymentRequest,
+      salonName,
     };
     
     
@@ -627,6 +630,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
         <Typography variant="h5" gutterBottom sx={{fontWeight: 'bold'}}>Reservation information</Typography>
         <Box sx={{ backgroundColor: '#FDF6F3', borderRadius: 5, p: 3 }}>
           {[
+            ['매장 이름', salonName],
             ['스타일리스트 이름', stylistName],
             ['선택 날짜', selectedDate],
             ['선택 시간', selectedTime],
@@ -844,8 +848,6 @@ const handlePaymentSuccess = async (paymentData: any) => {
               environment="TEST"
               paymentRequest={googlePayRequest}
               onLoadPaymentData={(paymentData) => {
-                console.log('결제 완료 데이터:', paymentData);
-                // 전체 결제 데이터 구조 확인
                   console.log('전체 결제 데이터:', JSON.stringify(paymentData, null, 2));
                   
                   // 토큰 관련 부분 확인
@@ -861,26 +863,26 @@ const handlePaymentSuccess = async (paymentData: any) => {
             />
             )}
             
-            {selectedPayment === 'apple' && isSafariBrowser && (
-              <ApplePayButton
-                onClick={() => {
-                  console.log('애플 페이 결제 시작');
+            {/* {selectedPayment === 'apple' && isSafariBrowser && (
+              // <ApplePayButton
+              //   onClick={() => {
+              //     console.log('애플 페이 결제 시작');
                   
-                  const mockPaymentData = {
-                    totalPrice: finalAmount.toString(),
-                    paymentMethod: 'apple',
-                    transactionId: `apple-${Date.now()}`,
-                  };
+              //     const mockPaymentData = {
+              //       totalPrice: finalAmount.toString(),
+              //       paymentMethod: 'apple',
+              //       transactionId: `apple-${Date.now()}`,
+              //     };
                   
-                  setTimeout(() => {
-                    handlePaymentSuccess(mockPaymentData);
-                  }, 2000);
-                }}
-                buttonType="plain"
-                buttonColor="black"
-                style={{ width: '300px', height: '50px' }}
-              />
-            )}
+              //     setTimeout(() => {
+              //       handlePaymentSuccess(mockPaymentData);
+              //     }, 2000);
+              //   }}
+              //   buttonType="plain"
+              //   buttonColor="black"
+              //   style={{ width: '300px', height: '50px' }}
+              // />
+            )} */}
           </Box>
         )}
         
@@ -901,7 +903,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
         open={successModalOpen}
         onClose={() => {
           setSuccessModalOpen(false);
-          navigate('/myPage/reservation');
+          navigate('/myPage/appointments');
         }}
         aria-labelledby="payment-success-dialog-title"
       >
@@ -927,7 +929,7 @@ const handlePaymentSuccess = async (paymentData: any) => {
           <Button 
             onClick={() => {
               setSuccessModalOpen(false);
-              navigate('/myPage/reservation');
+              navigate('/myPage/appointments');
             }}
             variant="contained"
             sx={{
