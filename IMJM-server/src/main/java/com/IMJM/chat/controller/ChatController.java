@@ -2,7 +2,7 @@ package com.IMJM.chat.controller;
 
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
-import com.IMJM.chat.service.ChatService;
+import com.IMJM.chat.service.RabbitMQChatService;
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +21,18 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/chat")
 public class ChatController {
 
-    private final ChatService chatService;
-    private final StorageService storageService;
+    private final RabbitMQChatService chatService;
 
-    // 웹소켓으로 메시지 전송
+    // 메시지 전송 REST 엔드포인트 (RabbitMQ 사용)
+    @PostMapping("/message")
+    public ResponseEntity<ChatMessageDto> sendMessage(@RequestBody ChatMessageDto chatMessageDto) {
+        ChatMessageDto sentMessage = chatService.sendMessage(chatMessageDto);
+        return ResponseEntity.ok(sentMessage);
+    }
+
+    // WebSocket 메시지 전송 (레거시 지원)
     @MessageMapping("/chat.sendMessage")
-    public void sendMessage(@Payload ChatMessageDto chatMessageDto) {
+    public void handleWebSocketMessage(@Payload ChatMessageDto chatMessageDto) {
         chatService.sendMessage(chatMessageDto);
     }
 
