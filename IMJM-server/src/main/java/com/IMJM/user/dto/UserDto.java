@@ -24,7 +24,7 @@ public class UserDto {
     private boolean isNotification;
     private String history;
     private String washingHair;
-    private String hairSalon;
+    private String salonName;
     private String license;
     private boolean termsAgreed;
     private BigDecimal latitude;

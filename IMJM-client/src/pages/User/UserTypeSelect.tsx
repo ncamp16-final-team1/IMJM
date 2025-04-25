@@ -23,7 +23,9 @@ const UserTypeSelect: React.FC = () => {
   };
 
   const handleNext = () => {
-    if (userType) {
+    if (userType === 'MEMBER') {
+      navigate('/user/register/step2', { state: { userType } });
+    } else if (userType === 'STYLIST') {
       navigate('/user/register/step1', { state: { userType } });
     }
   };
@@ -83,7 +85,7 @@ const UserTypeSelect: React.FC = () => {
       <OptionCard
         label={isKR ? '헤어 디자이너' : 'Hair Stylist'}
         icon={<ContentCutIcon />}
-        value="STYLIST" // 오타 수정
+        value="STYLIST"
       />
 
       <Button

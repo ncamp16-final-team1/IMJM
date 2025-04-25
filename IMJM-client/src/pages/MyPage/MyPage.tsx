@@ -1,6 +1,8 @@
-import { Box, Button, Divider, List, ListItemButton, ListItemText, Typography } from "@mui/material";
+import { Box, Button, Divider, List, ListItemButton, Typography, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
 import { ChevronRight } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
 
 const menuItems = [
   { label: "My Profile", path: "/profile" },
@@ -15,12 +17,13 @@ const menuItems = [
 
 export default function MyPage() {
   const navigate = useNavigate();
+  const [openDialog, setOpenDialog] = useState(false);
 
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/user/logout", {
         method: "POST",
-        credentials: "include", 
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -31,6 +34,27 @@ export default function MyPage() {
     } catch (error) {
       console.error("Logout error:", error);
       alert("An error occurred while logging out.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await fetch("/api/user/delete-account", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        await fetch("/api/user/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+        navigate("/");
+      } else {
+        alert("Delete account failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Delete account error:", error);
     }
   };
 
@@ -67,10 +91,24 @@ export default function MyPage() {
         ))}
       </List>
 
-      {/* Delete Account 버튼 */}
       <Box mt={4} textAlign="center">
-        <Button variant="text" color="error">Delete Account</Button>
+        <Button variant="text" color="error" onClick={() => setOpenDialog(true)}>
+          Delete Account
+        </Button>
       </Box>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>회원 탈퇴</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            정말로 회원 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>취소</Button>
+          <Button onClick={handleDeleteAccount} color="error">확인</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

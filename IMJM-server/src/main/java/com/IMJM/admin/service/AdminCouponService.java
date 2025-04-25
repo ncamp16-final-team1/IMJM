@@ -8,7 +8,6 @@ import com.IMJM.common.entity.Coupon;
 import com.IMJM.common.entity.Salon;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class CouponService {
+public class AdminCouponService {
 
     private final CouponRepository couponRepository;
     private final SalonRepository salonRepository;

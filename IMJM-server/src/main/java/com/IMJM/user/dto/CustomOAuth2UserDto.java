@@ -1,6 +1,7 @@
 package com.IMJM.user.dto;
 
 import com.IMJM.common.entity.Users;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+@Getter
 public class CustomOAuth2UserDto implements OAuth2User {
 
     private final Users user;

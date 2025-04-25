@@ -16,6 +16,7 @@ import java.util.Date;
         @UniqueConstraint(columnNames = "email"),
         @UniqueConstraint(columnNames = "nickname")
 })
+@ToString
 public class Users {
 
     @Id
@@ -69,8 +70,6 @@ public class Users {
     @Column(name = "terms_agreed")
     private boolean termsAgreed;
 
-    @Column
-
     public void updateName(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -94,5 +93,20 @@ public class Users {
         this.region = region;
         this.isNotification = isNotification;
         this.termsAgreed = termsAgreed;
+    }
+
+    public void updateLocation(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void deleteAccount() {
+        this.gender = null;
+        this.nickname = null;
+        this.profile = null;
+        this.birthday = null;
+        this.region = null;
+        this.isNotification = false;
+        this.termsAgreed = false;
     }
 }
