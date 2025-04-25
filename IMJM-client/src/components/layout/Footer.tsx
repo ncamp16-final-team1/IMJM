@@ -3,7 +3,7 @@ import './Footer.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 // Material UI 아이콘 임포트
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import PeopleIcon from '@mui/icons-material/People';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomeIcon from '@mui/icons-material/Home';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import PersonIcon from '@mui/icons-material/Person';
@@ -23,7 +23,7 @@ function Footer(): React.ReactElement {
 
     const navItems: NavItem[] = [
         { id: 'archive', path: '/archive', icon: <PhotoCamera />, label: 'archive' },
-        { id: 'community', path: '/community', icon: <PeopleIcon />, label: 'community' },
+        { id: 'chat', path: '/chat', icon: <ChatBubbleIcon />, label: 'chat' },
         { id: 'home', path: '/', icon: <HomeIcon />, label: 'home' },
         { id: 'hairSalon', path: '/salon', icon: <ContentCutIcon />, label: 'hair salon' },
         { id: 'myPage', path: '/myPage', icon: <PersonIcon />, label: 'my page' }
