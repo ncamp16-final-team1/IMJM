@@ -7,11 +7,11 @@ import { useState } from "react";
 const menuItems = [
   { label: "My Profile", path: "/profile" },
   { label: "Point", path: "/point", right: "10,000 P" },
-  { label: "Appointment history", path: "/appointments" },
-  { label: "My Review", path: "/reviews" },
-  { label: "My Acahive", path: "/acahive" },
-  { label: "My Community", path: "/community" },
-  { label: "Announcement", path: "/announcements" },
+  { label: "Appointment history", path: "/myPage/appointments" },
+  { label: "My Review", path: "/myPage/reviews" },
+  { label: "My Acahive", path: "/myPage/acahive" },
+  { label: "My Community", path: "/myPage/community" },
+  { label: "Announcement", path: "/myPage/announcements" },
   { label: "Logout", path: "/logout", isLogout: true },
 ];
 

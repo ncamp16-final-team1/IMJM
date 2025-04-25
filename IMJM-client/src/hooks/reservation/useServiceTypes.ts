@@ -171,6 +171,6 @@ export const useServiceTypes = () => {
     handleTouchStart,
     handleTouchMove,
     handleScroll,
-    handleArrowClick
+    handleArrowClick,
   };
 };

@@ -9,6 +9,7 @@ export interface StylistSchedule {
   salonHolidayMask: number;
   stylistHolidayMask: number;
   profile: string;
+  salonName: string;
 }
 
 export interface Menu {
@@ -18,6 +19,7 @@ export interface Menu {
   serviceDescription: string;
   price: number;
   salonId: string;
+  salonName: string;
 }
 
 export interface ReservationInfo {
@@ -27,7 +29,8 @@ export interface ReservationInfo {
   selectedDate: string;
   selectedTime: string;
   selectedType: string;
-  userId: string;
+  salonName: string;
+
   selectedMenu: {
     serviceName: string;
     serviceDescription?: string;
@@ -62,6 +65,7 @@ export interface ServiceMenuProps {
   selectedMenuName: string | null;
   handleMenuSelect: (menu: Menu) => void;
   sanlonId: string;
+  sanloName: string;
 }
 
 export interface CalendarSectionProps {
@@ -113,6 +117,7 @@ export interface ServiceMenusSectionProps {
   stylistName: string;
   selectedDate: string;
   selectedTime: string;
+  salonName: string;
 
 }
 
