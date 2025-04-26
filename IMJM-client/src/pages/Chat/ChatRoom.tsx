@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
     Typography,
     IconButton,
@@ -48,11 +49,11 @@ const ChatRoom: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const [userId] = useState<string>('user1'); // 테스트용 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
+    const [userId, setUserId] = useState<string>('');
 
     // RabbitMQ 연결 및 메시지 수신 설정
     useEffect(() => {
-        if (!roomId) return;
+        if (!roomId || !userId) return;
 
         // RabbitMQ 초기화
         RabbitMQService.initialize(userId);
@@ -109,17 +110,26 @@ const ChatRoom: React.FC = () => {
 
     // 채팅방 정보와 메시지 로드
     useEffect(() => {
-        const fetchChatRoom = async () => {
+        const fetchUserAndChatRoom = async () => {
             try {
                 if (!roomId) return;
 
-                // 채팅방 정보를 서버에서 가져오는 API가 없어서 간단한 정보로 대체
+                // 현재 로그인된 사용자 정보 가져오기
+                const userResponse = await axios.get('/api/chat/user/current');
+                const currentUserId = userResponse.data.id;
+                setUserId(currentUserId);
+
+                // RabbitMQ 초기화
+                RabbitMQService.initialize(currentUserId);
+
+                // 채팅방 정보 가져오기
+                const roomResponse = await axios.get(`/api/chat/room/${roomId}`);
                 setChatRoom({
                     id: Number(roomId),
-                    salonId: salonId || '',
-                    salonName: 'Beauty Salon', // 실제로는 API에서 받아와야 함
-                    userLanguage: 'en', // 사용자 언어
-                    salonLanguage: 'ko', // 미용실 언어
+                    salonId: roomResponse.data.salonId,
+                    salonName: roomResponse.data.salonName,
+                    userLanguage: roomResponse.data.userLanguage,
+                    salonLanguage: roomResponse.data.salonLanguage
                 });
 
                 // 채팅 메시지 로드
@@ -136,7 +146,7 @@ const ChatRoom: React.FC = () => {
             }
         };
 
-        fetchChatRoom();
+        fetchUserAndChatRoom();
     }, [roomId, salonId]);
 
     // 메시지 스크롤 처리
@@ -267,7 +277,7 @@ const ChatRoom: React.FC = () => {
     };
 
     const handleSendMessage = async () => {
-        if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom) return;
+        if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom || !userId) return;
 
         setLoading(true); // 메시지 전송 중 로딩 상태 설정
 
