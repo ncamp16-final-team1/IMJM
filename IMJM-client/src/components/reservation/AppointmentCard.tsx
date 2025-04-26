@@ -14,8 +14,10 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import EventIcon from '@mui/icons-material/Event';
 import { useState, useEffect } from 'react';
 import { UserReservations } from '../../services/reservation/getUserReservations';
+import { useNavigate } from 'react-router-dom';
 
 export default function AppointmentCard({
+    salonId,
     salonName,
     salonScore,
     reviewCount,
@@ -27,9 +29,11 @@ export default function AppointmentCard({
     reviewed,  
     reservationServiceName,
     reservationId,
-    reviewId,  
+    reviewId,
+    stylistName,  
 }: UserReservations) {
 
+    const navigate = useNavigate();
     const [isPast, setIsPast] = useState(false);
     const [formattedDateTime, setFormattedDateTime] = useState<string>("");
     const [status, setStatus] = useState<'upcoming' | 'past-no-review' | 'past-with-review'>('upcoming');
@@ -80,9 +84,23 @@ export default function AppointmentCard({
                     icon: <RateReviewIcon fontSize="small" />,
                     color: '#FF9080',
                     action: () => {
-                        // 리뷰 작성 페이지로 이동
                         console.log(`리뷰 작성: ${reservationId}`);
-                        // navigate(`/write-review/${reservationId}`);
+                        navigate(`/myPage/writeReview`, {
+                            state: {
+                                salonId,
+                                reservationId,
+                                salonName,
+                                salonScore,
+                                reviewCount,
+                                salonAddress,
+                                reservationDate,
+                                reservationTime,
+                                price,
+                                salonPhotoUrl,
+                                reservationServiceName,
+                                stylistName,
+                            }
+                    });
                     }
                 };
             case 'past-with-review':
@@ -124,6 +142,7 @@ export default function AppointmentCard({
                     </Stack>
                     <Typography variant="body2" sx={{ mt: 0.5 }}>{salonAddress}</Typography>
                     <Typography variant="body2" color="text.secondary">{formattedDateTime}</Typography>
+                    <Typography variant="body2" color="text.secondary">스타일리스트 : {stylistName}</Typography>
                     <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 'bold' }}>{price.toLocaleString()} KRW</Typography>
                 </Box>
 

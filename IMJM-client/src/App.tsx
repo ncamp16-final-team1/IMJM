@@ -18,7 +18,8 @@ import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
-import AppointmentHistory from './pages/MyPage/Appointments';
+import Appointments from './pages/MyPage/Appointments';
+import WriteReview from './pages/MyPage/WriteReview';
 
 function App() {
     return (
@@ -66,7 +67,12 @@ function App() {
                         } />
                         <Route path="/myPage/appointments" element={
                             <ProtectedRoute>
-                                <AppointmentHistory />
+                                <Appointments />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/myPage/writeReview" element={
+                            <ProtectedRoute>
+                                <WriteReview />
                             </ProtectedRoute>
                         } />
                         

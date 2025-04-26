@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Typography,
@@ -12,8 +11,7 @@ import {
 import AppointmentCard from '../../components/reservation/AppointmentCard';
 import { getUserReservations, UserReservations } from '../../services/reservation/getUserReservations';
 
-export default function AppointmentHistory() {
-  const navigate = useNavigate();
+export default function Appointments() {
 
   const [appointments, setAppointments] = useState<UserReservations[]>([]);
   const [selectedOption, setSelectedOption] = useState("All");
@@ -129,6 +127,7 @@ export default function AppointmentHistory() {
         filteredAppointments.map((item, index) => (
           <AppointmentCard
             key={index}
+            salonId={item.salonId}
             salonName={item.salonName}
             salonScore={item.salonScore}
             reviewCount={item.reviewCount}
@@ -140,7 +139,8 @@ export default function AppointmentHistory() {
             reviewed={item.reviewed}
             reservationServiceName={item.reservationServiceName}
             reservationId={item.reservationId}
-            reviewId={item.reviewId}          
+            reviewId={item.reviewId}
+            stylistName={item.stylistName}          
           />
         ))
       ) : (
