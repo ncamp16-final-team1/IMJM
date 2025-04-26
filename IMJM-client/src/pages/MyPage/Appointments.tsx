@@ -136,7 +136,7 @@ export default function Appointments() {
             reservationTime={item.reservationTime}
             price={item.price}
             salonPhotoUrl={item.salonPhotoUrl}
-            reviewed={item.reviewed}
+            isReviewed={item.isReviewed}
             reservationServiceName={item.reservationServiceName}
             reservationId={item.reservationId}
             reviewId={item.reviewId}

@@ -23,6 +23,7 @@ import axios from 'axios';
 // 리뷰 폼에 필요한 타입 정의
 interface LocationState {
     salonId: string;
+    reservationId: number;
     salonName: string;
     salonScore?: string;
     reviewCount?: string;
@@ -38,6 +39,7 @@ interface LocationState {
 // 리뷰 데이터 타입 정의
 interface ReviewData {
     salonId: string;
+    reservationId: number;
     rating: number;
     reviewText: string;
     tags: string[];
@@ -48,6 +50,7 @@ export default function WriteReview() {
     const navigate = useNavigate();
     const {
         salonId,
+        reservationId,
         salonName,
         salonScore,
         reviewCount,
@@ -138,7 +141,8 @@ export default function WriteReview() {
         
         // 1. 리뷰 데이터를 구조화된 객체로 수집
         const reviewData = {
-            salonId: salonId, 
+            salonId: salonId,
+            reservationId: reservationId,
             rating: value,
             reviewText,
             tags: selectedTags,

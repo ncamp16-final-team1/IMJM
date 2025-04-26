@@ -11,7 +11,7 @@ export type UserReservations = {
     reservationTime: string;   
     reservationServiceName: string;
     price: number;     
-    reviewed: boolean; 
+    isReviewed: boolean; 
     reservationId: number;    
     reviewId: number;
     stylistName: string;   

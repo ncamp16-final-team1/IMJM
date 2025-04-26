@@ -33,9 +33,11 @@ public class UserMyPageController {
     // 예약리스트 조회
     @GetMapping("/reservations")
     public ResponseEntity<List<UserReservationResponseDto>> getUserReservations(
-            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
+//            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+    ) {
 
-        String userId = customOAuth2UserDto.getId();
+//        String userId = customOAuth2UserDto.getId();
+        String userId = "google 116389893784649164530";
         // 서비스에서 예약 정보를 가져옴
         List<UserReservationResponseDto> reservations = myPageService.getUserReservations(userId);
         return ResponseEntity.ok(reservations);
