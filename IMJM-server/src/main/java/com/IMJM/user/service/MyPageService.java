@@ -43,7 +43,7 @@ public class MyPageService {
         List<Object[]> results = reservationRepository.findByUser_IdNative(userId);
 
         return results.stream()
-                .map(UserReservationResponseDto::new) // Object[] -> DTO 변환
+                .map(UserReservationResponseDto::new)
                 .collect(Collectors.toList());
     }
 
@@ -115,7 +115,6 @@ public class MyPageService {
 
     private String uploadReviewImageToStorage(Long reviewId, MultipartFile image) {
         try {
-            // 파일명 생성 (UUID 사용 + 경로 구조화)
             String originalFilename = image.getOriginalFilename();
             String extension = "";
             if (originalFilename != null && originalFilename.contains(".")) {

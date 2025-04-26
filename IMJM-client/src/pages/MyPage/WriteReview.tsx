@@ -20,7 +20,7 @@ import {
 import StarIcon from '@mui/icons-material/Star';
 import axios from 'axios';
 
-// 리뷰 폼에 필요한 타입 정의
+
 interface LocationState {
     salonId: string;
     reservationId: number;
@@ -36,7 +36,7 @@ interface LocationState {
     stylistName?: string;
 }
 
-// 리뷰 데이터 타입 정의
+
 interface ReviewData {
     salonId: string;
     reservationId: number;
@@ -90,7 +90,6 @@ export default function WriteReview() {
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
     
-    // 추가된 상태 관리 변수들
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [alertOpen, setAlertOpen] = useState<boolean>(false);
     const [alertMessage, setAlertMessage] = useState<string>('');
@@ -118,28 +117,23 @@ export default function WriteReview() {
         return true;
     };
     
-    // 알림 표시 함수
     const showAlert = (message: string, severity: AlertColor = 'success'): void => {
         setAlertMessage(message);
         setAlertSeverity(severity);
         setAlertOpen(true);
     };
     
-    // 알림 닫기 핸들러
     const handleAlertClose = (): void => {
         setAlertOpen(false);
     };
 
     const handleSubmit = async (): Promise<void> => {
-        // 유효성 검사
         if (!validateReview()) {
             return;
         }
         
-        // 제출 중 상태로 변경
         setIsSubmitting(true);
         
-        // 1. 리뷰 데이터를 구조화된 객체로 수집
         const reviewData = {
             salonId: salonId,
             reservationId: reservationId,
@@ -148,38 +142,30 @@ export default function WriteReview() {
             tags: selectedTags,
         };
         
-        // 2. 이미지 업로드를 위해 FormData 객체 생성
         const formData = new FormData();
         
-        // 3. 리뷰 데이터를 JSON 문자열로 변환하여 추가
         formData.append('reviewData', new Blob([JSON.stringify(reviewData)], {type: 'application/json'}));
         
-        // 4. 각 이미지 파일을 FormData에 추가
         uploadedImages.forEach((image, index) => {
             formData.append(`image${index}`, image);
         });
         
         try {
-            // 5. axios를 사용하여 서버에 데이터 전송
             const response = await axios.post('/api/myPages/review-save', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
-                // 타임아웃 설정 (10초)
                 timeout: 10000
             });
             
-            // 6. 성공 응답 처리
             console.log('리뷰가 성공적으로 제출되었습니다:', response.data);
             showAlert('리뷰가 성공적으로 제출되었습니다!');
             
-            // 7. 성공 후 잠시 대기 후 이전 페이지로 이동
             setTimeout(() => {
-                navigate('/my-reservations');  // 적절한 경로로 수정
+                navigate('/myPage/appointments'); 
             }, 1500);
             
         } catch (error: any) { 
-            // 기존 에러 처리 로직 유지
             console.error('리뷰 제출 중 오류 발생:', error);
             
             let errorMessage = '리뷰 제출 중 오류가 발생했습니다.';
@@ -198,7 +184,6 @@ export default function WriteReview() {
             
             showAlert(errorMessage, 'error');
         } finally {
-            // 9. 제출 상태 종료
             setIsSubmitting(false);
         }
     };
@@ -384,7 +369,6 @@ export default function WriteReview() {
                     variant="outlined"
                     label="Your Review"
                     onChange={(e) => {
-                        // 입력된 텍스트가 MAX_CHARS를 초과하지 않도록 제한
                         if (e.target.value.length <= MAX_CHARS) {
                             setReviewText(e.target.value);
                         }

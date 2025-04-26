@@ -21,7 +21,6 @@ export const getUserReservations = async (): Promise<UserReservations[]> => {
     try {
         const response = await axios.get('/api/myPages/reservations');
         
-        // 서버 응답을 체크합니다.
         if (response.status === 200 && Array.isArray(response.data)) {
             return response.data;
         } else {
@@ -29,7 +28,6 @@ export const getUserReservations = async (): Promise<UserReservations[]> => {
         }
         
     } catch (error) {
-        // axios 에러 및 일반 에러 핸들링
         if (axios.isAxiosError(error) && error.response) {
             console.error('서버 응답 오류:', error.response.data);
         } else {

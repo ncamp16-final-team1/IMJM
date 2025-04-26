@@ -33,12 +33,11 @@ public class UserMyPageController {
     // 예약리스트 조회
     @GetMapping("/reservations")
     public ResponseEntity<List<UserReservationResponseDto>> getUserReservations(
-//            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
     ) {
 
-//        String userId = customOAuth2UserDto.getId();
-        String userId = "google 116389893784649164530";
-        // 서비스에서 예약 정보를 가져옴
+        String userId = customOAuth2UserDto.getId();
+
         List<UserReservationResponseDto> reservations = myPageService.getUserReservations(userId);
         return ResponseEntity.ok(reservations);
     }
@@ -53,22 +52,17 @@ public class UserMyPageController {
             @AuthenticationPrincipal CustomOAuth2UserDto oAuth2UserDto) {
 
         try {
-            // 현재 로그인한 사용자 정보 가져오기
             String userId = oAuth2UserDto.getId();
 
-            // 유저 아이디를 DTO에 설정
             reviewSaveRequestDto.setUserId(userId);
 
-            // 이미지 파일들을 리스트로 변환 (null이 아닌 것만)
             List<MultipartFile> images = new ArrayList<>();
             if (image0 != null && !image0.isEmpty()) images.add(image0);
             if (image1 != null && !image1.isEmpty()) images.add(image1);
             if (image2 != null && !image2.isEmpty()) images.add(image2);
 
-            // 서비스에 리뷰 저장 요청 (결과로 저장된 리뷰 ID 반환)
             Long reviewId = myPageService.saveReview(reviewSaveRequestDto, images);
 
-            // 성공 응답 반환
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "리뷰가 성공적으로 저장되었습니다.");
@@ -77,10 +71,8 @@ public class UserMyPageController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            // 에러 로깅
             log.error("리뷰 저장 중 오류 발생", e);
 
-            // 에러 응답 반환
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "리뷰 저장 중 오류가 발생했습니다: " + e.getMessage());
