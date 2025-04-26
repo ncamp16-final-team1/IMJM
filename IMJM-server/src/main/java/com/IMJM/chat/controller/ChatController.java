@@ -3,8 +3,9 @@ package com.IMJM.chat.controller;
 
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
+import com.IMJM.chat.repository.ChatRoomRepository;
 import com.IMJM.chat.service.RabbitMQChatService;
-import com.IMJM.common.cloud.StorageService;
+import com.IMJM.common.entity.ChatRoom;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class ChatController {
 
     private final RabbitMQChatService chatService;
+    private ChatRoomRepository chatRoomRepository;
 
     // 메시지 전송 REST 엔드포인트 (RabbitMQ 사용)
     @PostMapping("/message")
@@ -102,5 +105,24 @@ public class ChatController {
         List<Map<String, String>> results = chatService.uploadMultipleChatImages(files, chatRoomId);
 
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<Map<String, Object>> getChatRoomDetail(@PathVariable Long roomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+
+        Map<String, Object> roomInfo = new HashMap<>();
+        roomInfo.put("id", chatRoom.getId());
+        roomInfo.put("userId", chatRoom.getUser().getId());
+        roomInfo.put("salonId", chatRoom.getSalon().getId());
+        roomInfo.put("salonName", chatRoom.getSalon().getName());
+        roomInfo.put("userName", chatRoom.getUser().getNickname());
+        roomInfo.put("userLanguage", chatRoom.getUser().getLanguage() != null ? chatRoom.getUser().getLanguage() : "en");
+        roomInfo.put("salonLanguage", "ko"); // 미용실 언어는 한국어로 고정
+        roomInfo.put("createdAt", chatRoom.getCreatedAt());
+        roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
+
+        return ResponseEntity.ok(roomInfo);
     }
 }
