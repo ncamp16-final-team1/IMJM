@@ -74,6 +74,7 @@ class WebSocketService {
 
         const message = {
             chatRoomId,
+            
             message: content,
             senderType,
             senderId: this.userId,

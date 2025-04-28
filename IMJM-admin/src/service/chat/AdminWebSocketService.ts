@@ -22,6 +22,7 @@ class AdminWebSocketService {
 
         // 새로운 STOMP 클라이언트 생성
         this.client = new Client({
+            brokerURL: undefined, // 브라우저에서 자동으로 WebSocket URL 결정
             webSocketFactory: () => new SockJS('/ws'),
             debug: function (str) {
                 console.log('STOMP: ' + str);
