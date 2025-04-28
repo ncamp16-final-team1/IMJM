@@ -56,3 +56,6 @@ Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
+
+# local.yml
+application-local.yml

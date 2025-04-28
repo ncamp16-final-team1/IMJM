@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/imjm
-    username: postgres
-    password: 0817
+    username: imjm
+    password: qwert12345!
     driver-class-name: org.postgresql.Driver
   security:
     oauth2:

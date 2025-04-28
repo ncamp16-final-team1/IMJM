@@ -28,7 +28,7 @@ public class SalonService {
     public Page<SalonDto> findNearbySalons(LocationDto location, Pageable pageable) {
         BigDecimal latitude = location.getLatitude();
         BigDecimal longitude = location.getLongitude();
-        BigDecimal radius = new BigDecimal(5);
+        BigDecimal radius = new BigDecimal(400);
 
         Page<Salon> salons = salonRepository.findNearbySalons(latitude, longitude, radius, pageable);
         return salons.map(salon -> {
