@@ -81,15 +81,17 @@ export default function Appointments() {
     const timeParts = appointment.reservationTime.split(':').map(Number);
     appointmentDate.setHours(timeParts[0], timeParts[1], 0);
     const isPastAppointment = appointmentDate < now;
+    
+    // 여기서 isReviewed 속성 사용 (reviewed가 아닌)
     switch (selectedOption) {
       case "All":
         return true; 
       case "Reservation":
         return !isPastAppointment; 
       case "WriteAreview":
-        return isPastAppointment && !appointment.reviewed; 
+        return isPastAppointment && !appointment.isReviewed; // 수정됨: reviewed -> isReviewed
       case "ViewReview":
-        return isPastAppointment && appointment.reviewed;
+        return isPastAppointment && appointment.isReviewed; // 수정됨: reviewed -> isReviewed
       default:
         return true;
     }
