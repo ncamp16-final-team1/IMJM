@@ -8,17 +8,14 @@ import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.entity.Review;
 import com.IMJM.common.entity.ReviewPhotos;
 import com.IMJM.common.entity.ReviewReply;
-import com.IMJM.common.entity.Salon;
-import com.IMJM.salon.repository.ReviewPhotoRepository;
+import com.IMJM.salon.repository.ReviewPhotosRepository;
 import com.IMJM.salon.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +25,7 @@ public class AdminReviewService {
 
     private final ReviewReplyRepository reviewReplyRepository;
     private final ReviewRepository reviewRepository;
-    private final ReviewPhotoRepository reviewPhotoRepository;
+    private final ReviewPhotosRepository reviewPhotosRepository;
     private final SalonRepository salonRepository;
 
     public List<AdminReviewDto> getReviewList(String salonId) {
@@ -63,7 +60,7 @@ public class AdminReviewService {
 
         ReviewReply reviewReply = reviewReplyRepository.findByReviewId(reviewId);
 
-        List<ReviewPhotos> reviewPhotos = reviewPhotoRepository.findByReviewId(reviewId);
+        List<ReviewPhotos> reviewPhotos = reviewPhotosRepository.findByReviewId(reviewId);
 
         if (reviewReply != null) {
             System.out.println(reviewReply.getContent());

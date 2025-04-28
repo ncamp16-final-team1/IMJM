@@ -7,5 +7,4 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReviewPhotoRepository extends JpaRepository<ReviewPhotos, Long> {
-    List<ReviewPhotos> findByReviewId(Long reviewId);
 }
