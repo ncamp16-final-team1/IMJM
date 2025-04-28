@@ -25,7 +25,7 @@ import java.util.Map;
 public class ChatController {
 
     private final RabbitMQChatService chatService;
-    private ChatRoomRepository chatRoomRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     // 메시지 전송 REST 엔드포인트 (RabbitMQ 사용)
     @PostMapping("/message")

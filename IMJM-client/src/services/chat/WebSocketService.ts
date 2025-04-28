@@ -22,7 +22,7 @@ class WebSocketService {
 
         // 새로운 STOMP 클라이언트 생성
         this.client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+            webSocketFactory: () => new SockJS('/ws'),
             debug: function (str) {
                 console.log('STOMP: ' + str);
             },
@@ -74,6 +74,7 @@ class WebSocketService {
 
         const message = {
             chatRoomId,
+            
             message: content,
             senderType,
             senderId: this.userId,

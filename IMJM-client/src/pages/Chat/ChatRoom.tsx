@@ -36,7 +36,8 @@ interface TranslationState {
 }
 
 const ChatRoom: React.FC = () => {
-    const { roomId, salonId } = useParams<{ roomId: string; salonId: string }>();
+    // const { roomId, salonId } = useParams<{ roomId: string; salonId: string }>();
+    const { roomId } = useParams<{ roomId: string }>();
     const [messages, setMessages] = useState<ChatMessageDto[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
     const [chatRoom, setChatRoom] = useState<ChatRoomInfo | null>(null);
@@ -147,7 +148,7 @@ const ChatRoom: React.FC = () => {
         };
 
         fetchUserAndChatRoom();
-    }, [roomId, salonId]);
+    }, [roomId]);
 
     // 메시지 스크롤 처리
     useEffect(() => {
@@ -476,7 +477,12 @@ const ChatRoom: React.FC = () => {
                     placeholder="메시지를 입력하세요..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault(); // 기본 동작 방지
+                            handleSendMessage();
+                        }
+                    }}
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
