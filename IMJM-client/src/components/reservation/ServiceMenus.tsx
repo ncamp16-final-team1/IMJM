@@ -11,9 +11,10 @@ const ServiceMenus = ({
   selectedMenu,
   stylistName,
   selectedDate, 
-  selectedTime, 
+  selectedTime,
+  salonName, 
 }: ServiceMenusSectionProps) => {
-
+  console.log("Received salonName:", salonName);
   const { salonId,stylistId } = useParams(); 
   const navigate = useNavigate(); 
 
@@ -36,6 +37,7 @@ const ServiceMenus = ({
         selectedDate: selectedDate,
         selectedTime: selectedTime, 
         selectedType: selectedType,
+        salonName: salonName,
         selectedMenu: selectedMenu
           ? {
               serviceName: selectedMenu.serviceName,
@@ -126,7 +128,7 @@ const ServiceMenus = ({
                       }
                     }}
                   >
-                    {selectedMenuName === menu.serviceName ? '취소' : '선택'} {/* 선택된 경우 취소 버튼 표시 */}
+                    {selectedMenuName === menu.serviceName ? '취소' : '선택'}
                   </Button>
                 </Box>
               </Box>

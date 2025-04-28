@@ -2,8 +2,10 @@ import { useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Menu, ReservationInfo, StylistSchedule } from '../../type/reservation/reservation';
 import { isHoliday } from '../../utils/reservation/dateUtils';
+// import Stylists from '../../pages/HairSalon/Stylists';
 
 export const useReservation = () => {
+  
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [reservationInfo, setReservationInfo] = useState<ReservationInfo | null>(null);
 
@@ -31,6 +33,7 @@ export const useReservation = () => {
 
   const handleMenuSelect = (
     salonId: string,
+    salonName: string,
     menu: Menu | null,
     stylistId: number | null,
     stylistName: string,
@@ -38,6 +41,7 @@ export const useReservation = () => {
     selectedTime: string | null,
     selectedType: string | null,
     setSelectedMenuName: (name: string) => void
+
   ) => {
     if (!menu) {
       setSelectedMenuName('');
@@ -60,7 +64,7 @@ export const useReservation = () => {
       selectedDate: formattedDate,
       selectedTime: selectedTime || '없음',
       selectedType: selectedType || '없음',
-      userId: '', // 결제/확정 단계에서 채움
+      salonName: salonName || '매장이름이 없습니다.',
       selectedMenu: {
         serviceName: menu.serviceName,
         serviceDescription: menu.serviceDescription,

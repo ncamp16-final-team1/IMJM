@@ -74,10 +74,10 @@ public class ReservationController {
     public ResponseEntity<List<SalonCouponDto>> getCoupons(
             @RequestParam String salonId,
             @RequestParam String totalAmount,
-      @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
     ) {
     String userId = customOAuth2UserDto.getId();
-//        String userId = "user001";
+
         try {
             int totalAmountInt = Integer.parseInt(totalAmount);
 

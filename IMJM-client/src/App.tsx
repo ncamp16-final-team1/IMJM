@@ -18,6 +18,7 @@ import PublicRoute from './components/auth/PublicRoute';
 import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
+import AppointmentHistory from './pages/MyPage/Appointments';
 
 function App() {
     return (
@@ -61,6 +62,11 @@ function App() {
                         <Route path="/myPage" element={
                             <ProtectedRoute>
                                 <MyPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/myPage/appointments" element={
+                            <ProtectedRoute>
+                                <AppointmentHistory />
                             </ProtectedRoute>
                         } />
                         
