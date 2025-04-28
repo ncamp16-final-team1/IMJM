@@ -18,6 +18,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import AdminChatService, { ChatMessage, ChatPhoto } from '../../service/chat/AdminChatService';
 import AdminWebSocketService from '../../service/chat/AdminWebSocketService';
 import AdminFileUploadService from '../../service/chat/AdminFileUploadService';
+import TranslationService from '../../service/chat/TranslationService';
 import styles from './ChatRoom.module.css';
 import axios from 'axios';
 
@@ -39,10 +40,88 @@ const AdminChatRoom: React.FC = () => {
     const [userName, setUserName] = useState<string>('');
     const [salonId, setSalonId] = useState<string>('');
     const [sending, setSending] = useState<boolean>(false);
+    const [userLanguage, setUserLanguage] = useState<string>('en');
+    const [salonLanguage, setSalonLanguage] = useState<string>('ko');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    // 번역 요청 및 토글 함수
+    const handleTranslateRequest = async (message: ChatMessage) => {
+        const messageId = message.id;
+
+        // 이미 번역이 로드되었으면 토글 수행
+        if (translations[messageId] && !translations[messageId].isLoading) {
+            // 이미 번역이 표시되어 있으면 제거
+            if (!translations[messageId].error && translations[messageId].text) {
+                setTranslations(prev => {
+                    const newTranslations = { ...prev };
+                    delete newTranslations[messageId];
+                    return newTranslations;
+                });
+                return;
+            }
+
+            // 에러가 있으면 다시 시도
+            if (translations[messageId].error) {
+                // 로딩 상태로 설정
+                setTranslations(prev => ({
+                    ...prev,
+                    [messageId]: { isLoading: true, text: null, error: null }
+                }));
+
+                try {
+                    await requestTranslation(message);
+                } catch (error) {
+                    console.error('번역 요청 실패:', error);
+                }
+            }
+            return;
+        }
+
+        // 로딩 상태로 설정
+        setTranslations(prev => ({
+            ...prev,
+            [messageId]: { isLoading: true, text: null, error: null }
+        }));
+
+        try {
+            await requestTranslation(message);
+        } catch (error) {
+            console.error('번역 요청 실패:', error);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+            }));
+        }
+    };
+
+    // 실제 번역 요청을 수행하는 함수
+    const requestTranslation = async (message: ChatMessage) => {
+        const messageId = message.id;
+        const sourceLang = message.senderType === 'USER' ? userLanguage : salonLanguage;
+        const targetLang = message.senderType === 'USER' ? salonLanguage : userLanguage;
+
+        try {
+            const translatedText = await TranslationService.translate(
+                message.message,
+                sourceLang,
+                targetLang
+            );
+
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: translatedText, error: null }
+            }));
+        } catch (error) {
+            console.error('번역 요청 실패:', error);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+            }));
+        }
+    };
 
     useEffect(() => {
         const fetchSalonAndChatRoom = async () => {
@@ -272,6 +351,7 @@ const AdminChatRoom: React.FC = () => {
                 {messages.map((message) => {
                     const isSalonMessage = message.senderType === 'SALON';
                     const messageClassName = `${styles.messageWrapper} ${isSalonMessage ? styles.salonMessageWrapper : styles.userMessageWrapper}`;
+                    const translationState = translations[message.id];
 
                     return (
                         <Box
@@ -300,6 +380,29 @@ const AdminChatRoom: React.FC = () => {
                                             />
                                         ))}
                                     </Box>
+                                )}
+
+                                <Button
+                                    size="small"
+                                    onClick={() => handleTranslateRequest(message)}
+                                    className={styles.translateButton}
+                                    disabled={translationState?.isLoading}
+                                >
+                                    {!translationState ? '번역 보기' :
+                                        translationState.isLoading ? '번역 중...' :
+                                            translationState.error ? '다시 시도' : '번역 숨기기'}
+                                </Button>
+
+                                {translationState && !translationState.isLoading && !translationState.error && (
+                                    <Typography className={styles.translatedMessage}>
+                                        {translationState.text}
+                                    </Typography>
+                                )}
+
+                                {translationState?.error && (
+                                    <Typography className={styles.translationError}>
+                                        {translationState.error}
+                                    </Typography>
                                 )}
 
                                 <Typography className={styles.messageTime}>
