@@ -476,7 +476,12 @@ const ChatRoom: React.FC = () => {
                     placeholder="메시지를 입력하세요..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault(); // 기본 동작 방지
+                            handleSendMessage();
+                        }
+                    }}
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
