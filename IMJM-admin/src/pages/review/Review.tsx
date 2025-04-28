@@ -225,7 +225,18 @@ function Review() {
                                             <Box display="flex" alignItems="center" mb={2}>
                                                 {selectedReview?.photoUrls?.length > 0 ? (
                                                     selectedReview.photoUrls.map((url, idx) => (
-                                                    <Avatar key={idx} src={url} sx={{ width: 60, height: 60, mr: 2 }} />
+                                                        <Box
+                                                        key={idx}
+                                                        component="img"
+                                                        src={url}
+                                                        sx={{
+                                                          width: 70,
+                                                          height: 70,
+                                                          mr: 2,
+                                                          borderRadius: 2, 
+                                                          objectFit: "cover",
+                                                        }}
+                                                      />
                                                     ))
                                                 ) : (
                                                     <Typography>사진이 없습니다.</Typography>
@@ -238,13 +249,15 @@ function Review() {
                                                     <Box
                                                         key={idx}
                                                         sx={{
-                                                            backgroundColor: "#f0f0f0", // 연한 회색 배경
+                                                            backgroundColor: "#f5f5f5",
+                                                            color: "#666",
                                                             borderRadius: "20px",
-                                                            px: 2,
-                                                            py: 0.5,
+                                                            px: 0.8,
+                                                            py: 0.4,
                                                             display: "inline-block",
                                                             marginRight: 1,
                                                             marginBottom: 1,
+                                                            fontSize: "12px",
                                                         }}
                                                     >
                                                         #{tag.trim()} {/* trim()을 사용하여 앞뒤 공백 제거 */}
