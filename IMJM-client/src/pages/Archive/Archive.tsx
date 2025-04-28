@@ -1,232 +1,188 @@
-// src/components/archive/ArchiveForm.tsx
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Container, Typography, Button, Box, CircularProgress} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {
-    Container,
-    Paper,
-    Typography,
-    TextField,
-    Button
-} from '@mui/material';
+
+interface ArchiveItem {
+    id: number;
+    content: string;
+    regDate: string;
+    thumbnailUrl: string;
+}
+
+interface PageResponse {
+    currentPage: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+    contents: ArchiveItem[];
+}
 
 const Archive: React.FC = () => {
     const navigate = useNavigate();
-
-    const [form, setForm] = useState({
-        content: ''
-    });
-
-    const [photos, setPhotos] = useState<File[]>([]);
-    const [previews, setPreviews] = useState<string[]>([]);
-    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [archives, setArchives] = useState<Map<number, ArchiveItem>>(new Map());
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState<number>(0);
+    const [hasMore, setHasMore] = useState<boolean>(true);
 
-    // 입력 필드 변경 처리
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    useEffect(() => {
+        const fetchArchives = async () => {
+            if (loading || !hasMore) return;
 
-    // 파일 선택 처리
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const filesArray = Array.from(e.target.files);
-            setPhotos(filesArray);
+            setLoading(true);
+            try {
+                const response = await fetch(`/api/archive/?page=${page}&size=12`);
 
-            // 이미지 미리보기 생성
-            const previewUrls = filesArray.map(file => URL.createObjectURL(file));
-            setPreviews(previewUrls);
-        }
-    };
+                if (!response.ok) {
+                    throw new Error('아카이브 데이터를 불러오는데 실패했습니다.');
+                }
 
-    // 폼 제출 처리
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        setError(null);
+                const data: PageResponse = await response.json();
+                console.log("API 응답 데이터:", data);
 
-        try {
-            // 필수 필드 검증
-            if (!form.content) {
-                throw new Error('내용을 입력해주세요.');
+                setHasMore(data.hasNext);
+
+                if (data.contents.length === 0) {
+                    setHasMore(false);
+                } else {
+                    const newArchives = data.contents.filter(item => item.thumbnailUrl);
+                    console.log("필터링 후 새 아카이브:", newArchives);
+
+                    setArchives(prevMap => {
+                        const newMap = new Map(prevMap);
+                        newArchives.forEach(archive => {
+                            newMap.set(archive.id, archive);
+                        });
+                        return newMap;
+                    });
+
+                    setPage(prevPage => prevPage + 1);
+                }
+            } catch (err) {
+                console.error('아카이브 목록 조회 오류:', err);
+                setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+            } finally {
+                setLoading(false);
             }
+        };
 
-            const formData = new FormData();
+        fetchArchives();
+    }, [page, hasMore, loading]);
 
-            // 폼 데이터를 JSON 문자열로 변환하여 추가
-            formData.append('archiveDto', new Blob([JSON.stringify(form)], {
-                type: 'application/json'
-            }));
-
-            // 사진 파일 추가
-            photos.forEach(photo => {
-                formData.append('photos', photo);
-            });
-
-            // 디버깅용 로그
-            console.log('폼 데이터:', form);
-            console.log('사진 개수:', photos.length);
-
-            const response = await fetch('/api/archive/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: formData,
-            });
-
-            console.log('응답 상태:', response.status);
-
-            if (response.ok) {
-                const archiveId = await response.json();
-                console.log('아카이브가 성공적으로 생성되었습니다:', archiveId);
-                navigate('/archive');
-            } else {
-                const errorText = await response.text();
-                console.error('서버 오류 응답:', errorText);
-                throw new Error(`아카이브 생성에 실패했습니다. (${response.status})`);
+    useEffect(() => {
+        const handleScroll = () => {
+            if (
+                window.innerHeight + document.documentElement.scrollTop >=
+                document.documentElement.scrollHeight - 100 &&
+                !loading &&
+                hasMore
+            ) {
+                setPage(prevPage => prevPage);
             }
-        } catch (err) {
-            console.error('아카이브 생성 실패:', err);
-            setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
-        } finally {
-            setIsSubmitting(false);
-        }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading, hasMore]);
+
+    const handleWriteClick = () => {
+        navigate('/archive/write');
     };
+
+    const handleArchiveClick = (id: number) => {
+        navigate(`/archive/${id}`);
+    };
+
+    const archiveList = Array.from(archives.values());
+    console.log("렌더링할 아카이브 목록:", archiveList);
 
     return (
-        <Container fixed sx={{ mt: 4, mb: 4 }} maxWidth="lg">
-            <Paper elevation={3} sx={{ p: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom align="center">
-                    새 아카이브 작성
-                </Typography>
+        <Container fixed maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Box display="flex" justifyContent="flex-end" alignItems="center" mb={3}>
+                <Button
+                    variant="contained"
+                    sx={{
+                        backgroundColor: '#FDC7BF',
+                        boxShadow: 'none',
+                        '&:hover': {
+                            boxShadow: 'none',
+                            backgroundColor: '#FDC7BF'
+                        }
+                    }}
+                    onClick={handleWriteClick}
+                >
+                    글쓰기
+                </Button>
+            </Box>
 
-                {error && (
-                    <div style={{
-                        marginBottom: '16px',
-                        padding: '16px',
-                        backgroundColor: '#ffebee',
-                        borderRadius: '4px',
-                        color: '#d32f2f'
-                    }}>
-                        {error}
-                    </div>
-                )}
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div>
-                        <TextField
-                            fullWidth
-                            label="내용"
-                            name="content"
-                            value={form.content}
-                            onChange={handleInputChange}
-                            multiline
-                            rows={5}
-                            required
-                            placeholder="아카이브 내용을 입력하세요..."
-                        />
-                    </div>
-
-                    <div>
-                        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                            사진 첨부
-                        </Typography>
-
-                        <div>
-                            <input
-                                accept="image/*"
-                                id="upload-photos"
-                                type="file"
-                                multiple
-                                style={{ display: 'none' }}
-                                onChange={handleImageChange}
-                            />
-                            <label htmlFor="upload-photos" style={{ cursor: 'pointer', display: 'inline-block' }}>
-                                <div style={{
-                                    width: '95px',
-                                    height: '70px',
-                                    backgroundColor: '#ddd',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
+            {error ? (
+                <Box bgcolor="#ffebee" p={3} borderRadius={1} mb={4}>
+                    <Typography color="error">{error}</Typography>
+                </Box>
+            ) : archiveList.length > 0 ? (
+                <>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: 2
+                        }}
+                    >
+                        {archiveList.map((archive) => (
+                            <Box
+                                key={`archive-${archive.id}`}
+                                onClick={() => handleArchiveClick(archive.id)}
+                                sx={{
+                                    cursor: 'pointer',
+                                    aspectRatio: '1 / 1',
+                                    position: 'relative',
                                     borderRadius: '4px',
-                                }}>
-                                    <Typography fontSize="2rem">＋</Typography>
-                                </div>
-                            </label>
+                                    '&:hover': {
+                                        opacity: 0.9,
+                                        transform: 'scale(1.02)',
+                                        transition: 'all 0.2s ease'
+                                    }
+                                }}
+                            >
+                                <img
+                                    src={archive.thumbnailUrl}
+                                    alt={`아카이브 ${archive.id}`}
+                                    loading="lazy"
+                                    style={{
+                                        position: 'absolute',
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                            </Box>
+                        ))}
+                    </Box>
 
-                            <div style={{
-                                marginTop: '8px',
-                                display: 'flex',
-                                gap: '8px',
-                                flexWrap: 'wrap'
-                            }}>
-                                {previews.map((src, index) => (
-                                    <div key={index} style={{ position: 'relative' }}>
-                                        <img
-                                            src={src}
-                                            alt={`미리보기 ${index + 1}`}
-                                            style={{
-                                                width: '95px',
-                                                height: '70px',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px'
-                                            }}
-                                        />
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                top: '-8px',
-                                                right: '-8px',
-                                                width: '24px',
-                                                height: '24px',
-                                                backgroundColor: 'rgba(0,0,0,0.5)',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer',
-                                                color: 'white',
-                                                fontSize: '12px'
-                                            }}
-                                            onClick={() => {
-                                                setPreviews(prev => prev.filter((_, i) => i !== index));
-                                                setPhotos(prev => prev.filter((_, i) => i !== index));
-                                            }}
-                                        >
-                                            ✕
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: '32px'
-                }}>
-                    <Button
-                        variant="outlined"
-                        onClick={() => navigate('/archive')}
-                    >
-                        취소
-                    </Button>
-                    <Button
-                        variant="contained"
-                        disabled={isSubmitting}
-                        color="primary"
-                        onClick={handleSubmit}
-                    >
-                        {isSubmitting ? '저장 중...' : '저장하기'}
-                    </Button>
-                </div>
-            </Paper>
+                    {/* 로딩 인디케이터 */}
+                    {loading && (
+                        <Box display="flex" justifyContent="center" my={4}>
+                            <CircularProgress size={30} />
+                        </Box>
+                    )}
+                </>
+            ) : !loading ? (
+                <Box textAlign="center" my={8}>
+                    <Typography variant="h6" color="text.secondary">
+                        아직 등록된 아카이브가 없습니다.
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" mt={1}>
+                        첫 번째 아카이브를 작성해보세요!
+                    </Typography>
+                </Box>
+            ) : (
+                <Box display="flex" justifyContent="center" my={8}>
+                    <CircularProgress />
+                </Box>
+            )}
         </Container>
     );
 };

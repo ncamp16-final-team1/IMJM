@@ -19,6 +19,8 @@ import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
 import Archive from "./pages/Archive/Archive";
+import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
+import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
 
 function App() {
     return (
@@ -64,6 +66,17 @@ function App() {
                                 <MyPage />
                             </ProtectedRoute>
                         } />
+                        <Route path="/archive/write" element={
+                            <ProtectedRoute>
+                                <ArchiveWrite />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveDetail />
+                            </ProtectedRoute>
+                        } />
+
                         {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
                         <Route path="/login" element={
                             <PublicRoute>

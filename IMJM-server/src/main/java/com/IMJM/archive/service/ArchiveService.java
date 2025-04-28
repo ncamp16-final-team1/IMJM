@@ -1,16 +1,19 @@
 package com.IMJM.archive.service;
 
-import com.IMJM.archive.dto.ArchiveCreateDto;
+import com.IMJM.archive.dto.ArchiveListDto;
 import com.IMJM.archive.repository.ArchivePhotosRepository;
 import com.IMJM.archive.repository.ArchiveRepository;
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.Archive;
 import com.IMJM.common.entity.ArchivePhotos;
 import com.IMJM.common.entity.Users;
+import com.IMJM.common.page.PageResponseDto;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,13 +38,13 @@ public class ArchiveService {
     private String bucketName;
 
     @Transactional
-    public Long createArchive(ArchiveCreateDto archiveCreateDto, Long userId, List<MultipartFile> photos) {
-        Users user = usersRepository.findById(String.valueOf(userId))
+    public Long createArchive(String content, String userId, List<MultipartFile> photos) {
+        Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
         Archive archive = Archive.builder()
                 .user(user)
-                .content(archiveCreateDto.getContent())
+                .content(content)
                 .service(null)
                 .gender(null)
                 .color(null)
@@ -90,5 +94,65 @@ public class ArchiveService {
                 }
             }
         }
+    }
+
+    // 컨트롤러에서 호출되는 메서드
+    public PageResponseDto<ArchiveListDto> getArchiveList(Pageable pageable) {
+        // 두 가지 구현 방식을 제공합니다
+
+        // 1. 각 아카이브별로 첫 번째 사진만 조회하는 방식
+        return getArchiveListWithFirstPhotos(pageable);
+
+        // 2. 최적화된 단일 쿼리 방식
+        // return getArchiveListOptimized(pageable);
+    }
+
+    // 각 아카이브별로 첫 번째 사진만 조회하는 방식
+    private PageResponseDto<ArchiveListDto> getArchiveListWithFirstPhotos(Pageable pageable) {
+        Page<Archive> archivePage = archiveRepository.findAll(pageable);
+
+        List<ArchiveListDto> archiveList = archivePage.getContent().stream()
+                .map(archive -> {
+                    // 각 아카이브의 첫 번째 사진만 조회
+                    String thumbnailUrl = null;
+                    ArchivePhotos firstPhoto = archivePhotosRepository.findFirstPhotoByArchiveId(archive.getId());
+                    // 또는
+                    // ArchivePhotos firstPhoto = archivePhotosRepository.findByArchiveIdAndPhotoOrder(archive.getId(), 0);
+
+                    if (firstPhoto != null) {
+                        thumbnailUrl = firstPhoto.getPhotoUrl();
+                    }
+
+                    return ArchiveListDto.builder()
+                            .id(archive.getId())
+                            .content(archive.getContent())
+                            .regDate(archive.getRegDate())
+                            .thumbnailUrl(thumbnailUrl)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new PageResponseDto<>(archiveList, archivePage);
+    }
+
+    // 최적화된 단일 쿼리 방식 (ArchiveRepository의 findAllWithFirstPhoto 메서드 사용)
+    public PageResponseDto<ArchiveListDto> getArchiveListOptimized(Pageable pageable) {
+        Page<Object[]> result = archiveRepository.findAllWithFirstPhoto(pageable);
+
+        List<ArchiveListDto> archiveList = result.getContent().stream()
+                .map(array -> {
+                    Archive archive = (Archive) array[0];
+                    String thumbnailUrl = (String) array[1];
+
+                    return ArchiveListDto.builder()
+                            .id(archive.getId())
+                            .content(archive.getContent())
+                            .regDate(archive.getRegDate())
+                            .thumbnailUrl(thumbnailUrl)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new PageResponseDto<>(archiveList, result);
     }
 }
