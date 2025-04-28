@@ -68,7 +68,7 @@ const ChatList: React.FC = () => {
     }, [userId]);
 
     const handleChatRoomClick = (roomId: number, salonId: string) => {
-        navigate(`/chat/${roomId}/${salonId}`);
+        navigate(`/chat/${roomId}`);
     };
 
     if (loading) {
