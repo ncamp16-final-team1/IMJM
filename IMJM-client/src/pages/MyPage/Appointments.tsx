@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Typography,
@@ -12,8 +11,7 @@ import {
 import AppointmentCard from '../../components/reservation/AppointmentCard';
 import { getUserReservations, UserReservations } from '../../services/reservation/getUserReservations';
 
-export default function AppointmentHistory() {
-  const navigate = useNavigate();
+export default function Appointments() {
 
   const [appointments, setAppointments] = useState<UserReservations[]>([]);
   const [selectedOption, setSelectedOption] = useState("All");
@@ -83,15 +81,17 @@ export default function AppointmentHistory() {
     const timeParts = appointment.reservationTime.split(':').map(Number);
     appointmentDate.setHours(timeParts[0], timeParts[1], 0);
     const isPastAppointment = appointmentDate < now;
+    
+    // 여기서 isReviewed 속성 사용 (reviewed가 아닌)
     switch (selectedOption) {
       case "All":
         return true; 
       case "Reservation":
         return !isPastAppointment; 
       case "WriteAreview":
-        return isPastAppointment && !appointment.reviewed; 
+        return isPastAppointment && !appointment.isReviewed; // 수정됨: reviewed -> isReviewed
       case "ViewReview":
-        return isPastAppointment && appointment.reviewed;
+        return isPastAppointment && appointment.isReviewed; // 수정됨: reviewed -> isReviewed
       default:
         return true;
     }
@@ -129,6 +129,7 @@ export default function AppointmentHistory() {
         filteredAppointments.map((item, index) => (
           <AppointmentCard
             key={index}
+            salonId={item.salonId}
             salonName={item.salonName}
             salonScore={item.salonScore}
             reviewCount={item.reviewCount}
@@ -137,10 +138,11 @@ export default function AppointmentHistory() {
             reservationTime={item.reservationTime}
             price={item.price}
             salonPhotoUrl={item.salonPhotoUrl}
-            reviewed={item.reviewed}
+            isReviewed={item.isReviewed}
             reservationServiceName={item.reservationServiceName}
             reservationId={item.reservationId}
-            reviewId={item.reviewId}          
+            reviewId={item.reviewId}
+            stylistName={item.stylistName}          
           />
         ))
       ) : (
