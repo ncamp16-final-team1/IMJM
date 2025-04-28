@@ -124,7 +124,6 @@ public class ReservationStylistService {
         List<ReservationCoupon> usedCoupons = reservationCouponRepository
                 .findByReservation_User_idAndCoupon_Salon_id(userId, salonId);
 
-        // 사용한 쿠폰 ID만 추출
         Set<Long> usedCouponIds = usedCoupons.stream()
                 .map(rc -> rc.getCoupon().getId())
                 .collect(Collectors.toSet());
@@ -214,7 +213,6 @@ public class ReservationStylistService {
     private Reservation createReservation(ReservationRequestDto request, Users user, AdminStylist stylist, ServiceMenu serviceMenu) {
         var reservationData = request.getPaymentRequest().getReservation();
 
-        // LocalDate와 LocalTime으로 변환
         LocalDate reservationDate = LocalDate.parse(reservationData.getReservation_date());
         LocalTime reservationTime = LocalTime.parse(reservationData.getReservation_time());
 
@@ -224,10 +222,10 @@ public class ReservationStylistService {
                 .serviceMenu(serviceMenu)
                 .reservationDate(reservationDate)
                 .reservationTime(reservationTime)
-                .reservationServiceType(serviceMenu.getServiceType()) // 서비스 메뉴에서 가져옴
-                .reservationServiceName(serviceMenu.getServiceName()) // 서비스 메뉴에서 가져옴
-                .reservationPrice(serviceMenu.getPrice()) // 서비스 메뉴의 원래 가격 사용
-                .isPaid(true) // 항상 true로 설정
+                .reservationServiceType(serviceMenu.getServiceType())
+                .reservationServiceName(serviceMenu.getServiceName())
+                .reservationPrice(serviceMenu.getPrice())
+                .isPaid(true)
                 .requirements(reservationData.getRequirements())
                 .build();
     }
@@ -238,7 +236,7 @@ public class ReservationStylistService {
                 .price(request.getPaymentRequest().getPrice().intValue())
                 .paymentMethod(request.getPayment_method())
                 .paymentStatus(request.getPayment_status())
-                .transactionId("TRANS_" + System.currentTimeMillis()) // 트랜잭션 ID 생성
+                .transactionId("TRANS_" + System.currentTimeMillis())
                 .paymentDate(LocalDateTime.now())
                 .isCanceled(false)
                 .isRefunded(false)
@@ -261,7 +259,6 @@ public class ReservationStylistService {
     }
 
     private void updateUserPoints(Users user, int usedPoints) {
-        // Users 엔티티에 setPoint 메서드가 없어 리포지토리에서 직접 업데이트 필요
         int currentPoints = user.getPoint();
         int newPoints = currentPoints - usedPoints;
 
