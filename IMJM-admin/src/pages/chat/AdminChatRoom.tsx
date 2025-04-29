@@ -18,6 +18,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import AdminChatService, { ChatMessage, ChatPhoto } from '../../service/chat/AdminChatService';
 import AdminWebSocketService from '../../service/chat/AdminWebSocketService';
 import AdminFileUploadService from '../../service/chat/AdminFileUploadService';
+import TranslationService from '../../service/chat/TranslationService';
 import styles from './ChatRoom.module.css';
 import axios from 'axios';
 
@@ -39,10 +40,88 @@ const AdminChatRoom: React.FC = () => {
     const [userName, setUserName] = useState<string>('');
     const [salonId, setSalonId] = useState<string>('');
     const [sending, setSending] = useState<boolean>(false);
+    const [userLanguage, setUserLanguage] = useState<string>('en');
+    const [salonLanguage, setSalonLanguage] = useState<string>('ko');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    // 번역 요청 및 토글 함수
+    const handleTranslateRequest = async (message: ChatMessage) => {
+        const messageId = message.id;
+
+        // 이미 번역이 로드되었으면 토글 수행
+        if (translations[messageId] && !translations[messageId].isLoading) {
+            // 이미 번역이 표시되어 있으면 제거
+            if (!translations[messageId].error && translations[messageId].text) {
+                setTranslations(prev => {
+                    const newTranslations = { ...prev };
+                    delete newTranslations[messageId];
+                    return newTranslations;
+                });
+                return;
+            }
+
+            // 에러가 있으면 다시 시도
+            if (translations[messageId].error) {
+                // 로딩 상태로 설정
+                setTranslations(prev => ({
+                    ...prev,
+                    [messageId]: { isLoading: true, text: null, error: null }
+                }));
+
+                try {
+                    await requestTranslation(message);
+                } catch (error) {
+                    console.error('번역 요청 실패:', error);
+                }
+            }
+            return;
+        }
+
+        // 로딩 상태로 설정
+        setTranslations(prev => ({
+            ...prev,
+            [messageId]: { isLoading: true, text: null, error: null }
+        }));
+
+        try {
+            await requestTranslation(message);
+        } catch (error) {
+            console.error('번역 요청 실패:', error);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+            }));
+        }
+    };
+
+    // 실제 번역 요청을 수행하는 함수
+    const requestTranslation = async (message: ChatMessage) => {
+        const messageId = message.id;
+        const sourceLang = message.senderType === 'USER' ? userLanguage : salonLanguage;
+        const targetLang = message.senderType === 'USER' ? salonLanguage : userLanguage;
+
+        try {
+            const translatedText = await TranslationService.translate(
+                message.message,
+                sourceLang,
+                targetLang
+            );
+
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: translatedText, error: null }
+            }));
+        } catch (error) {
+            console.error('번역 요청 실패:', error);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+            }));
+        }
+    };
 
     useEffect(() => {
         const fetchSalonAndChatRoom = async () => {
@@ -54,18 +133,46 @@ const AdminChatRoom: React.FC = () => {
                 const currentSalonId = salonResponse.data.id;
                 setSalonId(currentSalonId);
 
-                // WebSocket 연결 초기화
+                // WebSocket 초기화
                 AdminWebSocketService.initialize(currentSalonId);
+
+                // 채팅방 정보 가져오기 - 새 API 사용
+                try {
+                    const roomResponse = await axios.get(`/api/chat/admin/room/${roomId}`);
+                    if (roomResponse.data && roomResponse.data.userName) {
+                        setUserName(roomResponse.data.userName);
+                    }
+                } catch (roomError) {
+                    console.error('채팅방 정보를 불러오는데 실패했습니다:', roomError);
+                    // 오류 발생 시 대체 방법으로 진행 (아래 메시지 로딩 시 처리)
+                }
 
                 // 채팅 메시지 로드
                 const chatMessages = await AdminChatService.getChatMessages(Number(roomId));
                 setMessages(chatMessages);
 
-                // 사용자 이름 설정
-                if (chatMessages.length > 0) {
+                // 사용자 이름이 아직 설정되지 않은 경우 메시지에서 추출
+                if (!userName && chatMessages.length > 0) {
+                    // 사용자가 보낸 메시지 찾기
                     const userMessage = chatMessages.find(msg => msg.senderType === 'USER');
+
                     if (userMessage) {
-                        setUserName(userMessage.senderId);
+                        try {
+                            // 사용자 정보 요청 - 이 API는 사용자 정보를 제공하는 엔드포인트가 있다고 가정
+                            const userResponse = await axios.get(`/api/user/info/${userMessage.senderId}`);
+                            if (userResponse.data) {
+                                // 닉네임 또는 이름 사용
+                                setUserName(userResponse.data.nickname ||
+                                    (userResponse.data.firstName + ' ' + userResponse.data.lastName));
+                            } else {
+                                // 대체: 사용자 ID 사용
+                                setUserName(userMessage.senderId);
+                            }
+                        } catch (userError) {
+                            console.error('사용자 정보를 불러오는데 실패했습니다:', userError);
+                            // 대체: 사용자 ID 사용
+                            setUserName(userMessage.senderId);
+                        }
                     }
                 }
 
@@ -124,7 +231,7 @@ const AdminChatRoom: React.FC = () => {
             }
         };
 
-    }, [roomId, userId, salonId]);
+    }, [roomId, userId, userName]);
 
     // 메시지 스크롤 처리
     useEffect(() => {
@@ -272,6 +379,7 @@ const AdminChatRoom: React.FC = () => {
                 {messages.map((message) => {
                     const isSalonMessage = message.senderType === 'SALON';
                     const messageClassName = `${styles.messageWrapper} ${isSalonMessage ? styles.salonMessageWrapper : styles.userMessageWrapper}`;
+                    const translationState = translations[message.id];
 
                     return (
                         <Box
@@ -300,6 +408,29 @@ const AdminChatRoom: React.FC = () => {
                                             />
                                         ))}
                                     </Box>
+                                )}
+
+                                <Button
+                                    size="small"
+                                    onClick={() => handleTranslateRequest(message)}
+                                    className={styles.translateButton}
+                                    disabled={translationState?.isLoading}
+                                >
+                                    {!translationState ? '번역 보기' :
+                                        translationState.isLoading ? '번역 중...' :
+                                            translationState.error ? '다시 시도' : '번역 숨기기'}
+                                </Button>
+
+                                {translationState && !translationState.isLoading && !translationState.error && (
+                                    <Typography className={styles.translatedMessage}>
+                                        {translationState.text}
+                                    </Typography>
+                                )}
+
+                                {translationState?.error && (
+                                    <Typography className={styles.translationError}>
+                                        {translationState.error}
+                                    </Typography>
                                 )}
 
                                 <Typography className={styles.messageTime}>

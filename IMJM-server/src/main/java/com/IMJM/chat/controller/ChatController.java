@@ -1,16 +1,16 @@
-// IMJM-server/src/main/java/com/IMJM/chat/controller/ChatController.java 수정
 package com.IMJM.chat.controller;
 
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
-import com.IMJM.chat.repository.ChatRoomRepository;
-import com.IMJM.chat.service.RabbitMQChatService;
+import com.IMJM.chat.service.ChatService;
 import com.IMJM.common.entity.ChatRoom;
+import com.IMJM.chat.repository.ChatRoomRepository;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,20 +24,58 @@ import java.util.Map;
 @RequestMapping("/api/chat")
 public class ChatController {
 
-    private final RabbitMQChatService chatService;
+    private final ChatService chatService;
     private final ChatRoomRepository chatRoomRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    // 메시지 전송 REST 엔드포인트 (RabbitMQ 사용)
+    // 메시지 전송 REST 엔드포인트
     @PostMapping("/message")
     public ResponseEntity<ChatMessageDto> sendMessage(@RequestBody ChatMessageDto chatMessageDto) {
         ChatMessageDto sentMessage = chatService.sendMessage(chatMessageDto);
         return ResponseEntity.ok(sentMessage);
     }
 
-    // WebSocket 메시지 전송 (레거시 지원)
+    // WebSocket 메시지 전송
     @MessageMapping("/chat.sendMessage")
     public void handleWebSocketMessage(@Payload ChatMessageDto chatMessageDto) {
-        chatService.sendMessage(chatMessageDto);
+        // 메시지 처리 및 저장
+        ChatMessageDto processedMessage = chatService.sendMessage(chatMessageDto);
+
+        // 디버깅 로그 추가
+        System.out.println("WebSocket 메시지 수신: " + chatMessageDto.getMessage());
+        System.out.println("발신자: " + chatMessageDto.getSenderType() + ", ID: " + chatMessageDto.getSenderId());
+
+        // 발신자에게 메시지 전송 (본인 확인용)
+        messagingTemplate.convertAndSendToUser(
+                processedMessage.getSenderId(),
+                "/queue/messages",
+                processedMessage
+        );
+
+        // 수신자 결정
+        String recipientId;
+        if ("USER".equals(processedMessage.getSenderType())) {
+            // 사용자가 보낸 메시지는 미용실로 전송
+            recipientId = chatService.getSalonIdFromChatRoom(processedMessage.getChatRoomId());
+        } else {
+            // 미용실이 보낸 메시지는 사용자에게 전송
+            recipientId = chatService.getUserIdFromChatRoom(processedMessage.getChatRoomId());
+        }
+
+        System.out.println("수신자 ID: " + recipientId);
+
+        // 수신자에게 메시지 전송
+        messagingTemplate.convertAndSendToUser(
+                recipientId,
+                "/queue/messages",
+                processedMessage
+        );
+
+        // 특정 채팅방에 대한 토픽 구독자에게도 전송 (추가 안전장치)
+        messagingTemplate.convertAndSend(
+                "/topic/chat/" + processedMessage.getChatRoomId(),
+                processedMessage
+        );
     }
 
     // 채팅방 목록 조회 (사용자)
@@ -120,6 +158,32 @@ public class ChatController {
         roomInfo.put("userName", chatRoom.getUser().getNickname());
         roomInfo.put("userLanguage", chatRoom.getUser().getLanguage() != null ? chatRoom.getUser().getLanguage() : "en");
         roomInfo.put("salonLanguage", "ko"); // 미용실 언어는 한국어로 고정
+        roomInfo.put("createdAt", chatRoom.getCreatedAt());
+        roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
+
+        return ResponseEntity.ok(roomInfo);
+    }
+
+    // ChatController.java에 추가 또는 기존 코드 수정
+
+    @GetMapping("/admin/room/{roomId}")
+    public ResponseEntity<Map<String, Object>> getAdminChatRoomDetail(@PathVariable Long roomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+
+        Map<String, Object> roomInfo = new HashMap<>();
+        roomInfo.put("id", chatRoom.getId());
+        roomInfo.put("userId", chatRoom.getUser().getId());
+        roomInfo.put("salonId", chatRoom.getSalon().getId());
+        roomInfo.put("salonName", chatRoom.getSalon().getName());
+
+        // 사용자 닉네임 또는 이름 추가
+        String userName = chatRoom.getUser().getNickname();
+        if (userName == null || userName.isEmpty()) {
+            userName = chatRoom.getUser().getFirstName() + " " + chatRoom.getUser().getLastName();
+        }
+        roomInfo.put("userName", userName);
+
         roomInfo.put("createdAt", chatRoom.getCreatedAt());
         roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
 

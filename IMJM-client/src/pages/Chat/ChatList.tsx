@@ -15,7 +15,7 @@ import {
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import styles from './ChatList.module.css';
 import ChatService, { ChatRoom } from '../../services/chat/ChatService';
-import RabbitMQService from '../../services/chat/RabbitMQService';
+import WebSocketService from '../../services/chat/WebSocketService';
 
 const ChatList: React.FC = () => {
     const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -31,8 +31,8 @@ const ChatList: React.FC = () => {
                 const currentUserId = userResponse.data.id;
                 setUserId(currentUserId);
 
-                // RabbitMQ 연결 초기화
-                RabbitMQService.initialize(currentUserId);
+                // WebSocket 연결 초기화
+                WebSocketService.initialize(currentUserId);
 
                 // 채팅방 목록 가져오기
                 const rooms = await ChatService.getUserChatRooms();
@@ -57,12 +57,12 @@ const ChatList: React.FC = () => {
         };
 
         if (userId) {
-            RabbitMQService.addListener('message', handleNewMessage);
+            WebSocketService.addListener('message', handleNewMessage);
         }
 
         return () => {
             if (userId) {
-                RabbitMQService.removeListener('message', handleNewMessage);
+                WebSocketService.removeListener('message', handleNewMessage);
             }
         };
     }, [userId]);
