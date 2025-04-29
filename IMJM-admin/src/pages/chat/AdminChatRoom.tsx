@@ -133,18 +133,46 @@ const AdminChatRoom: React.FC = () => {
                 const currentSalonId = salonResponse.data.id;
                 setSalonId(currentSalonId);
 
-                // WebSocket 연결 초기화
+                // WebSocket 초기화
                 AdminWebSocketService.initialize(currentSalonId);
+
+                // 채팅방 정보 가져오기 - 새 API 사용
+                try {
+                    const roomResponse = await axios.get(`/api/chat/admin/room/${roomId}`);
+                    if (roomResponse.data && roomResponse.data.userName) {
+                        setUserName(roomResponse.data.userName);
+                    }
+                } catch (roomError) {
+                    console.error('채팅방 정보를 불러오는데 실패했습니다:', roomError);
+                    // 오류 발생 시 대체 방법으로 진행 (아래 메시지 로딩 시 처리)
+                }
 
                 // 채팅 메시지 로드
                 const chatMessages = await AdminChatService.getChatMessages(Number(roomId));
                 setMessages(chatMessages);
 
-                // 사용자 이름 설정
-                if (chatMessages.length > 0) {
+                // 사용자 이름이 아직 설정되지 않은 경우 메시지에서 추출
+                if (!userName && chatMessages.length > 0) {
+                    // 사용자가 보낸 메시지 찾기
                     const userMessage = chatMessages.find(msg => msg.senderType === 'USER');
+
                     if (userMessage) {
-                        setUserName(userMessage.senderId);
+                        try {
+                            // 사용자 정보 요청 - 이 API는 사용자 정보를 제공하는 엔드포인트가 있다고 가정
+                            const userResponse = await axios.get(`/api/user/info/${userMessage.senderId}`);
+                            if (userResponse.data) {
+                                // 닉네임 또는 이름 사용
+                                setUserName(userResponse.data.nickname ||
+                                    (userResponse.data.firstName + ' ' + userResponse.data.lastName));
+                            } else {
+                                // 대체: 사용자 ID 사용
+                                setUserName(userMessage.senderId);
+                            }
+                        } catch (userError) {
+                            console.error('사용자 정보를 불러오는데 실패했습니다:', userError);
+                            // 대체: 사용자 ID 사용
+                            setUserName(userMessage.senderId);
+                        }
                     }
                 }
 
@@ -203,7 +231,7 @@ const AdminChatRoom: React.FC = () => {
             }
         };
 
-    }, [roomId, userId, salonId]);
+    }, [roomId, userId, userName]);
 
     // 메시지 스크롤 처리
     useEffect(() => {

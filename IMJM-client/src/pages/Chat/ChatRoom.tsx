@@ -16,7 +16,7 @@ import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
 import styles from './ChatRoom.module.css';
 import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
-import RabbitMQService from '../../services/chat/RabbitMQService';
+import WebSocketService from '../../services/chat/WebSocketService';
 import TranslationService from '../../services/chat/TranslationService';
 import FileUploadService from '../../services/chat/FileUploadService';
 
@@ -36,7 +36,6 @@ interface TranslationState {
 }
 
 const ChatRoom: React.FC = () => {
-    // const { roomId, salonId } = useParams<{ roomId: string; salonId: string }>();
     const { roomId } = useParams<{ roomId: string }>();
     const [messages, setMessages] = useState<ChatMessageDto[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
@@ -52,15 +51,11 @@ const ChatRoom: React.FC = () => {
     const navigate = useNavigate();
     const [userId, setUserId] = useState<string>('');
 
-    // RabbitMQ 연결 및 메시지 수신 설정
+    // WebSocket 연결 및 메시지 수신 설정
     useEffect(() => {
         if (!roomId || !userId) return;
 
-        // RabbitMQ 초기화
-        RabbitMQService.initialize(userId);
-
-        // 특정 채팅방 구독
-        RabbitMQService.subscribeToRoom(Number(roomId));
+        console.log("메시지 리스너 설정 - 룸ID:", roomId, "유저ID:", userId);
 
         // 메시지 수신 리스너 등록
         const handleNewMessage = (messageData: ChatMessageDto) => {
@@ -68,18 +63,21 @@ const ChatRoom: React.FC = () => {
 
             // 현재 채팅방과 관련된 메시지인지 확인
             if (messageData.chatRoomId === Number(roomId)) {
-                setMessages(prev => {
-                    // 이미 같은 메시지가 있는지 확인
-                    const messageExists = prev.some(msg =>
+                console.log("현재 채팅방 메시지 감지됨");
+
+                // 상태 업데이트 함수를 사용하여 메시지 배열 업데이트
+                setMessages(prevMessages => {
+                    // 중복 메시지 확인 로직
+                    const isDuplicate = prevMessages.some(msg =>
                         msg.id === messageData.id ||
                         (msg.message === messageData.message &&
                             msg.senderType === messageData.senderType &&
                             Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000)
                     );
 
-                    if (messageExists) {
-                        // ID가 있는 메시지로 임시 메시지 교체
-                        return prev.map(msg =>
+                    if (isDuplicate) {
+                        console.log("중복 메시지 감지, 기존 메시지 업데이트");
+                        return prevMessages.map(msg =>
                             (msg.id === messageData.id ||
                                 (msg.message === messageData.message &&
                                     msg.senderType === messageData.senderType &&
@@ -87,9 +85,11 @@ const ChatRoom: React.FC = () => {
                                 ? messageData : msg
                         );
                     } else {
-                        // 새 메시지 추가
                         console.log("새 메시지 추가:", messageData);
-                        return [...prev, messageData];
+                        // 스프레드 연산자를 사용하여 새 배열 생성
+                        const newMessages = [...prevMessages, messageData];
+                        console.log("업데이트된 메시지 배열:", newMessages);
+                        return newMessages;
                     }
                 });
 
@@ -98,14 +98,19 @@ const ChatRoom: React.FC = () => {
                     ChatService.markMessagesAsRead(Number(roomId), 'USER')
                         .catch(err => console.error("메시지 읽음 처리 실패:", err));
                 }
+            } else {
+                console.log("다른 채팅방 메시지, 무시됨");
             }
         };
 
-        RabbitMQService.addListener('message', handleNewMessage);
+        // 리스너 등록
+        WebSocketService.addListener('message', handleNewMessage);
+        console.log("메시지 리스너 등록 완료");
 
-        // 컴포넌트 언마운트 시 리스너 제거 및 연결 해제
+        // 컴포넌트 언마운트 시 리스너 제거
         return () => {
-            RabbitMQService.removeListener('message', handleNewMessage);
+            console.log("메시지 리스너 제거");
+            WebSocketService.removeListener('message', handleNewMessage);
         };
     }, [userId, roomId]);
 
@@ -120,8 +125,8 @@ const ChatRoom: React.FC = () => {
                 const currentUserId = userResponse.data.id;
                 setUserId(currentUserId);
 
-                // RabbitMQ 초기화
-                RabbitMQService.initialize(currentUserId);
+                // WebSocket 초기화
+                WebSocketService.initialize(currentUserId);
 
                 // 채팅방 정보 가져오기
                 const roomResponse = await axios.get(`/api/chat/room/${roomId}`);
@@ -321,28 +326,32 @@ const ChatRoom: React.FC = () => {
             // 메시지를 즉시 UI에 추가
             setMessages(prev => [...prev, tempMessage]);
 
-            // RabbitMQ를 통해 메시지 전송
-            const response = await RabbitMQService.sendMessageWithPhotos(
+            // 입력 필드 및 선택된 파일 초기화
+            setNewMessage('');
+            setSelectedFiles([]);
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            setPreviewUrls([]);
+
+            // WebSocket만 통해 메시지 전송 - 여기서 중복 발송하지 않도록 주의
+            // ChatService.sendMessage()와 같은 REST API 호출이 있다면 제거
+            const response = await WebSocketService.sendMessageWithPhotos(
                 chatRoom.id,
-                newMessage,
+                tempMessage.message,
                 'USER',
                 photoAttachments
             );
 
             console.log("메시지 전송 응답:", response);
 
-            // 서버 응답 후 임시 메시지를 실제 메시지로 업데이트
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg.id === tempMessage.id ? response : msg
-                )
-            );
-
-            // 입력 필드 및 선택된 파일 초기화
-            setNewMessage('');
-            setSelectedFiles([]);
-            previewUrls.forEach(url => URL.revokeObjectURL(url));
-            setPreviewUrls([]);
+            // 서버 응답을 받았을 때만 임시 메시지를 업데이트 (선택 사항)
+            // 서버에서 제대로 된 응답을 받지 못하더라도 UI에는 이미 표시됨
+            if (response && response.id && response.id !== tempMessage.id) {
+                setMessages(prev =>
+                    prev.map(msg =>
+                        msg.id === tempMessage.id ? response : msg
+                    )
+                );
+            }
 
         } catch (error) {
             console.error('메시지 전송 실패:', error);

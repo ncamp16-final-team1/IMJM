@@ -124,6 +124,18 @@ public class ChatService {
         }
     }
 
+    public String getSalonIdFromChatRoom(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+        return chatRoom.getSalon().getId();
+    }
+
+    public String getUserIdFromChatRoom(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+        return chatRoom.getUser().getId();
+    }
+
     private TranslationResult translateMessageIfNeeded(String message, ChatRoom chatRoom, String senderType) {
         String senderLanguage = getSenderLanguage(senderType, chatRoom);
         String recipientLanguage = getRecipientLanguage(senderType, chatRoom);
