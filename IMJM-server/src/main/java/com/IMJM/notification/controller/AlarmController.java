@@ -1,7 +1,7 @@
-package com.IMJM.alarm.controller;
+package com.IMJM.notification.controller;
 
-import com.IMJM.alarm.dto.AlarmDto;
-import com.IMJM.alarm.service.AlarmService;
+import com.IMJM.notification.dto.AlarmDto;
+import com.IMJM.notification.service.AlarmService;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

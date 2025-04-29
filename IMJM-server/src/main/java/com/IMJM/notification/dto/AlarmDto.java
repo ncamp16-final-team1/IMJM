@@ -1,4 +1,4 @@
-package com.IMJM.alarm.dto;
+package com.IMJM.notification.dto;
 
 import com.IMJM.common.entity.Alarm;
 import lombok.*;

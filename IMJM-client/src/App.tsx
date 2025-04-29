@@ -1,4 +1,6 @@
+// src/App.tsx (기존 App.tsx에 알림 관련 코드 추가)
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home/Home';
@@ -20,15 +22,48 @@ import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
 import Appointments from './pages/MyPage/Appointments';
 import WriteReview from './pages/MyPage/WriteReview';
+import NotificationToast from './components/notification/NotificationToast';
+import NotificationService from './services/notification/NotificationService';
+import axios from 'axios';
 
 function App() {
+    const [isInitialized, setIsInitialized] = useState<boolean>(false);
+
+    useEffect(() => {
+        // 로그인 상태 확인 및 알림 서비스 초기화
+        const initializeApp = async () => {
+            try {
+                // 현재 사용자 정보 확인
+                const userResponse = await axios.get('/api/chat/user/current');
+
+                if (userResponse.status === 200 && userResponse.data.id) {
+                    console.log('로그인된 사용자:', userResponse.data.id);
+
+                    // 알림 서비스 초기화
+                    NotificationService.initialize(userResponse.data.id);
+                }
+            } catch (error) {
+                console.log('로그인되지 않은 상태입니다.');
+            } finally {
+                setIsInitialized(true);
+            }
+        };
+
+        initializeApp();
+
+        // 컴포넌트 언마운트 시 연결 해제
+        return () => {
+            NotificationService.disconnect();
+        };
+    }, []);
+
     return (
         <BrowserRouter>
             <div className="app-container">
                 <Header />
                 <main className="content-area">
                     <Routes>
-                        {/* 로그인 여부와 상관없이 접근 가능한 경로 */}
+                        {/* 기존 라우트들 */}
                         <Route path="/" element={<Home />} />
                         <Route path="/salon" element={<HairSalon />} />
                         <Route path="/archive" element={<div>Archive Page (준비 중)</div>} />
@@ -48,10 +83,10 @@ function App() {
                         } />
                         <Route path="/salon/:salonId/reservation/:stylistId/paymentDetails" element={
                             <ProtectedRoute>
-                            <>
-                                <ScrollToTop />
-                                <PaymentDetails />
-                            </>
+                                <>
+                                    <ScrollToTop />
+                                    <PaymentDetails />
+                                </>
                             </ProtectedRoute>
                         }
                         />
@@ -75,7 +110,6 @@ function App() {
                                 <WriteReview />
                             </ProtectedRoute>
                         } />
-                        
 
                         {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
                         <Route path="/login" element={
@@ -84,27 +118,29 @@ function App() {
                             </PublicRoute>
                         } />
                         <Route path="/user/language" element={
-                                <UserLanguageSelect />
+                            <UserLanguageSelect />
                         } />
                         <Route path="/user/register" element={
-                                <UserTypeSelect />
+                            <UserTypeSelect />
                         } />
                         <Route path="/user/register/step1" element={
-                                <RegisterStep1 />
+                            <RegisterStep1 />
                         } />
                         <Route path="/user/register/step2" element={
-                                <UserDetailRegister />
+                            <UserDetailRegister />
                         } />
                         <Route path="/user/final" element={
-                                <UserFinalSubmit />
+                            <UserFinalSubmit />
                         } />
                     </Routes>
                 </main>
                 <Footer />
+
+                {/* 전역 알림 토스트 */}
+                <NotificationToast />
             </div>
         </BrowserRouter>
     );
 }
-
 
 export default App;

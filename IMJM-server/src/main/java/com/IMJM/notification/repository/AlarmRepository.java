@@ -1,4 +1,4 @@
-package com.IMJM.alarm.repository;
+package com.IMJM.notification.repository;
 
 import com.IMJM.common.entity.Alarm;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,6 +1,6 @@
 package com.IMJM.chat.service;
 
-import com.IMJM.alarm.service.AlarmService;
+import com.IMJM.notification.service.AlarmService;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;

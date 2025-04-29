@@ -1,9 +1,9 @@
-package com.IMJM.alarm.service;
+package com.IMJM.notification.service;
 
 import com.IMJM.common.entity.Alarm;
 import com.IMJM.common.entity.Users;
-import com.IMJM.alarm.dto.AlarmDto;
-import com.IMJM.alarm.repository.AlarmRepository;
+import com.IMJM.notification.dto.AlarmDto;
+import com.IMJM.notification.repository.AlarmRepository;
 import com.IMJM.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
