@@ -2,12 +2,15 @@ package com.IMJM.user.controller;
 
 import com.IMJM.salon.dto.ReviewDto;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
+import com.IMJM.user.dto.ReservationDetailResponseDto;
 import com.IMJM.user.dto.ReviewSaveRequestDto;
 import com.IMJM.user.dto.UserReservationResponseDto;
 import com.IMJM.user.service.MyPageService;
 import com.fasterxml.jackson.core.ObjectCodec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 
 @RestController
@@ -33,11 +37,8 @@ public class UserMyPageController {
     // 예약리스트 조회
     @GetMapping("/reservations")
     public ResponseEntity<List<UserReservationResponseDto>> getUserReservations(
-            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
-    ) {
-
+            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
         String userId = customOAuth2UserDto.getId();
-
         List<UserReservationResponseDto> reservations = myPageService.getUserReservations(userId);
         return ResponseEntity.ok(reservations);
     }
@@ -79,5 +80,12 @@ public class UserMyPageController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+
+    // 예약 상세조회
+    @GetMapping("/reservations/{reservationId}")
+    public ResponseEntity<ReservationDetailResponseDto> getReservationDetail(@PathVariable Long reservationId) {
+        ReservationDetailResponseDto responseDto = myPageService.getReservationDetail(reservationId);
+        return ResponseEntity.ok(responseDto);
     }
 }

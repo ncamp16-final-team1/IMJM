@@ -1,11 +1,15 @@
 package com.IMJM.user.service;
 
+import com.IMJM.admin.repository.ReservationCouponRepository;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.cloud.NCPObjectStorageService;
 import com.IMJM.common.entity.*;
+import com.IMJM.reservation.repository.PaymentRepository;
+import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.salon.repository.ReviewPhotoRepository;
 import com.IMJM.salon.repository.ReviewRepository;
+import com.IMJM.user.dto.ReservationDetailResponseDto;
 import com.IMJM.user.dto.ReviewSaveRequestDto;
 import com.IMJM.user.dto.UserReservationResponseDto;
 import com.IMJM.user.repository.UserRepository;
@@ -13,12 +17,17 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,18 +43,73 @@ public class MyPageService {
     private final UserRepository userRepository;
     private final NCPObjectStorageService storageService;
     private final SalonRepository salonRepository;
+    private final PaymentRepository paymentRepository;
+    private final PointUsageRepository pointUsageRepository;
+    private final ReservationCouponRepository reservationCouponRepository;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
 
     // 예약리스트 조회
-    public List<UserReservationResponseDto> getUserReservations(String userId) {
-        List<Object[]> results = reservationRepository.findByUser_IdNative(userId);
 
-        return results.stream()
-                .map(UserReservationResponseDto::new)
+    @Transactional(readOnly = true)
+    public List<UserReservationResponseDto> getUserReservations(String userId) {
+        List<Reservation> reservations = reservationRepository.findByUser_IdOrderByReservationDateDesc(userId);
+
+        return reservations.stream()
+                .map(this::convertToReservationDto)
                 .collect(Collectors.toList());
     }
+
+    private UserReservationResponseDto convertToReservationDto(Reservation reservation) {
+        // 결제 정보 조회
+        Payment payment = paymentRepository.findByReservationId(reservation.getId()).orElse(null);
+
+        // 리뷰 작성 여부 확인
+        boolean hasReview = reviewRepository.existsByReservationId(reservation.getId());
+
+        // 살롱 이미지 URL 조회
+        String salonPhotoUrl = getSalonFirstPhotoUrl(reservation.getStylist().getSalon().getId());
+
+        return UserReservationResponseDto.builder()
+                .reservationId(reservation.getId())
+                .reservationDate(reservation.getReservationDate())
+                .reservationTime(reservation.getReservationTime())
+                .serviceName(reservation.getReservationServiceName())
+                .serviceType(reservation.getReservationServiceType())
+                .price(reservation.getReservationPrice())
+                .isPaid(reservation.isPaid())
+                .salonId(reservation.getStylist().getSalon().getId())
+                .salonName(reservation.getStylist().getSalon().getName())
+                .salonAddress(reservation.getStylist().getSalon().getAddress())
+                .salonScore(reservation.getStylist().getSalon().getScore())
+                .salonPhotoUrl(salonPhotoUrl)
+                .stylistName(reservation.getStylist().getName())
+                .reviewCount(getReviewCount(reservation.getStylist().getSalon().getId()))
+                .isReviewed(hasReview)
+                .reviewId(hasReview ? getReviewId(reservation.getId(), reservation.getUser().getId()) : null)
+                .paymentMethod(payment != null ? payment.getPaymentMethod() : null)
+                .build();
+    }
+
+    // 추가 유틸리티 메서드들
+    private String getSalonFirstPhotoUrl(String salonId) {
+        // 살롱 첫 번째 사진 URL 조회 로직
+        return "기본이미지URL";
+    }
+
+    private long getReviewCount(String salonId) {
+        return reviewRepository.countBySalonId(salonId);
+    }
+
+    private Long getReviewId(Long reservationId, String userId) {
+        return reviewRepository.findByReservationIdAndUserId(reservationId, userId)
+                .map(Review::getId)
+                .orElse(null);
+    }
+
+
+
 
     // 리뷰 저장
     @Transactional
@@ -145,6 +209,99 @@ public class MyPageService {
     private String getFullImageUrl(String s3Path) {
         String baseUrl = "https://" + bucketName + ".kr.object.ncloudstorage.com";
         return baseUrl + "/" + s3Path;
+    }
+
+
+    // 예약 상세페이지 조회
+    public ReservationDetailResponseDto getReservationDetail(Long reservationId) {
+        // 1. 예약 정보 조회
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("예약 정보를 찾을 수 없습니다: " + reservationId));
+
+        // 2. 결제 정보 조회
+        Payment payment = paymentRepository.findByReservationId(reservationId)
+                .orElse(null);
+
+        // 3. 포인트 사용 내역 조회 (필요하다면)
+        List<PointUsage> pointUsages = pointUsageRepository.findByUserId(reservation.getUser().getId());
+
+        // 4. 쿠폰 정보 조회
+        ReservationCoupon reservationCoupon = reservationCouponRepository.findByReservationId(reservationId)
+                .orElse(null);
+
+        // 5. DTO로 변환하여 반환
+        return buildReservationDetailResponseDto(reservation, payment, pointUsages, reservationCoupon);
+    }
+
+    private ReservationDetailResponseDto buildReservationDetailResponseDto(
+            Reservation reservation,
+            Payment payment,
+            List<PointUsage> pointUsages,
+            ReservationCoupon reservationCoupon) {
+
+        // DTO 생성 로직
+        return ReservationDetailResponseDto.builder()
+                .reservationId(reservation.getId())
+                .reservationDate(reservation.getReservationDate())
+                .reservationTime(reservation.getReservationTime())
+                .serviceName(reservation.getReservationServiceName())
+                .serviceType(reservation.getReservationServiceType())
+                .price(reservation.getReservationPrice())
+                .requirements(reservation.getRequirements())
+                .salonName(reservation.getStylist().getSalon().getName())
+                .salonAddress(reservation.getStylist().getSalon().getAddress())
+                .stylistName(reservation.getStylist().getName())
+                .paymentInfo(payment != null ? mapToPaymentInfoDto(payment) : null)
+                .couponInfo(reservationCoupon != null ? mapToCouponInfoDto(reservationCoupon) : null)
+                .pointUsage(findRelevantPointUsage(pointUsages, reservation))
+                .build();
+    }
+
+    private ReservationDetailResponseDto.PaymentInfoDto mapToPaymentInfoDto(Payment payment) {
+        if (payment == null) {
+            return null;
+        }
+
+        return ReservationDetailResponseDto.PaymentInfoDto.builder()
+                .paymentMethod(payment.getPaymentMethod())
+                .paymentStatus(payment.getPaymentStatus())
+                .paymentDate(payment.getPaymentDate())
+                .isCanceled(payment.isCanceled())
+                .canceledAmount(payment.getCanceledAmount())
+                .build();
+    }
+
+    private ReservationDetailResponseDto.PointUsageDto findRelevantPointUsage(List<PointUsage> pointUsages, Reservation reservation) {
+        if (pointUsages == null || pointUsages.isEmpty()) {
+            return null;
+        }
+
+        // 이 예약과 관련된 포인트 사용 내역 찾기
+        // 예를 들어, 내용(content)에 예약 ID가 포함되어 있거나
+        // 사용 시간이 예약 시간과 가까운 경우 등의 로직을 구현
+        return pointUsages.stream()
+                .filter(usage -> usage.getContent().contains("예약 ID: " + reservation.getId()))
+                .findFirst()
+                .map(pointUsage -> ReservationDetailResponseDto.PointUsageDto.builder()
+                        .points(pointUsage.getPrice())
+                        .useDate(pointUsage.getUseDate())
+                        .build())
+                .orElse(null);
+    }
+
+    private ReservationDetailResponseDto.CouponInfoDto mapToCouponInfoDto(ReservationCoupon reservationCoupon) {
+        if (reservationCoupon == null) {
+            return null;
+        }
+
+        Coupon coupon = reservationCoupon.getCoupon();
+
+        return ReservationDetailResponseDto.CouponInfoDto.builder()
+                .couponName(coupon.getName())
+                .discountType(coupon.getDiscountType())
+                .discountValue(coupon.getDiscountValue())
+                .discountAmount(reservationCoupon.getDiscountAmount())
+                .build();
     }
 
 }

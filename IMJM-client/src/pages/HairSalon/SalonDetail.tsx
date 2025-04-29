@@ -496,10 +496,10 @@ function SalonDetail() {
             </div>
 
             <div className="reservation-buttons">
-                <button className="reservation-btn calendar">
+                <Link to={`/salon/stylists/${id}`} className="reservation-btn calendar">
                     <CalendarTodayIcon className="btn-icon" />
                     <span>예약하기</span>
-                </button>
+                </Link>
                 <button className="reservation-btn phone" onClick={showPhone}>
                     <PhoneIcon className="btn-icon" />
                     <span>전화</span>

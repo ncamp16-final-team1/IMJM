@@ -9,12 +9,15 @@ export type UserReservations = {
     reviewCount: number;       
     reservationDate: string;   
     reservationTime: string;   
-    reservationServiceName: string;
+    serviceName: string; // serviceName -> reservationServiceName
     price: number;     
     isReviewed: boolean; 
     reservationId: number;    
-    reviewId: number;
+    reviewId: number | null; // null 허용
     stylistName: string;   
+    isPaid?: boolean; // 선택적으로 추가
+    serviceType?: string; // 선택적으로 추가
+    paymentMethod?: string; // 선택적으로 추가 
 };
 
 export const getUserReservations = async (): Promise<UserReservations[]> => {

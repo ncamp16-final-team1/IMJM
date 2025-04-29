@@ -4,6 +4,10 @@ import com.IMJM.common.entity.PointUsage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PointUsageRepository extends JpaRepository<PointUsage, Long> {
+    // 예약상세조회
+    List<PointUsage> findByUserId(String userId);
 }

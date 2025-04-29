@@ -27,7 +27,7 @@ export default function AppointmentCard({
     price,
     salonPhotoUrl,
     isReviewed,  
-    reservationServiceName,
+    serviceName,
     reservationId,
     reviewId,
     stylistName,  
@@ -97,7 +97,7 @@ export default function AppointmentCard({
                                 reservationTime,
                                 price,
                                 salonPhotoUrl,
-                                reservationServiceName,
+                                serviceName,
                                 stylistName,
                             }
                     });
@@ -168,7 +168,7 @@ export default function AppointmentCard({
                         fontWeight: 500, 
                     }}
                 >
-                    {reservationServiceName}
+                    {serviceName}
                 </Typography>
 
                 {/* 버튼 영역 */}

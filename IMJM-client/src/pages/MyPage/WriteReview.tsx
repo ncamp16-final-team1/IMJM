@@ -59,7 +59,7 @@ export default function WriteReview() {
         reservationTime,
         price,
         salonPhotoUrl,
-        reservationServiceName,
+        serviceName,
         stylistName,
     } = (location.state as LocationState) || {};
 
@@ -230,7 +230,7 @@ export default function WriteReview() {
                         fontWeight: 500, 
                     }}
                 >
-                    {reservationServiceName}
+                    {serviceName}
                 </Typography>  
             </Box>
 
