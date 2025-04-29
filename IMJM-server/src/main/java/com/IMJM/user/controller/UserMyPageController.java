@@ -1,12 +1,12 @@
 package com.IMJM.user.controller;
 
+import com.IMJM.user.dto.*;
 import com.IMJM.salon.dto.ReviewDto;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.ReservationDetailResponseDto;
 import com.IMJM.user.dto.ReviewSaveRequestDto;
 import com.IMJM.user.dto.UserReservationResponseDto;
 import com.IMJM.user.service.MyPageService;
-import com.fasterxml.jackson.core.ObjectCodec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,7 +27,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/myPages")
+@RequestMapping("/api/mypages")
 @Slf4j
 public class UserMyPageController {
 
@@ -81,6 +80,47 @@ public class UserMyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+    @GetMapping("/view-review")
+    public ResponseEntity<?> getUserReview(@RequestParam("reviewId") Long reviewId,
+                                           @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+
+    ) {
+
+        String userId = customOAuth2UserDto.getId();
+
+        if (userId == null || userId.isEmpty()) {
+            return ResponseEntity.badRequest().body("유저 ID가 유효하지 않습니다.");
+        }
+
+        try {
+            UserReviewResponseDto reviewResponseDto = myPageService.getReviewWithPhotos(reviewId);
+            return ResponseEntity.ok(reviewResponseDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("리뷰를 찾을 수 없습니다.");
+        }
+    }
+
+    @GetMapping("/view-review-reply")
+    public ResponseEntity<?> getUserReviewReply(@RequestParam("reviewId") Long reviewId,
+                                                @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
+        String userId = customOAuth2UserDto.getId();
+
+        if (userId == null || userId.isEmpty()) {
+            return ResponseEntity.badRequest().body("유저 ID가 유효하지 않습니다.");
+        }
+        try {
+            UserReviewReplyResponseDto replyResponseDto = myPageService.getReviewReplyByReviewId(reviewId);
+
+            if (replyResponseDto == null) {
+                return ResponseEntity.ok(null);
+            }
+            return ResponseEntity.ok(replyResponseDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+        }
+    }
+
 
     // 예약 상세조회
     @GetMapping("/reservations/{reservationId}")
