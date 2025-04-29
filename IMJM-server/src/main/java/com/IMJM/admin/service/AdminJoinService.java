@@ -78,6 +78,7 @@ public class AdminJoinService {
         uploadSalonPhotos(salon, photos);
     }
 
+    @Transactional
     private void uploadSalonPhotos(Salon salon, List<MultipartFile> photos) {
         if (photos == null || photos.isEmpty()) return;
 
