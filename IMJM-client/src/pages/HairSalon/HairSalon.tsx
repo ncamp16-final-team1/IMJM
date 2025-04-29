@@ -402,6 +402,7 @@ function HairSalon() {
                 params.longitude = longitude;
             }
 
+            console.log(params)
             const response = await axios.get('/api/salon', { params });
 
             if (response.status === 200) {
