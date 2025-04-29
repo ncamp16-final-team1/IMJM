@@ -10,6 +10,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true
+      },
+      '/ws': { // WebSocket에 대한 프록시 설정 추가
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        ws: true, // WebSocket 프록시 활성화
       }
     }
   },

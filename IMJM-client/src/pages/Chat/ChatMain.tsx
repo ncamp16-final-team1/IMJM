@@ -9,7 +9,7 @@ const ChatMain: React.FC = () => {
         <div className={styles.container}>
             <Routes>
                 <Route index element={<ChatList />} />
-                <Route path=":roomId/:salonId" element={<ChatRoom />} />
+                <Route path=":roomId" element={<ChatRoom />} />
                 <Route path="*" element={<Navigate to="/chat" replace />} />
             </Routes>
         </div>

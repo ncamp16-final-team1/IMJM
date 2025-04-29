@@ -13,58 +13,63 @@ import {
     Paper
 } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import AdminChatService, { ChatRoom } from '../../service/chat/AdminChatService';
+import AdminWebSocketService from '../../service/chat/AdminWebSocketService';
+import styles from './ChatRoom.module.css';
 import axios from 'axios';
 
-// ChatRoom 타입 정의
-interface ChatRoom {
-    id: number;
-    userId: string;
-    userName: string;
-    lastMessage: string;
-    lastMessageTime: string;
-    unreadCount: number;
-}
-
-const ChatList: React.FC = () => {
+const AdminChatList: React.FC = () => {
     const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
+    const [salonId, setSalonId] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchChatRooms = async () => {
+        const fetchSalonAndChatRooms = async () => {
             try {
-                // 쿠키로부터 미용실 ID를 가져오는 로직
-                // 실제 구현에서는 다음과 같이 쿠키를 파싱하는 로직이 필요합니다
-                const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-                    const [key, value] = cookie.trim().split('=');
-                    acc[key] = value;
-                    return acc;
-                }, {} as Record<string, string>);
+                // 현재 로그인된 미용실 정보 가져오기
+                const salonResponse = await axios.get('/api/admin/salons/my');
+                const currentSalonId = salonResponse.data.id;
+                setSalonId(currentSalonId);
 
-                // AdminToken에서 ID를 추출하는 로직
-                // 여기서는 임시로 JWT 토큰에서 salonId를 추출한다고 가정합니다
-                const token = cookies.AdminToken;
-                // 실제로는 JWT 디코딩 또는 API 호출로 salonId를 가져와야 합니다
-                // 여기서는 예시로 API를 호출하는 방식을 사용합니다
-
-                const response = await axios.get('/api/admin/salons/my');
-                const salonId = response.data.id;
+                // WebSocket 연결 초기화
+                AdminWebSocketService.initialize(currentSalonId);
 
                 // 채팅방 목록 가져오기
-                const roomsResponse = await axios.get(`/api/chat/rooms/salon/${salonId}`);
-                setChatRooms(roomsResponse.data);
+                const rooms = await AdminChatService.getSalonChatRooms();
+                setChatRooms(rooms);
                 setLoading(false);
             } catch (error) {
-                console.error('채팅방 목록을 불러오는데 실패했습니다:', error);
+                console.error('미용실 정보 또는 채팅방 목록을 불러오는데 실패했습니다:', error);
                 setLoading(false);
             }
         };
 
-        fetchChatRooms();
-    }, []);
+        fetchSalonAndChatRooms();
+
+        // 새 메시지 수신 시 채팅방 목록 업데이트
+        const handleNewMessage = async () => {
+            try {
+                const rooms = await AdminChatService.getSalonChatRooms();
+                setChatRooms(rooms);
+            } catch (error) {
+                console.error('채팅방 목록 업데이트 실패:', error);
+            }
+        };
+
+        if (salonId) {
+            AdminWebSocketService.addListener('message', handleNewMessage);
+        }
+
+        return () => {
+            if (salonId) {
+                AdminWebSocketService.removeListener('message', handleNewMessage);
+            }
+        };
+    }, [salonId]);
 
     const handleChatRoomClick = (roomId: number, userId: string) => {
-        navigate(`/chat/${roomId}/${userId}`);  // 소문자 'chat'으로 변경
+        navigate(`/chat/${roomId}/${userId}`);
     };
 
     const formatTimeToDisplay = (dateString: string) => {
@@ -156,4 +161,4 @@ const ChatList: React.FC = () => {
     );
 };
 
-export default ChatList;
+export default AdminChatList;

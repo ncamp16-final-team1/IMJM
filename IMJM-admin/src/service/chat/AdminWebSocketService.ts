@@ -1,11 +1,12 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { ChatMessage, ChatPhoto } from './AdminChatService';
 
 interface MessageListener {
     (message: any): void;
 }
 
-class WebSocketService {
+class AdminWebSocketService {
     private client: Client | null = null;
     private messageListeners: Map<string, MessageListener[]> = new Map();
     private salonId: string | null = null;
@@ -21,6 +22,7 @@ class WebSocketService {
 
         // 새로운 STOMP 클라이언트 생성
         this.client = new Client({
+            brokerURL: undefined, // 브라우저에서 자동으로 WebSocket URL 결정
             webSocketFactory: () => new SockJS('/ws'),
             debug: function (str) {
                 console.log('STOMP: ' + str);
@@ -80,7 +82,7 @@ class WebSocketService {
             chatRoomId,
             message,
             senderType,
-            senderId: this.userId, // userId 추가
+            senderId: this.salonId,
             photos
         };
 
@@ -119,4 +121,4 @@ class WebSocketService {
 }
 
 // 싱글톤으로 내보내기
-export default new WebSocketService();
+export default new AdminWebSocketService();

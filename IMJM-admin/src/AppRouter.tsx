@@ -6,7 +6,7 @@ import Reservation from './pages/reservation/Reservation';
 import Salon from './pages/salon/Salon';
 import Login from './pages/auth/Login';
 import Customer from './pages/customer/Customer';
-import Chat from './pages/chat/Chat';
+import AdminChat from './pages/chat/AdminChat';
 import Review from './pages/review/Review';
 import Event from './pages/event/Event';
 import Register from './pages/auth/Register';
@@ -64,7 +64,7 @@ function AppRouter() {
                 <Route path="Reservation" element={<Reservation />} />
                 <Route path="Salon" element={<Salon />} />
                 <Route path="Customer" element={<Customer />} />
-                <Route path="chat/*" element={<Chat />} />
+                <Route path="chat/*" element={<AdminChat />} />
                 <Route path="Review" element={<Review />} />
                 <Route path="Event" element={<Event />} />
             </Route>

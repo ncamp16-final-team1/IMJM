@@ -41,4 +41,7 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
+
+    @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
+    private ReviewReply reviewReply;
 }

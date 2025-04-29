@@ -1,11 +1,11 @@
 package com.IMJM.user.service;
 
+import com.IMJM.admin.repository.ReviewReplyRepository;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.cloud.NCPObjectStorageService;
 import com.IMJM.common.entity.*;
 import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.salon.repository.ReviewPhotosRepository;
-import com.IMJM.salon.repository.ReviewReplyRepository;
 import com.IMJM.salon.repository.ReviewRepository;
 import com.IMJM.user.dto.ReviewSaveRequestDto;
 import com.IMJM.user.dto.UserReservationResponseDto;
@@ -183,7 +183,7 @@ public class MyPageService {
     }
 
     public UserReviewReplyResponseDto getReviewReplyByReviewId(Long reviewId) {
-        Optional<ReviewReply> reviewReply = reviewReplyRepository.findByReviewId(reviewId);
+        Optional<ReviewReply> reviewReply = reviewReplyRepository.findOptionalByReviewId(reviewId);
 
         return reviewReply.map(UserReviewReplyResponseDto::new)
                 .orElse(null);

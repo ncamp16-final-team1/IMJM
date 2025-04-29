@@ -1,5 +1,6 @@
 package com.IMJM.common.entity;
 
+import com.IMJM.admin.dto.ReviewReplyDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +18,7 @@ public class ReviewReply {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
     private Review review;
 
@@ -26,4 +27,8 @@ public class ReviewReply {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public void updateReviewReply (String content) {
+        this.content = content;
+    }
 }
