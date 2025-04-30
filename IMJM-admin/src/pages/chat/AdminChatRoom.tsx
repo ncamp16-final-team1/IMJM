@@ -18,6 +18,10 @@ import ImageIcon from '@mui/icons-material/Image';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import AdminChatService, { ChatMessage, ChatPhoto } from '../../service/chat/AdminChatService';
 import AdminWebSocketService from '../../service/chat/AdminWebSocketService';
 import AdminFileUploadService from '../../service/chat/AdminFileUploadService';
@@ -356,6 +360,8 @@ const AdminChatRoom: React.FC = () => {
 
     const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
     const isMenuOpen = Boolean(menuAnchorEl);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deletedOpen, setDeletedOpen] = useState(false);
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setMenuAnchorEl(event.currentTarget);
@@ -373,6 +379,20 @@ const AdminChatRoom: React.FC = () => {
         }
     };
 
+    const handleDeleteMenuClick = () => {
+        setConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await axios.delete(`/api/chat/room/${roomId}`);
+            setConfirmOpen(false);
+            setDeletedOpen(true);
+        } catch (error) {
+            console.error('채팅방 삭제 실패:', error);
+            alert('삭제에 실패했습니다.');
+        }
+    };
 
     if (loading && messages.length === 0) {
         return (
@@ -397,7 +417,7 @@ const AdminChatRoom: React.FC = () => {
                     <MoreVertIcon />
                 </IconButton>
                 <Menu anchorEl={menuAnchorEl} open={isMenuOpen} onClose={handleMenuClose}>
-                    <MenuItem onClick={handleDeleteRoom}>채팅방 삭제</MenuItem>
+                    <MenuItem onClick={handleDeleteMenuClick}>채팅방 삭제</MenuItem>
                 </Menu>
             </Box>
 
@@ -549,6 +569,40 @@ const AdminChatRoom: React.FC = () => {
                     className={styles.messageInput}
                 />
             </Box>
+
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>채팅방 삭제</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        채팅방을 삭제하면 모든 메시지와 사진이 함께 삭제됩니다. 계속하시겠습니까?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)}>취소</Button>
+                    <Button onClick={handleConfirmDelete} color="error">삭제</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={deletedOpen} onClose={() => {
+                setDeletedOpen(false);
+                navigate('/chat');
+            }}>
+                <DialogTitle>삭제 완료</DialogTitle>
+                <DialogContent>
+                    <Typography>채팅방이 성공적으로 삭제되었습니다.</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setDeletedOpen(false);
+                            navigate('/chat');
+                        }}
+                        autoFocus
+                    >
+                        확인
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 };
