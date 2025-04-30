@@ -2,11 +2,9 @@ package com.IMJM.jwt;
 
 import com.IMJM.common.entity.Users;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
-import com.IMJM.user.dto.UserResponseDto;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

@@ -203,4 +203,28 @@ public class UserService {
     public boolean isNicknameAvailable(String nickname) {
         return !userRepository.existsByNickname(nickname);
     }
+
+    public UserDto getUserProfile(String userId) {
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("not found user"));
+
+        return UserDto.builder()
+                .profile(user.getProfile())
+                .nickname(user.getNickname())
+                .gender(user.getGender())
+                .birthday(String.valueOf(user.getBirthday()))
+                .region(user.getRegion())
+                .build();
+    }
+
+    @Transactional
+    public void updateUserProfile(String id, String nickname, MultipartFile profileImage) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("not found user"));
+
+        String profile = uploadProfileImage(id, profileImage);
+
+        user.updateUserProfile(nickname, profile);
+    }
 }
