@@ -25,6 +25,7 @@ import WriteReview from './pages/MyPage/WriteReview';
 import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
 import ViewReview from './pages/MyPage/ViewReview';
+import ReservationDetail from './pages/MyPage/ReservationDetail';
 import axios from 'axios';
 
 function App() {
@@ -82,7 +83,7 @@ function App() {
                                 <StylistSchedule />
                             </ProtectedRoute>
                         } />
-                        <Route path="/salon/:salonId/reservation/:stylistId/paymentDetails" element={
+                        <Route path="/salon/:salonId/reservation/:stylistId/payment-details" element={
                             <ProtectedRoute>
                                 <>
                                     <ScrollToTop />
@@ -96,24 +97,29 @@ function App() {
                                 <ChatMain />
                             </ProtectedRoute>
                         } />
-                        <Route path="/myPage" element={
+                        <Route path="/my" element={
                             <ProtectedRoute>
                                 <MyPage />
                             </ProtectedRoute>
                         } />
-                        <Route path="/myPage/appointments" element={
+                        <Route path="/my/appointments" element={
                             <ProtectedRoute>
                                 <Appointments />
                             </ProtectedRoute>
                         } />
-                        <Route path="/myPage/writeReview" element={
+                        <Route path="/my/write-review" element={
                             <ProtectedRoute>
                                 <WriteReview />
                             </ProtectedRoute>
                         } />
-                        <Route path="/myPage/viewReview" element={
+                        <Route path="/my/view-review" element={
                             <ProtectedRoute>
                                 <ViewReview />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/reservation-detail/:reservationId" element={
+                            <ProtectedRoute>
+                                <ReservationDetail />
                             </ProtectedRoute>
                         } />
 

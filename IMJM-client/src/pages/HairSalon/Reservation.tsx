@@ -189,13 +189,10 @@ const Reservation = () => {
 
   // 디버깅을 위한 useEffect
   useEffect(() => {
-    console.log("현재 사용 중인 살롱 이름:", salonName);
-    console.log("현재 예약 정보:", reservationInfo);
   }, [salonName, reservationInfo]);
 
   if (!stylistSchedule) return <Typography>Loading...</Typography>;
 
-  // 최종 사용할 살롱 이름 (우선순위: 상태값 > 스타일리스트 데이터 > 기본값)
   const finalSalonName = salonName || stylistSchedule.salonName || '살롱 이름 없음';
 
   return (

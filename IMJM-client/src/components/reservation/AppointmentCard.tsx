@@ -72,9 +72,7 @@ export default function AppointmentCard({
                     icon: <EventIcon fontSize="small" />,
                     color: '#4CAF50',
                     action: () => {
-                        // 예약 확인 페이지로 이동
-                        console.log(`예약 확인: ${reservationId}`);
-                        navigate(`/myPage/ReservationDetail/${reservationId}`,{
+                        navigate(`/my/reservation-detail/${reservationId}`,{
                             state:{
                                 salonPhotoUrl,
                             }
@@ -87,7 +85,7 @@ export default function AppointmentCard({
                     icon: <RateReviewIcon fontSize="small" />,
                     color: '#FF9080',
                     action: () => {
-                        navigate(`/myPage/writeReview`, {
+                        navigate(`/my/write-review`, {
                             state: {
                                 salonId,
                                 reservationId,
@@ -111,7 +109,7 @@ export default function AppointmentCard({
                     icon: <RateReviewIcon fontSize="small" />,
                     color: '#2196F3',
                     action: () => {
-                        navigate(`/myPage/viewReview`,{
+                        navigate(`/my/view-review`,{
                             state: { 
                                 salonId,
                                 reviewId,
@@ -191,8 +189,6 @@ export default function AppointmentCard({
                         variant="outlined" 
                         size="medium" 
                         onClick={() => {
-                            // 1:1 챗으로 이동
-                            console.log('1:1 채팅으로 이동');
                             // navigate(`/myPage/chat/${reservationId}`);
                         }}
                         sx={{

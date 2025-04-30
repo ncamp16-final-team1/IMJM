@@ -21,17 +21,12 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -105,12 +100,6 @@ public class MyPageService {
                 .build();
     }
 
-    // 추가 유틸리티 메서드들
-    private String getSalonFirstPhotoUrl(String salonId) {
-        // 살롱 첫 번째 사진 URL 조회 로직
-        return "기본이미지URL";
-    }
-
     private long getReviewCount(String salonId) {
         return reviewRepository.countBySalonId(salonId);
     }
@@ -122,12 +111,9 @@ public class MyPageService {
     }
 
 
-
-
     // 리뷰 저장
     @Transactional
     public Long saveReview(ReviewSaveRequestDto requestDto, List<MultipartFile> images) {
-
         Users user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
@@ -140,13 +126,7 @@ public class MyPageService {
                     .orElseThrow(() -> new EntityNotFoundException("예약 정보를 찾을 수 없습니다."));
         }
 
-        String reviewTag = null;
-        if (requestDto.getTags() != null && !requestDto.getTags().isEmpty()) {
-            reviewTag = String.join(",", requestDto.getTags());
-            if (reviewTag.length() > 100) {
-                reviewTag = reviewTag.substring(0, 100);
-            }
-        }
+        String reviewTag = processReviewTags(requestDto.getTags());
 
         Review review = Review.builder()
                 .user(user)
@@ -161,21 +141,21 @@ public class MyPageService {
         Review savedReview = reviewRepository.save(review);
 
         if (images != null && !images.isEmpty()) {
-            saveReviewImages(savedReview.getId(), images);
+            saveReviewImages(savedReview, images);
         }
+
+        updateSalonScore(salon.getId());
 
         return savedReview.getId();
     }
 
-    private void saveReviewImages(Long reviewId, List<MultipartFile> images) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다: " + reviewId));
-
+    private void saveReviewImages(Review review, List<MultipartFile> images) {
         List<ReviewPhotos> reviewPhotos = new ArrayList<>();
 
         for (int i = 0; i < images.size(); i++) {
             MultipartFile image = images.get(i);
-            String photoUrl = uploadReviewImageToStorage(reviewId, image);
+
+            String photoUrl = uploadReviewImageToStorage(review.getId(), image);
 
             ReviewPhotos reviewPhoto = ReviewPhotos.builder()
                     .review(review)
@@ -193,14 +173,10 @@ public class MyPageService {
     private String uploadReviewImageToStorage(Long reviewId, MultipartFile image) {
         try {
             String originalFilename = image.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String extension = extractFileExtension(originalFilename);
 
-                validateFileExtension(extension);
-            }
             String uuid = UUID.randomUUID().toString();
-            String newFilename = "reviews/" + reviewId + "/" + uuid + extension;
+            String newFilename = createReviewImagePath(reviewId, uuid, extension);
 
             storageService.upload(newFilename, image.getInputStream());
 
@@ -212,11 +188,48 @@ public class MyPageService {
         }
     }
 
+    private String extractFileExtension(String originalFilename) {
+        if (originalFilename == null || !originalFilename.contains(".")) {
+            throw new IllegalArgumentException("유효하지 않은 파일명입니다.");
+        }
+
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        validateFileExtension(extension);
+
+        return extension;
+    }
+
     private void validateFileExtension(String ext) {
         List<String> allowedExtensions = Arrays.asList(".jpg", ".jpeg", ".png", ".gif", ".webp");
-        if (!allowedExtensions.contains(ext.toLowerCase())) {
+        if (!allowedExtensions.contains(ext)) {
             throw new IllegalArgumentException("지원되지 않는 파일 형식입니다.");
         }
+    }
+
+    private String createReviewImagePath(Long reviewId, String uuid, String extension) {
+        return "reviews/" + reviewId + "/" + uuid + extension;
+    }
+
+    private String processReviewTags(List<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return null;
+        }
+
+        String reviewTag = String.join(",", tags);
+        return reviewTag.length() > 100
+                ? reviewTag.substring(0, 100)
+                : reviewTag;
+    }
+
+    @Transactional
+    protected void updateSalonScore(String salonId) {
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new EntityNotFoundException("살롱을 찾을 수 없습니다."));
+
+        Double averageScore = reviewRepository.findAverageRatingBySalonId(salon.getId())
+                .orElse(0.0);
+
+        salon.updateScore(averageScore);
     }
 
     private String getFullImageUrl(String s3Path) {
@@ -258,22 +271,17 @@ public class MyPageService {
 
     // 예약 상세페이지 조회
     public ReservationDetailResponseDto getReservationDetail(Long reservationId) {
-        // 1. 예약 정보 조회
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 찾을 수 없습니다: " + reservationId));
 
-        // 2. 결제 정보 조회
         Payment payment = paymentRepository.findByReservationId(reservationId)
                 .orElse(null);
 
-        // 3. 포인트 사용 내역 조회 (필요하다면)
         List<PointUsage> pointUsages = pointUsageRepository.findByUserId(reservation.getUser().getId());
 
-        // 4. 쿠폰 정보 조회
         ReservationCoupon reservationCoupon = reservationCouponRepository.findByReservationId(reservationId)
                 .orElse(null);
 
-        // 5. DTO로 변환하여 반환
         return buildReservationDetailResponseDto(reservation, payment, pointUsages, reservationCoupon);
     }
 
@@ -283,7 +291,6 @@ public class MyPageService {
             List<PointUsage> pointUsages,
             ReservationCoupon reservationCoupon) {
 
-        // DTO 생성 로직
         return ReservationDetailResponseDto.builder()
                 .reservationId(reservation.getId())
                 .reservationDate(reservation.getReservationDate())
@@ -312,6 +319,7 @@ public class MyPageService {
                 .paymentDate(payment.getPaymentDate())
                 .isCanceled(payment.isCanceled())
                 .canceledAmount(payment.getCanceledAmount())
+                .price(payment.getPrice())
                 .build();
     }
 
@@ -320,15 +328,12 @@ public class MyPageService {
             return null;
         }
 
-        // 이 예약과 관련된 포인트 사용 내역 찾기
-        // 예를 들어, 내용(content)에 예약 ID가 포함되어 있거나
-        // 사용 시간이 예약 시간과 가까운 경우 등의 로직을 구현
         return pointUsages.stream()
-                .filter(usage -> usage.getContent().contains("예약 ID: " + reservation.getId()))
                 .findFirst()
                 .map(pointUsage -> ReservationDetailResponseDto.PointUsageDto.builder()
                         .points(pointUsage.getPrice())
                         .useDate(pointUsage.getUseDate())
+                        .content(pointUsage.getContent())
                         .build())
                 .orElse(null);
     }

@@ -118,7 +118,7 @@ public class ReservationController {
         try {
             String userId = customOAuth2UserDto.getId();
             log.info("예약 완료 요청: {}", request);
-
+            System.out.println(request);
             reservationStylistService.completeReservation(request, userId);
 
             Map<String, Object> successResponse = new HashMap<>();

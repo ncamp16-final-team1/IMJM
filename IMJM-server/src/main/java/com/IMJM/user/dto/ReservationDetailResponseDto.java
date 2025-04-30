@@ -32,6 +32,7 @@ public class ReservationDetailResponseDto {
         private LocalDateTime paymentDate;
         private boolean isCanceled;
         private BigDecimal canceledAmount;
+        private int price;
     }
 
     @Getter
@@ -48,5 +49,7 @@ public class ReservationDetailResponseDto {
     public static class PointUsageDto {
         private int points;
         private LocalDateTime useDate;
+        private String content;
     }
+
 }

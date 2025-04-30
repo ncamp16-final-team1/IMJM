@@ -6,16 +6,16 @@ import java.math.BigDecimal;
 
 @Data
 public class ReservationRequestDto {
-    private String payment_method;
-    private String payment_status;
-    private PaymentInfoDto payment_info;
+    private String paymentMethod;
+    private String paymentStatus;
+    private PaymentInfoDto paymentInfo;
     private PaymentRequestDto paymentRequest;
     private String salonId;
 
     @Data
     public static class PaymentInfoDto {
-        private BigDecimal discount_amount;
-        private Integer point_used;
+        private BigDecimal discountAmount;
+        private Integer pointUsed;
         private String currency;
     }
 
@@ -29,24 +29,24 @@ public class ReservationRequestDto {
 
     @Data
     public static class PointUsageDto {
-        private String usage_type; // "USE" 또는 "SAVE"
+        private String usageType; // "USE" 또는 "SAVE"
         private Integer price;
         private String content;
     }
 
     @Data
     public static class CouponDataDto {
-        private Long coupon_id;
-        private BigDecimal discount_amount;
+        private Long couponId;
+        private BigDecimal discountAmount;
     }
 
     @Data
     public static class ReservationDataDto {
-        private Long stylist_id;
-        private String reservation_date;
-        private String reservation_time;
-        private boolean is_paid;
+        private Long stylistId;
+        private String reservationDate;
+        private String reservationTime;
+        private boolean isPaid;
         private String requirements;
-        private Long service_menu_id;
+        private Long serviceMenuId;
     }
 }

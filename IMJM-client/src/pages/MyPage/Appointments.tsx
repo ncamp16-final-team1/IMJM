@@ -60,7 +60,6 @@ export default function Appointments() {
     const loadAppointments = async () => {
       try {
         const data = await getUserReservations(); 
-        console.log(data);
         setAppointments(data);
       } catch (err) {
         console.error('예약 불러오기 실패:', err);

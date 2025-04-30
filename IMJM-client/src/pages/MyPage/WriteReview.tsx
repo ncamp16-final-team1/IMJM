@@ -267,7 +267,7 @@ export default function WriteReview() {
       showAlert('리뷰가 성공적으로 제출되었습니다!');
       
       setTimeout(() => {
-        navigate('/myPage/appointments'); 
+        navigate('/my/appointments'); 
       }, 1500);
       
     } catch (error: any) { 

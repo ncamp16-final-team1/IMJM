@@ -1,7 +1,6 @@
 package com.IMJM.user.controller;
 
 import com.IMJM.user.dto.*;
-import com.IMJM.salon.dto.ReviewDto;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.ReservationDetailResponseDto;
 import com.IMJM.user.dto.ReviewSaveRequestDto;
@@ -9,8 +8,6 @@ import com.IMJM.user.dto.UserReservationResponseDto;
 import com.IMJM.user.service.MyPageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.time.LocalDate;
 
 
 @RestController
@@ -37,6 +33,7 @@ public class UserMyPageController {
     @GetMapping("/reservations")
     public ResponseEntity<List<UserReservationResponseDto>> getUserReservations(
             @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
+
         String userId = customOAuth2UserDto.getId();
         List<UserReservationResponseDto> reservations = myPageService.getUserReservations(userId);
         return ResponseEntity.ok(reservations);
@@ -83,9 +80,7 @@ public class UserMyPageController {
 
     @GetMapping("/view-review")
     public ResponseEntity<?> getUserReview(@RequestParam("reviewId") Long reviewId,
-                                           @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
-
-    ) {
+                                           @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
 
         String userId = customOAuth2UserDto.getId();
 
@@ -104,6 +99,7 @@ public class UserMyPageController {
     @GetMapping("/view-review-reply")
     public ResponseEntity<?> getUserReviewReply(@RequestParam("reviewId") Long reviewId,
                                                 @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
+
         String userId = customOAuth2UserDto.getId();
 
         if (userId == null || userId.isEmpty()) {
@@ -125,6 +121,7 @@ public class UserMyPageController {
     // 예약 상세조회
     @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<ReservationDetailResponseDto> getReservationDetail(@PathVariable Long reservationId) {
+
         ReservationDetailResponseDto responseDto = myPageService.getReservationDetail(reservationId);
         return ResponseEntity.ok(responseDto);
     }

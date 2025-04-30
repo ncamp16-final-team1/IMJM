@@ -14,7 +14,6 @@ const ServiceMenus = ({
   selectedTime,
   salonName, 
 }: ServiceMenusSectionProps) => {
-  console.log("Received salonName:", salonName);
   const { salonId,stylistId } = useParams(); 
   const navigate = useNavigate(); 
 
@@ -29,7 +28,7 @@ const ServiceMenus = ({
   };
 
   const handleNextPage = () => {
-    navigate(`/salon/${salonId}/reservation/${stylistId}/paymentDetails`, {
+    navigate(`/salon/${salonId}/reservation/${stylistId}/payment-details`, {
       state: {
         salonId: salonId ?? '',
         stylistId: stylistId ? parseInt(stylistId) : null,

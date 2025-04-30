@@ -9,6 +9,7 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalTime;
 
 @Entity
@@ -79,5 +80,9 @@ public class Salon {
             this.latitude = salonUpdateDto.getLatitude();
             this.longitude = salonUpdateDto.getLongitude();
         }
+    }
+
+    public void updateScore(Double newScore) {
+        score= BigDecimal.valueOf(newScore);
     }
 }
