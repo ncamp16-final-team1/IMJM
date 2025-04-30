@@ -7,8 +7,7 @@ import {
     Box,
     Divider,
     CircularProgress,
-    Button,
-    IconButton
+    Button
 } from '@mui/material';
 import MarkChatReadIcon from '@mui/icons-material/MarkChatRead';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -28,6 +27,7 @@ const NotificationList: React.FC = () => {
             try {
                 setLoading(true);
                 const data = await NotificationService.getNotifications();
+                console.log('서버에서 받은 알림 데이터:', data); // 로그 추가
                 setNotifications(data);
             } catch (error) {
                 console.error('알림 목록 로드 실패:', error);
@@ -37,6 +37,12 @@ const NotificationList: React.FC = () => {
         };
 
         fetchNotifications();
+
+        // 페이지 포커스될 때마다 갱신
+        const handleFocus = () => {
+            fetchNotifications();
+        };
+        window.addEventListener('focus', handleFocus);
 
         // 새 알림을 수신했을 때 목록에 추가
         const handleNewNotification = (notification: AlarmDto) => {
@@ -49,18 +55,19 @@ const NotificationList: React.FC = () => {
         // 컴포넌트 언마운트 시 리스너 제거
         return () => {
             NotificationService.removeListener(handleNewNotification);
+            window.removeEventListener('focus', handleFocus);
         };
     }, []);
 
     const handleNotificationClick = async (notification: AlarmDto) => {
         try {
-            // 알림 읽음 처리
-            if (!notification.isRead) {
+            // 알림 읽음 처리 (read 속성 사용)
+            if (!notification.read) {
                 await NotificationService.markAsRead(notification.id);
 
                 // 알림 상태 업데이트
                 setNotifications(notifications.map(n =>
-                    n.id === notification.id ? { ...n, isRead: true } : n
+                    n.id === notification.id ? { ...n, read: true } : n
                 ));
             }
 
@@ -80,7 +87,7 @@ const NotificationList: React.FC = () => {
     const handleMarkAllAsRead = async () => {
         try {
             await NotificationService.markAllAsRead();
-            setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+            setNotifications(notifications.map(n => ({ ...n, read: true })));
         } catch (error) {
             console.error('모든 알림 읽음 처리 실패:', error);
         }
@@ -174,7 +181,7 @@ const NotificationList: React.FC = () => {
                                 onClick={() => handleNotificationClick(notification)}
                                 sx={{
                                     cursor: 'pointer',
-                                    bgcolor: notification.isRead ? 'transparent' : 'rgba(25, 118, 210, 0.08)',
+                                    bgcolor: notification.read ? 'transparent' : 'rgba(25, 118, 210, 0.08)',
                                     transition: 'background-color 0.3s',
                                     '&:hover': {
                                         bgcolor: 'rgba(0, 0, 0, 0.04)'
