@@ -12,7 +12,7 @@ export default function MyPage() {
     { label: "My Profile", path: "/my/profile" },
     {
       label: "Point",
-      path: "/point",
+      path: "/my/point",
       right: point !== null ? `${point.toLocaleString()} P` : "Loading...",
     },
     { label: "Appointment history", path: "/myPage/appointments" },
