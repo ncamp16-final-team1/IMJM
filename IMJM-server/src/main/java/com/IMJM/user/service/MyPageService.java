@@ -48,11 +48,8 @@ public class MyPageService {
     private final ReviewReplyRepository reviewReplyRepository;
     private final SalonPhotosRepository salonPhotosRepository;
 
-
     @Value("${ncp.bucket-name}")
     private String bucketName;
-
-    // 예약리스트 조회
 
     @Transactional(readOnly = true)
     public List<UserReservationResponseDto> getUserReservations(String userId) {
@@ -64,13 +61,11 @@ public class MyPageService {
     }
 
     private UserReservationResponseDto convertToReservationDto(Reservation reservation) {
-        // 결제 정보 조회
+
         Payment payment = paymentRepository.findByReservationId(reservation.getId()).orElse(null);
 
-        // 리뷰 작성 여부 확인
         boolean hasReview = reviewRepository.existsByReservationId(reservation.getId());
 
-        // 살롱 첫 번째 사진 URL 조회
         String salonPhotoUrl = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(
                         reservation.getStylist().getSalon().getId()
                 )
@@ -110,8 +105,7 @@ public class MyPageService {
                 .orElse(null);
     }
 
-
-    // 리뷰 저장
+    
     @Transactional
     public Long saveReview(ReviewSaveRequestDto requestDto, List<MultipartFile> images) {
         Users user = userRepository.findById(requestDto.getUserId())
@@ -269,7 +263,7 @@ public class MyPageService {
         );
     }
 
-    // 예약 상세페이지 조회
+
     public ReservationDetailResponseDto getReservationDetail(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 찾을 수 없습니다: " + reservationId));
