@@ -23,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AdminJoinService {
 
     private final SalonRepository salonRepository;
@@ -68,7 +69,6 @@ public class AdminJoinService {
         uploadSalonPhotos(salon, photos);
     }
 
-    @Transactional
     public void updateProcess(String salonId, SalonDto salonUpdateDto, List<MultipartFile> photos) {
         Salon salon = salonRepository.findById(salonId)
                 .orElseThrow(() -> new RuntimeException("미용실이 존재하지 않습니다."));
@@ -78,8 +78,7 @@ public class AdminJoinService {
         uploadSalonPhotos(salon, photos);
     }
 
-    @Transactional
-    private void uploadSalonPhotos(Salon salon, List<MultipartFile> photos) {
+    protected void uploadSalonPhotos(Salon salon, List<MultipartFile> photos) {
         if (photos == null || photos.isEmpty()) return;
 
         String baseUrl = "https://" + bucketName + ".kr.object.ncloudstorage.com";
