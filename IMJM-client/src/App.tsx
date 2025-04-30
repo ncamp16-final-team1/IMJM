@@ -25,6 +25,7 @@ import WriteReview from './pages/MyPage/WriteReview';
 import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
 import axios from 'axios';
+import ViewReview from './pages/MyPage/ViewReview';
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
