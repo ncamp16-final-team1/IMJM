@@ -183,4 +183,13 @@ public class ChatController {
 
         return ResponseEntity.ok(roomInfo);
     }
+
+    @DeleteMapping("/room/{chatRoomId}")
+    public ResponseEntity<?> deleteChatRoom(
+            @PathVariable Long chatRoomId,
+            @AuthenticationPrincipal CustomOAuth2UserDto userDetails
+    ) {
+        chatService.deleteChatRoom(chatRoomId);
+        return ResponseEntity.ok().build();
+    }
 }
