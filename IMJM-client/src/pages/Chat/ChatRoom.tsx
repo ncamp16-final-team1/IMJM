@@ -14,6 +14,10 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Box from '@mui/material/Box';
 import styles from './ChatRoom.module.css';
 import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
 import WebSocketService from '../../services/chat/WebSocketService';
@@ -361,6 +365,25 @@ const ChatRoom: React.FC = () => {
         }
     };
 
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const openMenu = Boolean(anchorEl);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+    const handleDeleteRoom = async () => {
+        try {
+            await axios.delete(`/api/chat/room/${roomId}`);
+            navigate('/chat'); // 삭제 후 채팅방 목록으로 이동
+        } catch (error) {
+            console.error('채팅방 삭제 실패:', error);
+            alert('채팅방 삭제에 실패했습니다.');
+        }
+    };
+
     if (loading && messages.length === 0) {
         return (
             <div className={styles.loading}>
@@ -372,11 +395,23 @@ const ChatRoom: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <IconButton onClick={handleBackClick} size="small">
-                    <ArrowBackIcon />
+            <div className={styles.header} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton onClick={handleBackClick} size="small">
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>
+                        {chatRoom?.salonName || userName || '채팅방'}
+                    </Typography>
+                </Box>
+
+                {/* 오른쪽 케밥 메뉴 */}
+                <IconButton onClick={handleMenuOpen}>
+                    <MoreVertIcon />
                 </IconButton>
-                <Typography variant="h6">{chatRoom?.salonName || '채팅방'}</Typography>
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                    <MenuItem onClick={handleDeleteRoom}>채팅방 삭제</MenuItem>
+                </Menu>
             </div>
 
             <div className={styles.messagesContainer}>

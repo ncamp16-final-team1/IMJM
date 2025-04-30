@@ -15,6 +15,9 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import AdminChatService, { ChatMessage, ChatPhoto } from '../../service/chat/AdminChatService';
 import AdminWebSocketService from '../../service/chat/AdminWebSocketService';
 import AdminFileUploadService from '../../service/chat/AdminFileUploadService';
@@ -351,6 +354,26 @@ const AdminChatRoom: React.FC = () => {
         }
     };
 
+    const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const isMenuOpen = Boolean(menuAnchorEl);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setMenuAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setMenuAnchorEl(null);
+    };
+    const handleDeleteRoom = async () => {
+        try {
+            await axios.delete(`/api/chat/room/${roomId}`);
+            navigate('/chat');
+        } catch (error) {
+            console.error('채팅방 삭제 실패:', error);
+            alert('채팅방 삭제에 실패했습니다.');
+        }
+    };
+
+
     if (loading && messages.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
@@ -363,13 +386,19 @@ const AdminChatRoom: React.FC = () => {
     return (
         <Paper elevation={3} className={styles.container}>
             {/* 헤더 */}
-            <Box className={styles.header}>
+            <Box className={styles.header} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <IconButton onClick={handleBackClick} size="small">
                         <ArrowBackIcon />
                     </IconButton>
                     <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>{userName}</Typography>
                 </Box>
+                <IconButton onClick={handleMenuOpen}>
+                    <MoreVertIcon />
+                </IconButton>
+                <Menu anchorEl={menuAnchorEl} open={isMenuOpen} onClose={handleMenuClose}>
+                    <MenuItem onClick={handleDeleteRoom}>채팅방 삭제</MenuItem>
+                </Menu>
             </Box>
 
             <Divider />
