@@ -106,7 +106,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/admin/login", "/api/admin/register").permitAll()
                         .requestMatchers("/admin/check-login").authenticated()
                         .anyRequest().authenticated());
