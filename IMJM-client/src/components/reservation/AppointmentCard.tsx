@@ -34,7 +34,6 @@ export default function AppointmentCard({
 }: UserReservations) {
 
     const navigate = useNavigate();
-    const [isPast, setIsPast] = useState(false);
     const [formattedDateTime, setFormattedDateTime] = useState<string>("");
     const [status, setStatus] = useState<'upcoming' | 'past-no-review' | 'past-with-review'>('upcoming');
 
@@ -51,7 +50,7 @@ export default function AppointmentCard({
         const now = new Date();
         const isPastAppointment = appointmentDate < now;
         
-        setIsPast(isPastAppointment);
+        isPastAppointment;
         
         if (!isPastAppointment) {
             setStatus('upcoming');
@@ -84,7 +83,6 @@ export default function AppointmentCard({
                     icon: <RateReviewIcon fontSize="small" />,
                     color: '#FF9080',
                     action: () => {
-                        console.log(`리뷰 작성: ${reservationId}`);
                         navigate(`/myPage/writeReview`, {
                             state: {
                                 salonId,
@@ -109,9 +107,23 @@ export default function AppointmentCard({
                     icon: <RateReviewIcon fontSize="small" />,
                     color: '#2196F3',
                     action: () => {
-                        // 작성한 리뷰 보기
-                        console.log(`리뷰 확인: ${reviewId}`);
-                        // navigate(`/view-review/${reviewId}`);
+                        navigate(`/myPage/viewReview`,{
+                            state: { 
+                                salonId,
+                                reviewId,
+                                salonName, 
+                                salonScore,
+                                reviewCount,
+                                salonAddress,
+                                reservationDate,
+                                reservationTime,
+                                price,
+                                reservationServiceName,
+                                stylistName,
+                                salonPhotoUrl,
+                                reservationId,
+                            }
+                        });
                     }
                 };
         }
@@ -154,7 +166,6 @@ export default function AppointmentCard({
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {/* 서비스 이름 */}
                 <Typography
                     variant="body1"
                     sx={{
@@ -171,9 +182,7 @@ export default function AppointmentCard({
                     {reservationServiceName}
                 </Typography>
 
-                {/* 버튼 영역 */}
                 <Stack direction="row" spacing={1}>
-                    {/* 1:1 챗 버튼 - 항상 표시 */}
                     <Button 
                         variant="outlined" 
                         size="medium" 
