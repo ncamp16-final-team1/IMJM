@@ -23,11 +23,10 @@ import ScrollToTop from './components/ScrollToTop';
 import Appointments from './pages/MyPage/Appointments';
 import WriteReview from './pages/MyPage/WriteReview';
 import ViewReview from './pages/MyPage/ViewReview';
+import UserProfile from './pages/MyPage/UserProfile';
 import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
 import axios from 'axios';
-import ViewReview from './pages/MyPage/ViewReview';
-import UserProfile from './pages/MyPage/UserProfile';
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
