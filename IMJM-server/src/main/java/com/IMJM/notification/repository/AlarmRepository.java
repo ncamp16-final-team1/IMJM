@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface AlarmRepository extends JpaRepository<Alarm, Long> {
+
     List<Alarm> findByUserIdOrderByCreatedAtDesc(String userId);
 
     int countByUserIdAndIsReadFalse(String userId);
