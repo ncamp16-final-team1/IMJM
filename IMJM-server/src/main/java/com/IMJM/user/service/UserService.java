@@ -2,8 +2,10 @@ package com.IMJM.user.service;
 
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.ClientStylist;
+import com.IMJM.common.entity.PointUsage;
 import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
+import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.LocationDto;
 import com.IMJM.user.dto.UserDto;
@@ -26,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -40,10 +43,12 @@ public class UserService {
     private final ClientStylistRepository stylistRepository;
     private final JWTUtil jwtUtil;
     private final ClientStylistRepository clientStylistRepository;
+    private final PointUsageRepository pointUsageRepository;
 
     private static final String ANONYMOUS_USER = "anonymous";
     private static final BigDecimal LAT = new BigDecimal("37.498297");
     private static final BigDecimal LON = new BigDecimal("127.027733");
+    private static final int MEMBERSHIP_POINT = 1000;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -85,6 +90,19 @@ public class UserService {
                 dto.getRegion(),
                 dto.isIs_notification(),
                 dto.isTermsAgreed());
+
+        if(!pointUsageRepository.existsByUserIdAndContent(user.getId(), "Membership Points Earned")){
+            PointUsage pointUsage = PointUsage.builder()
+                    .user(user)
+                    .usageType("SAVE")
+                    .price(MEMBERSHIP_POINT)
+                    .useDate(LocalDateTime.now())
+                    .content("Membership Points Earned")
+                    .build();
+
+            pointUsageRepository.save(pointUsage);
+            user.savePoint(MEMBERSHIP_POINT);
+        }
     }
 
     public String uploadProfileImage(String userId, MultipartFile profileFile) {
@@ -209,5 +227,12 @@ public class UserService {
         String profile = uploadProfileImage(id, profileImage);
 
         user.updateUserProfile(nickname, profile);
+    }
+
+    public int getMyPoint(String id) {
+
+        return userRepository.findById(id)
+                .map(Users::getPoint)
+                .orElse(0);
     }
 }
