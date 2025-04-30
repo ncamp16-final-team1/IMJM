@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
-import logo from '../../assets/images/logo.png';
+import logo from '../../assets/images/IMJM-logo-Regi.png';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import NotificationsIcon from '@mui/icons-material/Notifications';
