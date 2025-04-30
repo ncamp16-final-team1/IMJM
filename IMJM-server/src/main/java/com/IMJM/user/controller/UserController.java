@@ -100,4 +100,9 @@ public class UserController {
         userService.updateUserProfile(userDetails.getId(), nickname, profileImage);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/my-point")
+    public ResponseEntity<?> getMyPoint(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        return ResponseEntity.ok().body(userService.getMyPoint(userDetails.getId()));
+    }
 }

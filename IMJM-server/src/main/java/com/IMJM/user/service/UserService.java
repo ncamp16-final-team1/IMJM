@@ -91,17 +91,18 @@ public class UserService {
                 dto.isIs_notification(),
                 dto.isTermsAgreed());
 
+        if(!pointUsageRepository.existsByUserIdAndContent(user.getId(), "Membership Points Earned")){
+            PointUsage pointUsage = PointUsage.builder()
+                    .user(user)
+                    .usageType("SAVE")
+                    .price(MEMBERSHIP_POINT)
+                    .useDate(LocalDateTime.now())
+                    .content("Membership Points Earned")
+                    .build();
 
-        user.savePoint(MEMBERSHIP_POINT);
-        PointUsage pointUsage = PointUsage.builder()
-                .user(user)
-                .usageType("SAVE")
-                .price(MEMBERSHIP_POINT)
-                .useDate(LocalDateTime.now())
-                .content("Membership Points Earned")
-                .build();
-
-        pointUsageRepository.save(pointUsage);
+            pointUsageRepository.save(pointUsage);
+            user.savePoint(MEMBERSHIP_POINT);
+        }
     }
 
     public String uploadProfileImage(String userId, MultipartFile profileFile) {
@@ -226,5 +227,12 @@ public class UserService {
         String profile = uploadProfileImage(id, profileImage);
 
         user.updateUserProfile(nickname, profile);
+    }
+
+    public int getMyPoint(String id) {
+
+        return userRepository.findById(id)
+                .map(Users::getPoint)
+                .orElse(0);
     }
 }
