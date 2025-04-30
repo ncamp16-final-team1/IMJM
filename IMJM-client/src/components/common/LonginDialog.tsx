@@ -27,36 +27,79 @@ const LoginDialog = ({
     loginText = '로그인'
   }: LoginDialogProps) => {
     return (
-      <Dialog open={open} onClose={onClose} >
+      <Dialog 
+        open={open} 
+        onClose={onClose}
+        PaperProps={{
+          sx: {
+            border: '6px solid #FDC7BF', 
+            borderRadius: 2,                
+            overflow: 'hidden'
+          }
+        }}
+      >
         <DialogTitle
-                  sx={{
-                    border: '6px solid #FDC7BF'
-                }}
-        >{title}</DialogTitle>
-        <DialogContent>
-        <Typography>{message}</Typography>
+          sx={{
+            borderBottom: '4px solid #FDC7BF', 
+            px: 3,
+            py: 2,
+            fontWeight: 'bold',
+            fontSize: '1.2rem',
+            textAlign: 'center',
+            backgroundColor: '#FFF8F6', 
+            mb: 2,
+          }}
+        >
+          {title}
+        </DialogTitle>
+
+        <DialogContent
+          sx={{
+            px: 6,
+            pb: 2,
+            pt: 5,
+            textAlign: 'center'
+          }}
+        >
+          <Typography variant="body1">{message}</Typography>
         </DialogContent>
-        <DialogActions>
-        <Button 
-                onClick={onClose} 
-                sx={{ 
-                color: '#FDC7BF' 
-                }}>
+
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2,
+            justifyContent: 'center',
+            gap: 2
+          }}
+        >
+          <Button 
+            onClick={onClose} 
+            variant="outlined"
+            sx={{ 
+              color: '#F06292',
+              borderColor: '#FDC7BF',          
+              '&:hover': {
+                borderColor: '#fbc0b3',
+                backgroundColor: '#fff7f5'
+              }
+            }}
+          >
             {cancelText}
-        </Button>
-        <Button
+          </Button>
+
+          <Button
             onClick={onLogin} 
             variant="contained"
             sx={{ 
-                color: '#F06292',
-                backgroundColor: '#FDC7BF',
-                '&:hover': {
-                backgroundColor: '#fbc0b3' 
-                }
+              color: '#fff',
+              backgroundColor: '#FDC7BF',     
+              '&:hover': {
+                backgroundColor: '#fbc0b3'
+              }
             }}
-            >
+          >
             {loginText}
-        </Button>
+          </Button>
         </DialogActions>
       </Dialog>
     );

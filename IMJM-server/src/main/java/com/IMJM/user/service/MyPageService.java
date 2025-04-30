@@ -1,13 +1,16 @@
 package com.IMJM.user.service;
 
+import com.IMJM.admin.repository.ReviewReplyRepository;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.cloud.NCPObjectStorageService;
 import com.IMJM.common.entity.*;
 import com.IMJM.reservation.repository.ReservationRepository;
-import com.IMJM.salon.repository.ReviewPhotoRepository;
+import com.IMJM.salon.repository.ReviewPhotosRepository;
 import com.IMJM.salon.repository.ReviewRepository;
 import com.IMJM.user.dto.ReviewSaveRequestDto;
 import com.IMJM.user.dto.UserReservationResponseDto;
+import com.IMJM.user.dto.UserReviewReplyResponseDto;
+import com.IMJM.user.dto.UserReviewResponseDto;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,16 +32,17 @@ import java.util.stream.Collectors;
 public class MyPageService {
 
     private final ReservationRepository reservationRepository;
-    private final ReviewPhotoRepository reviewPhotoRepository;
+    private final ReviewPhotosRepository reviewPhotosRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final NCPObjectStorageService storageService;
     private final SalonRepository salonRepository;
+    private final ReviewReplyRepository reviewReplyRepository;
+
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
 
-    // 예약리스트 조회
     public List<UserReservationResponseDto> getUserReservations(String userId) {
         List<Object[]> results = reservationRepository.findByUser_IdNative(userId);
 
@@ -47,7 +51,6 @@ public class MyPageService {
                 .collect(Collectors.toList());
     }
 
-    // 리뷰 저장
     @Transactional
     public Long saveReview(ReviewSaveRequestDto requestDto, List<MultipartFile> images) {
 
@@ -110,7 +113,7 @@ public class MyPageService {
             reviewPhotos.add(reviewPhoto);
         }
 
-        reviewPhotoRepository.saveAll(reviewPhotos);
+        reviewPhotosRepository.saveAll(reviewPhotos);
     }
 
     private String uploadReviewImageToStorage(Long reviewId, MultipartFile image) {
@@ -147,4 +150,43 @@ public class MyPageService {
         return baseUrl + "/" + s3Path;
     }
 
+
+    public UserReviewResponseDto getReviewWithPhotos(Long reviewId) {
+        Review review = reviewRepository.findByReviewId(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+
+        List<ReviewPhotos> reviewPhotos = reviewPhotosRepository.findByReview_IdOrderByPhotoOrderAsc(reviewId);
+
+        if (reviewPhotos.isEmpty()) {
+            reviewPhotos = new ArrayList<>();
+        }
+
+        String reviewTag = review.getReviewTag();
+        List<String> reviewTags = (reviewTag != null && !reviewTag.isEmpty())
+                ? Arrays.asList(reviewTag.split(","))
+                : new ArrayList<>();
+
+        List<String> reviewPhotoUrls = reviewPhotos.stream()
+                .map(ReviewPhotos::getPhotoUrl)
+                .collect(Collectors.toList());
+
+        return new UserReviewResponseDto(
+                review.getId(),
+                review.getUser().getId(),
+                review.getReservation().getId(),
+                review.getContent(),
+                review.getScore(),
+                review.getRegDate(),
+                reviewTags,
+                reviewPhotoUrls
+        );
+    }
+
+    public UserReviewReplyResponseDto getReviewReplyByReviewId(Long reviewId) {
+        Optional<ReviewReply> reviewReply = reviewReplyRepository.findOptionalByReviewId(reviewId);
+
+        return reviewReply.map(UserReviewReplyResponseDto::new)
+                .orElse(null);
+    }
 }
+
