@@ -21,9 +21,6 @@ const NotificationToast: React.FC = () => {
                 console.log('토스트 알림 표시:', newNotification);
                 setNotification(newNotification);
                 setOpen(true);
-
-                // 알림 소리 재생 (선택 사항)
-                playNotificationSound();
             }
         };
 
@@ -62,18 +59,6 @@ const NotificationToast: React.FC = () => {
             }
         }
         setOpen(false);
-    };
-
-    // 알림 소리 재생 함수
-    const playNotificationSound = () => {
-        // 간단한 비프음 재생 (선택 사항)
-        try {
-            const audio = new Audio('/notification-sound.mp3'); // 실제 소리 파일 경로로 변경
-            audio.volume = 0.5; // 볼륨 설정
-            audio.play().catch(e => console.log('알림 소리 재생 실패:', e));
-        } catch (e) {
-            console.log('알림 소리 재생 중 오류:', e);
-        }
     };
 
     // 알림 타입에 따른 아이콘 및 색상 설정
