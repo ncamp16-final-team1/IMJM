@@ -415,7 +415,6 @@ public class ChatService {
         if ("USER".equals(senderType)) {
             // 사용자가 발신자인 경우 사용자의 언어 반환
             String userLanguage = chatRoom.getUser().getLanguage();
-            System.out.println("사용자 언어 설정: " + userLanguage);
             return userLanguage != null ? userLanguage : "ko";
         } else {
             // 미용실이 발신자인 경우 한국어로 가정
@@ -430,7 +429,6 @@ public class ChatService {
         } else {
             // 미용실이 발신자인 경우 수신자는 사용자이므로 사용자 언어 반환
             String userLanguage = chatRoom.getUser().getLanguage();
-            System.out.println("수신자 언어 설정: " + userLanguage);
             return userLanguage != null ? userLanguage : "ko";
         }
     }
