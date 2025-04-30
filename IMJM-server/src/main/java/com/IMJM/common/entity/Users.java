@@ -108,5 +108,14 @@ public class Users {
         this.region = null;
         this.isNotification = false;
         this.termsAgreed = false;
+        this.point = 0;
+    }
+
+    public void usePoint(int point) {
+        this.point -= point;
+    }
+
+    public void savePoint(int point) {
+        this.point += point;
     }
 }
