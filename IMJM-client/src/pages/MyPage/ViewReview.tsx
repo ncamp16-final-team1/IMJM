@@ -44,7 +44,7 @@ interface LocationState {
     reservationDate: string;
     reservationTime: string;
     price: number;
-    reservationServiceName: string;
+    serviceName: string;
     stylistName: string;
     salonPhotoUrl: string;
 }
@@ -112,7 +112,7 @@ export default function ViewReview() {
         reservationDate,
         reservationTime,
         price,
-        reservationServiceName,
+        serviceName,
         stylistName,
         salonPhotoUrl,
     } = (location.state as LocationState) || {};
@@ -228,7 +228,7 @@ export default function ViewReview() {
                     fontWeight: 500,
                 }}
                 >
-                {reservationServiceName}
+                {serviceName}
                 </Typography>
                 
                 <Button

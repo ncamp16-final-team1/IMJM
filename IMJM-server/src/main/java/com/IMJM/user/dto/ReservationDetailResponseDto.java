@@ -24,7 +24,6 @@ public class ReservationDetailResponseDto {
     private CouponInfoDto couponInfo;
     private PointUsageDto pointUsage;
 
-    // 내부 클래스 정의
     @Getter
     @Builder
     public static class PaymentInfoDto {

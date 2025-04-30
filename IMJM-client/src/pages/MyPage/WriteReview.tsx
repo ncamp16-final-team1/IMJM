@@ -32,7 +32,7 @@ interface LocationState {
   reservationTime?: string;
   price?: number;
   salonPhotoUrl?: string;
-  reservationServiceName?: string;
+  serviceName?: string;
   stylistName?: string;
 }
 
@@ -44,28 +44,8 @@ interface ReviewData {
   tags: string[];
 }
 
-<<<<<<< HEAD
-export default function WriteReview() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const {
-        salonId,
-        reservationId,
-        salonName,
-        salonScore,
-        reviewCount,
-        salonAddress,
-        reservationDate,
-        reservationTime,
-        price,
-        salonPhotoUrl,
-        serviceName,
-        stylistName,
-    } = (location.state as LocationState) || {};
-=======
 const MAX_IMAGES = 3;
 const MAX_CHARS = 100;
->>>>>>> feat/104-mypage-review-detail
 
 const TAG_OPTIONS = [
   "The staff is kind",
@@ -168,30 +148,11 @@ export default function WriteReview() {
     reservationTime,
     price,
     salonPhotoUrl,
-    reservationServiceName,
+    serviceName,
     stylistName,
   } = (location.state as LocationState) || {};
   
 
-<<<<<<< HEAD
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography
-                    variant="body1"
-                    sx={{
-                        display: 'inline-block',
-                        border: '1px solid',
-                        borderColor: '#FF9080', 
-                        borderRadius: 4,
-                        padding: '8px 12px',
-                        textTransform: 'none',
-                        color: '#FF9080',
-                        fontWeight: 500, 
-                    }}
-                >
-                    {serviceName}
-                </Typography>  
-            </Box>
-=======
   const [rating, setRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -201,7 +162,6 @@ export default function WriteReview() {
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>('');
   const [alertSeverity, setAlertSeverity] = useState<AlertColor>('success');
->>>>>>> feat/104-mypage-review-detail
 
 
   const formatTime = (timeString: string): string => {
@@ -384,7 +344,7 @@ export default function WriteReview() {
             fontWeight: 500, 
           }}
         >
-          {reservationServiceName}
+          {serviceName}
         </Typography>  
       </Box>
 

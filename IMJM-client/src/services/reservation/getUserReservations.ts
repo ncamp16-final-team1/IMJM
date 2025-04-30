@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 export type UserReservations = {
-<<<<<<< HEAD
     salonId: string;
     salonName: string;         
     salonAddress: string;     
@@ -19,22 +18,6 @@ export type UserReservations = {
     isPaid?: boolean; // 선택적으로 추가
     serviceType?: string; // 선택적으로 추가
     paymentMethod?: string; // 선택적으로 추가 
-=======
-	salonId: string;
-	salonName: string;         
-	salonAddress: string;     
-	salonPhotoUrl: string;     
-	salonScore: number;     
-	reviewCount: number;       
-	reservationDate: string;   
-	reservationTime: string;   
-	reservationServiceName: string;
-	price: number;     
-	isReviewed: boolean; 
-	reservationId: number;    
-	reviewId: number;
-	stylistName: string;   
->>>>>>> feat/104-mypage-review-detail
 };
 
 export const getUserReservations = async (): Promise<UserReservations[]> => {

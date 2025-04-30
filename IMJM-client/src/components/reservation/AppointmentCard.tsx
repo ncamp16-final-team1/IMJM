@@ -74,7 +74,11 @@ export default function AppointmentCard({
                     action: () => {
                         // 예약 확인 페이지로 이동
                         console.log(`예약 확인: ${reservationId}`);
-                        // navigate(`/reservation/${reservationId}`);
+                        navigate(`/myPage/ReservationDetail/${reservationId}`,{
+                            state:{
+                                salonPhotoUrl,
+                            }
+                        });
                     }
                 };
             case 'past-no-review':
@@ -118,7 +122,7 @@ export default function AppointmentCard({
                                 reservationDate,
                                 reservationTime,
                                 price,
-                                reservationServiceName,
+                                serviceName,
                                 stylistName,
                                 salonPhotoUrl,
                                 reservationId,

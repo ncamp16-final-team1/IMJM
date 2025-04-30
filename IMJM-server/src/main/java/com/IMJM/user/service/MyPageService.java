@@ -2,6 +2,7 @@ package com.IMJM.user.service;
 
 import com.IMJM.admin.repository.ReservationCouponRepository;
 import com.IMJM.admin.repository.ReviewReplyRepository;
+import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.cloud.NCPObjectStorageService;
 import com.IMJM.common.entity.*;
@@ -50,6 +51,7 @@ public class MyPageService {
     private final PointUsageRepository pointUsageRepository;
     private final ReservationCouponRepository reservationCouponRepository;
     private final ReviewReplyRepository reviewReplyRepository;
+    private final SalonPhotosRepository salonPhotosRepository;
 
 
     @Value("${ncp.bucket-name}")
@@ -73,8 +75,14 @@ public class MyPageService {
         // 리뷰 작성 여부 확인
         boolean hasReview = reviewRepository.existsByReservationId(reservation.getId());
 
-        // 살롱 이미지 URL 조회
-        String salonPhotoUrl = getSalonFirstPhotoUrl(reservation.getStylist().getSalon().getId());
+        // 살롱 첫 번째 사진 URL 조회
+        String salonPhotoUrl = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(
+                        reservation.getStylist().getSalon().getId()
+                )
+                .stream()
+                .findFirst()
+                .map(SalonPhotos::getPhotoUrl)
+                .orElse("기본이미지URL");
 
         return UserReservationResponseDto.builder()
                 .reservationId(reservation.getId())
