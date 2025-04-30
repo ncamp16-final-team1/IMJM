@@ -26,7 +26,6 @@ import ViewReview from './pages/MyPage/ViewReview';
 import UserProfile from './pages/MyPage/UserProfile';
 import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
-import ViewReview from './pages/MyPage/ViewReview';
 import ReservationDetail from './pages/MyPage/ReservationDetail';
 import axios from 'axios';
 
