@@ -36,7 +36,6 @@ interface ChatRoomInfo {
     salonLanguage: string;
 }
 
-// 번역 상태를 관리하기 위한 인터페이스
 interface TranslationState {
     isLoading: boolean;
     text: string | null;
@@ -59,23 +58,13 @@ const ChatRoom: React.FC = () => {
     const navigate = useNavigate();
     const [userId, setUserId] = useState<string>('');
 
-    // WebSocket 연결 및 메시지 수신 설정
     useEffect(() => {
         if (!roomId || !userId) return;
 
-        console.log("메시지 리스너 설정 - 룸ID:", roomId, "유저ID:", userId);
-
-        // 메시지 수신 리스너 등록
         const handleNewMessage = (messageData: ChatMessageDto) => {
-            console.log("새 메시지 수신:", messageData);
 
-            // 현재 채팅방과 관련된 메시지인지 확인
             if (messageData.chatRoomId === Number(roomId)) {
-                console.log("현재 채팅방 메시지 감지됨");
-
-                // 상태 업데이트 함수를 사용하여 메시지 배열 업데이트
                 setMessages(prevMessages => {
-                    // 중복 메시지 확인 로직
                     const isDuplicate = prevMessages.some(msg =>
                         msg.id === messageData.id ||
                         (msg.message === messageData.message &&
@@ -84,7 +73,6 @@ const ChatRoom: React.FC = () => {
                     );
 
                     if (isDuplicate) {
-                        console.log("중복 메시지 감지, 기존 메시지 업데이트");
                         return prevMessages.map(msg =>
                             (msg.id === messageData.id ||
                                 (msg.message === messageData.message &&
@@ -93,50 +81,37 @@ const ChatRoom: React.FC = () => {
                                 ? messageData : msg
                         );
                     } else {
-                        console.log("새 메시지 추가:", messageData);
-                        // 스프레드 연산자를 사용하여 새 배열 생성
                         const newMessages = [...prevMessages, messageData];
-                        console.log("업데이트된 메시지 배열:", newMessages);
                         return newMessages;
                     }
                 });
 
-                // 메시지 읽음 처리 - 본인이 보낸 메시지가 아닌 경우만
                 if (messageData.senderType !== 'USER') {
                     ChatService.markMessagesAsRead(Number(roomId), 'USER')
                         .catch(err => console.error("메시지 읽음 처리 실패:", err));
                 }
             } else {
-                console.log("다른 채팅방 메시지, 무시됨");
             }
         };
 
-        // 리스너 등록
         WebSocketService.addListener('message', handleNewMessage);
-        console.log("메시지 리스너 등록 완료");
 
-        // 컴포넌트 언마운트 시 리스너 제거
         return () => {
-            console.log("메시지 리스너 제거");
             WebSocketService.removeListener('message', handleNewMessage);
         };
     }, [userId, roomId]);
 
-    // 채팅방 정보와 메시지 로드
     useEffect(() => {
         const fetchUserAndChatRoom = async () => {
             try {
                 if (!roomId) return;
 
-                // 현재 로그인된 사용자 정보 가져오기
                 const userResponse = await axios.get('/api/chat/user/current');
                 const currentUserId = userResponse.data.id;
                 setUserId(currentUserId);
 
-                // WebSocket 초기화
                 WebSocketService.initialize(currentUserId);
 
-                // 채팅방 정보 가져오기
                 const roomResponse = await axios.get(`/api/chat/room/${roomId}`);
                 setChatRoom({
                     id: Number(roomId),
@@ -146,16 +121,14 @@ const ChatRoom: React.FC = () => {
                     salonLanguage: roomResponse.data.salonLanguage
                 });
 
-                // 채팅 메시지 로드
                 const chatMessages = await ChatService.getChatMessages(Number(roomId));
                 setMessages(chatMessages);
 
-                // 메시지 읽음 처리
                 await ChatService.markMessagesAsRead(Number(roomId), 'USER');
 
                 setLoading(false);
             } catch (err) {
-                console.error('채팅방 정보를 불러오는데 실패했습니다:', err);
+                navigate('/chat');
                 setLoading(false);
             }
         };
@@ -163,7 +136,6 @@ const ChatRoom: React.FC = () => {
         fetchUserAndChatRoom();
     }, [roomId]);
 
-    // 메시지 스크롤 처리
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -176,12 +148,10 @@ const ChatRoom: React.FC = () => {
         navigate('/chat');
     };
 
-    // 파일 선택 핸들러
     const handleFileSelect = () => {
         fileInputRef.current?.click();
     };
 
-    // 파일 변경 핸들러
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -199,26 +169,21 @@ const ChatRoom: React.FC = () => {
         setSelectedFiles(prev => [...prev, ...newFiles]);
         setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
 
-        // 파일 선택 후 input 값 초기화 (같은 파일 다시 선택 가능하도록)
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
 
-    // 선택한 파일 제거 핸들러
     const removeSelectedFile = (index: number) => {
         URL.revokeObjectURL(previewUrls[index]); // 메모리 누수 방지
         setSelectedFiles(prev => prev.filter((_, i) => i !== index));
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
 
-    // 번역 요청 및 토글 함수
     const handleTranslateRequest = async (message: ChatMessageDto) => {
         const messageId = message.id;
 
-        // 이미 번역이 로드되었으면 토글 수행
         if (translations[messageId] && !translations[messageId].isLoading) {
-            // 이미 번역이 표시되어 있으면 제거
             if (!translations[messageId].error && translations[messageId].text) {
                 setTranslations(prev => {
                     const newTranslations = { ...prev };
@@ -228,9 +193,7 @@ const ChatRoom: React.FC = () => {
                 return;
             }
 
-            // 에러가 있으면 다시 시도
             if (translations[messageId].error) {
-                // 로딩 상태로 설정
                 setTranslations(prev => ({
                     ...prev,
                     [messageId]: { isLoading: true, text: null, error: null }
@@ -245,7 +208,6 @@ const ChatRoom: React.FC = () => {
             return;
         }
 
-        // 로딩 상태로 설정
         setTranslations(prev => ({
             ...prev,
             [messageId]: { isLoading: true, text: null, error: null }
@@ -262,7 +224,6 @@ const ChatRoom: React.FC = () => {
         }
     };
 
-    // 실제 번역 요청을 수행하는 함수
     const requestTranslation = async (message: ChatMessageDto) => {
         if (!chatRoom) return;
 
@@ -296,15 +257,12 @@ const ChatRoom: React.FC = () => {
         setLoading(true); // 메시지 전송 중 로딩 상태 설정
 
         try {
-            // 사진이 있는 경우 먼저 업로드
             let photoAttachments: ChatPhoto[] = [];
 
             if (selectedFiles.length > 0) {
                 try {
-                    // 여러 이미지를 개별적으로 업로드
                     const uploadResults = await FileUploadService.uploadMultipleImages(selectedFiles, chatRoom.id);
 
-                    // 업로드 결과를 ChatPhoto 형식으로 변환
                     photoAttachments = uploadResults.map((result, index) => ({
                         photoId: Date.now() + index, // 고유 ID 생성
                         photoUrl: result.fileUrl
@@ -317,7 +275,6 @@ const ChatRoom: React.FC = () => {
                 }
             }
 
-            // 임시 메시지 객체 생성 (UI에 즉시 표시용)
             const tempMessage: ChatMessageDto = {
                 id: Date.now(), // 임시 ID
                 chatRoomId: chatRoom.id,
@@ -331,17 +288,13 @@ const ChatRoom: React.FC = () => {
                 photos: photoAttachments
             };
 
-            // 메시지를 즉시 UI에 추가
             setMessages(prev => [...prev, tempMessage]);
 
-            // 입력 필드 및 선택된 파일 초기화
             setNewMessage('');
             setSelectedFiles([]);
             previewUrls.forEach(url => URL.revokeObjectURL(url));
             setPreviewUrls([]);
 
-            // WebSocket만 통해 메시지 전송 - 여기서 중복 발송하지 않도록 주의
-            // ChatService.sendMessage()와 같은 REST API 호출이 있다면 제거
             const response = await WebSocketService.sendMessageWithPhotos(
                 chatRoom.id,
                 tempMessage.message,
@@ -351,8 +304,6 @@ const ChatRoom: React.FC = () => {
 
             console.log("메시지 전송 응답:", response);
 
-            // 서버 응답을 받았을 때만 임시 메시지를 업데이트 (선택 사항)
-            // 서버에서 제대로 된 응답을 받지 못하더라도 UI에는 이미 표시됨
             if (response && response.id && response.id !== tempMessage.id) {
                 setMessages(prev =>
                     prev.map(msg =>
