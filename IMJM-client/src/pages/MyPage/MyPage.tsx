@@ -5,7 +5,7 @@ import { useState } from "react";
 
 
 const menuItems = [
-  { label: "My Profile", path: "/profile" },
+  { label: "My Profile", path: "/my/profile" },
   { label: "Point", path: "/point", right: "10,000 P" },
   { label: "Appointment history", path: "/myPage/appointments" },
   { label: "My Review", path: "/myPage/reviews" },
