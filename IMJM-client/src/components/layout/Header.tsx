@@ -23,7 +23,7 @@ function Header(): React.ReactElement {
     // 알림 팝오버 상태
     const isNotificationOpen = Boolean(notificationAnchorEl);
 
-    // 로그인 상태 확인
+    // 로그인 상태 확인 및 초기 unreadCount 설정
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
@@ -44,46 +44,67 @@ function Header(): React.ReactElement {
     const fetchUnreadCount = async () => {
         try {
             const count = await NotificationService.getUnreadCount();
+            console.log('읽지 않은 알림 수 가져옴:', count);
             setUnreadCount(count);
-            console.log('읽지 않은 알림 수:', count);
         } catch (error) {
             console.error('읽지 않은 알림 수 조회 실패:', error);
         }
     };
 
-    // 알림 이벤트 구독
+    // 알림 관련 이벤트 구독
     useEffect(() => {
         if (isLoggedIn) {
-            // 카운트 변경 이벤트 구독
-            const handleCountChange = (count: number) => {
-                console.log('알림 카운트 변경:', count);
-                setUnreadCount(count);
-            };
-
-            // 새 알림 이벤트 구독 (이전 방식과의 호환성)
+            // 새 알림이 왔을 때 카운트 증가
             const handleNewNotification = () => {
-                fetchUnreadCount(); // 새 알림이 오면 카운트 다시 가져오기
+                console.log('새 알림 발생, 카운트 증가');
+                setUnreadCount(prev => prev + 1);
             };
 
-            // 이벤트 리스너 등록
-            try {
-                NotificationService.addEventListener('countChange', handleCountChange);
-                NotificationService.addListener(handleNewNotification);
-            } catch (error) {
-                console.error('알림 이벤트 구독 실패:', error);
-            }
+            // 알림을 읽었을 때 카운트 감소 (NotificationList에서 알림을 읽을 때 발생)
+            const handleReadNotification = () => {
+                console.log('알림 읽음 처리됨, unreadCount 업데이트');
+                fetchUnreadCount(); // 가장 정확한 개수를 가져오기 위해 서버에 다시 요청
+            };
 
-            return () => {
-                // 컴포넌트 언마운트 시 이벤트 리스너 제거
-                try {
-                    NotificationService.removeEventListener('countChange', handleCountChange);
-                    NotificationService.removeListener(handleNewNotification);
-                } catch (error) {
-                    console.error('알림 이벤트 구독 해제 실패:', error);
+            // 알림창이 닫힐 때 unreadCount 새로고침
+            const handlePopoverClose = () => {
+                if (notificationAnchorEl !== null) {
+                    console.log('알림창 닫힘, unreadCount 업데이트');
+                    fetchUnreadCount();
                 }
             };
+
+            // 주기적으로 업데이트 (선택 사항, 60초마다)
+            const intervalId = setInterval(() => {
+                if (!isNotificationOpen) { // 알림창이 열려있지 않을 때만 업데이트
+                    fetchUnreadCount();
+                }
+            }, 60000);
+
+            // 이벤트 리스너 등록
+            NotificationService.addListener(handleNewNotification);
+
+            // readNotification 이벤트를 지원하는 경우
+            if (typeof NotificationService.addEventListener === 'function') {
+                NotificationService.addEventListener('readNotification', handleReadNotification);
+            }
+
+            // 페이지 포커스될 때마다 카운트 업데이트
+            window.addEventListener('focus', fetchUnreadCount);
+
+            return () => {
+                NotificationService.removeListener(handleNewNotification);
+
+                // 이벤트 리스너 제거 (지원하는 경우)
+                if (typeof NotificationService.removeEventListener === 'function') {
+                    NotificationService.removeEventListener('readNotification', handleReadNotification);
+                }
+
+                window.removeEventListener('focus', fetchUnreadCount);
+                clearInterval(intervalId);
+            };
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, notificationAnchorEl, isNotificationOpen]);
 
     const handleLanguageChange = (event: SelectChangeEvent<Language>): void => {
         setLanguage(event.target.value as Language);
@@ -101,6 +122,7 @@ function Header(): React.ReactElement {
 
     // 알림 닫기 핸들러
     const handleNotificationClose = () => {
+        fetchUnreadCount(); // 닫을 때 카운트 업데이트
         setNotificationAnchorEl(null);
     };
 
@@ -174,9 +196,12 @@ function Header(): React.ReactElement {
                                 horizontal: 'right',
                             }}
                             sx={{ mt: 1 }}
+                            // onEntered와 onExited 이벤트 활용
+                            onEntered={() => console.log('알림창 열림')}
+                            onExited={handleNotificationClose}
                         >
                             <Box sx={{ width: { xs: 320, sm: 360 }, maxHeight: 400 }}>
-                                <NotificationList />
+                                <NotificationList onNotificationRead={fetchUnreadCount} />
                             </Box>
                         </Popover>
                     </div>

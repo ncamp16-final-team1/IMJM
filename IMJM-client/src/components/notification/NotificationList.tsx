@@ -17,7 +17,11 @@ import InfoIcon from '@mui/icons-material/Info';
 import NotificationService, { AlarmDto } from '../../services/notification/NotificationService';
 import { useNavigate } from 'react-router-dom';
 
-const NotificationList: React.FC = () => {
+interface NotificationListProps {
+    onNotificationRead?: () => void;
+}
+
+const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead }) => {
     const [notifications, setNotifications] = useState<AlarmDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
@@ -69,6 +73,11 @@ const NotificationList: React.FC = () => {
                 setNotifications(notifications.map(n =>
                     n.id === notification.id ? { ...n, read: true } : n
                 ));
+
+                // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달
+                if (onNotificationRead) {
+                    onNotificationRead();
+                }
             }
 
             // 알림 타입에 따라 다른 페이지로 이동
@@ -88,6 +97,11 @@ const NotificationList: React.FC = () => {
         try {
             await NotificationService.markAllAsRead();
             setNotifications(notifications.map(n => ({ ...n, read: true })));
+
+            // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달
+            if (onNotificationRead) {
+                onNotificationRead();
+            }
         } catch (error) {
             console.error('모든 알림 읽음 처리 실패:', error);
         }
