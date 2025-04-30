@@ -186,8 +186,7 @@ public class ChatController {
 
     @DeleteMapping("/room/{chatRoomId}")
     public ResponseEntity<?> deleteChatRoom(
-            @PathVariable Long chatRoomId,
-            @AuthenticationPrincipal CustomOAuth2UserDto userDetails
+            @PathVariable Long chatRoomId
     ) {
         chatService.deleteChatRoom(chatRoomId);
         return ResponseEntity.ok().build();
