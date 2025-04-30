@@ -8,6 +8,8 @@ import java.util.List;
 
 @Repository
 public interface PointUsageRepository extends JpaRepository<PointUsage, Long> {
+
+    boolean existsByUserIdAndContent(String userId, String content);
     // 예약상세조회
     List<PointUsage> findByUserId(String userId);
 }

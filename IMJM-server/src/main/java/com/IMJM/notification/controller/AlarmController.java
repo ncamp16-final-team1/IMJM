@@ -43,22 +43,4 @@ public class AlarmController {
         alarmService.markAsRead(id);
         return ResponseEntity.ok().build();
     }
-
-    // 테스트용 엔드포인트 (나중에 제거 가능)
-    @PostMapping("/test")
-    public ResponseEntity<AlarmDto> createTestAlarm(
-            @AuthenticationPrincipal CustomOAuth2UserDto userDetails,
-            @RequestBody Map<String, String> payload) {
-
-        String userId = userDetails.getId();
-        String title = payload.getOrDefault("title", "테스트 알림");
-        String content = payload.getOrDefault("content", "이것은 테스트 알림입니다.");
-        String type = payload.getOrDefault("type", "TEST");
-
-        AlarmDto createdAlarm = alarmService.createAlarm(
-                userId, title, content, type, null
-        );
-
-        return ResponseEntity.ok(createdAlarm);
-    }
 }

@@ -53,8 +53,6 @@ public class AlarmService {
                 alarmDto
         );
 
-        log.info("Created alarm for user {}: {}", userId, alarm.getTitle());
-
         return alarmDto;
     }
 
@@ -73,8 +71,6 @@ public class AlarmService {
 
         alarm.setIsRead(true);
         alarmRepository.save(alarm);
-
-        log.info("Marked alarm as read: {}", alarmId);
     }
 
     @Transactional(readOnly = true)

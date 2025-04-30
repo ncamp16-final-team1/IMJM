@@ -41,10 +41,6 @@ public class ChatController {
         // 메시지 처리 및 저장
         ChatMessageDto processedMessage = chatService.sendMessage(chatMessageDto);
 
-        // 디버깅 로그 추가
-        System.out.println("WebSocket 메시지 수신: " + chatMessageDto.getMessage());
-        System.out.println("발신자: " + chatMessageDto.getSenderType() + ", ID: " + chatMessageDto.getSenderId());
-
         // 발신자에게 메시지 전송 (본인 확인용)
         messagingTemplate.convertAndSendToUser(
                 processedMessage.getSenderId(),
@@ -61,8 +57,6 @@ public class ChatController {
             // 미용실이 보낸 메시지는 사용자에게 전송
             recipientId = chatService.getUserIdFromChatRoom(processedMessage.getChatRoomId());
         }
-
-        System.out.println("수신자 ID: " + recipientId);
 
         // 수신자에게 메시지 전송
         messagingTemplate.convertAndSendToUser(

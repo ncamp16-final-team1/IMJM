@@ -1,23 +1,27 @@
 import { Box, Button, Divider, List, ListItemButton, Typography, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
 import { ChevronRight } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-
-
-const menuItems = [
-  { label: "My Profile", path: "/profile" },
-  { label: "Point", path: "/point", right: "10,000 P" },
-  { label: "Appointment history", path: "/my/appointments" },
-  { label: "My Review", path: "/my/reviews" },
-  { label: "My Acahive", path: "/my/acahive" },
-  { label: "My Community", path: "/my/community" },
-  { label: "Announcement", path: "/my/announcements" },
-  { label: "Logout", path: "/logout", isLogout: true },
-];
+import { useEffect, useState } from "react";
 
 export default function MyPage() {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
+  const [point, setPoint] = useState<number | null>(null);
+
+  const menuItems = [
+    { label: "My Profile", path: "/my/profile" },
+    {
+      label: "Point",
+      path: "/point",
+      right: point !== null ? `${point.toLocaleString()} P` : "Loading...",
+    },
+    { label: "Appointment history", path: "/my/appointments" },
+    { label: "My Review", path: "/my/reviews" },
+    { label: "My Acahive", path: "/my/acahive" },
+    { label: "My Community", path: "/my/community" },
+    { label: "Announcement", path: "/my/announcements" },
+    { label: "Logout", path: "/logout", isLogout: true },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -58,6 +62,27 @@ export default function MyPage() {
     }
   };
 
+  useEffect(() => {
+    const fetchPoint = async () => {
+      try {
+        const res = await fetch("/api/user/my-point", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPoint(data);
+        } else {
+          console.error("Failed to fetch point");
+        }
+      } catch (err) {
+        console.error("Error fetching point", err);
+      }
+    };
+
+    fetchPoint();
+  }, []);
+  
   return (
     <Box p={2} pt={4}>
       <List>
