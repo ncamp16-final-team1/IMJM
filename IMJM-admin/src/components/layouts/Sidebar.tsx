@@ -24,12 +24,12 @@ function Sidebar({ setIsAuthenticated }) {
 
     const menuItems = [
         { title: '대시보드', path: '/' },
-        { title: '예약관리', path: '/Reservation' },
-        { title: '미용실 정보 관리', path: '/Salon' },
-        { title: '고객 관리', path: '/Customer' },
-        { title: '채팅', path: '/Chat' },
-        { title: '리뷰 관리', path: '/Review' },
-        { title: '이벤트 관리', path: '/Event' },
+        { title: '예약관리', path: '/reservation' },
+        { title: '미용실 정보 관리', path: '/salon' },
+        { title: '고객 관리', path: '/customer' },
+        { title: '채팅', path: '/chat' },
+        { title: '리뷰 관리', path: '/review' },
+        { title: '이벤트 관리', path: '/event' },
         { title: '로그아웃', path: null }
     ];
 

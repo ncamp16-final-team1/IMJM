@@ -37,6 +37,7 @@ public class AdminReviewService {
                         .reviewId(review.getId())
                         .regDate(review.getRegDate())
                         .userName(review.getUser().getLastName() + " " + review.getUser().getFirstName())
+                        .nickName(review.getUser().getNickname())
                         .answered(review.getReviewReply() != null)
                         .build())
                 .collect(Collectors.toList());
