@@ -2,6 +2,7 @@ package com.IMJM.admin.service;
 
 import com.IMJM.admin.dto.AdminReservationDto;
 import com.IMJM.admin.dto.AdminReservationDto.*;
+import com.IMJM.admin.dto.DayCountDto;
 import com.IMJM.reservation.repository.PaymentRepository;
 import com.IMJM.common.entity.Payment;
 import com.IMJM.common.entity.Reservation;
@@ -12,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,6 +56,50 @@ public class AdminReservationService {
                 adminReservationUpdateDto.getReservationDate(),
                 adminReservationUpdateDto.getReservationTime()
         );
+    }
+
+    public Map<String, Long> getWeeklyReservationStats(String salonId) {
+        System.out.println(salonId);
+        LocalDate endDate = LocalDate.now();
+        System.out.println(endDate);
+        List<DayCountDto> result = reservationRepository.countReservationsByDayOfWeekBetween(
+                salonId, endDate.minusDays(6), endDate);
+
+        System.out.println(result);
+        // 0:일 ~ 6:토 → 한글 요일 매핑
+        String[] dayNames = {"일", "월", "화", "수", "목", "금", "토"};
+        Map<String, Long> dayCounts = new LinkedHashMap<>();
+        for (String day : dayNames) {
+            dayCounts.put(day, 0L);
+        }
+
+        for (DayCountDto dto : result) {
+            int dayIndex = dto.getDayOfWeek(); // 0~6
+            String day = dayNames[dayIndex];
+            dayCounts.put(day, dto.getCount());
+        }
+
+        return dayCounts;
+    }
+
+    public Map<String, Long> getMonthlyReservationStats(String salonId) {
+        LocalDate endDate = LocalDate.now();
+        List<DayCountDto> result = reservationRepository.countReservationsByDayOfWeekBetween(
+                salonId, endDate.minusDays(27), endDate);
+
+        String[] dayNames = {"일", "월", "화", "수", "목", "금", "토"};
+        Map<String, Long> dayCounts = new LinkedHashMap<>();
+        for (String day : dayNames) {
+            dayCounts.put(day, 0L);
+        }
+
+        for (DayCountDto dto : result) {
+            int dayIndex = dto.getDayOfWeek();
+            String day = dayNames[dayIndex];
+            dayCounts.put(day, Math.round(dto.getCount() / 4.0)); // 4주 평균
+        }
+
+        return dayCounts;
     }
 
 }

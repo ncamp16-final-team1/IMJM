@@ -61,12 +61,12 @@ function AppRouter() {
                 isAuthenticated ? <Layout setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />
             }>
                 <Route index element={<Dashboard />} />
-                <Route path="Reservation" element={<Reservation />} />
-                <Route path="Salon" element={<Salon />} />
-                <Route path="Customer" element={<Customer />} />
+                <Route path="reservation" element={<Reservation />} />
+                <Route path="salon" element={<Salon />} />
+                <Route path="customer" element={<Customer />} />
                 <Route path="chat/*" element={<AdminChat />} />
-                <Route path="Review" element={<Review />} />
-                <Route path="Event" element={<Event />} />
+                <Route path="review" element={<Review />} />
+                <Route path="event" element={<Event />} />
             </Route>
         </Routes>
     );

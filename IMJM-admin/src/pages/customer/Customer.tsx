@@ -125,7 +125,7 @@ const Customer = () => {
                         <TableBody>
                             {filteredCustomers.map(c => (
                                 <TableRow key={`${c.userId}-${c.reservationDate}`} hover onClick={() => setSelectedCustomer(c)} style={{ cursor: "pointer" }}>
-                                    <TableCell>{c.userName}</TableCell>
+                                    <TableCell>{c.userName} ({c.nickName})</TableCell>
                                     <TableCell>{c.reservationDate}</TableCell>
                                 </TableRow>
                             ))}
@@ -142,7 +142,7 @@ const Customer = () => {
                             <TableBody>
                                 <TableRow>
                                     <TableCell sx={{ width: 100 }}><b>이름</b></TableCell>
-                                    <TableCell>{selectedCustomer?.userName ?? "-"}</TableCell>
+                                    <TableCell>{selectedCustomer?.userName ?? "-"} ({selectedCustomer?.nickName ?? "-"})</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell sx={{ width: 100 }}><b>디자인</b></TableCell>
@@ -193,7 +193,7 @@ const Customer = () => {
                                     const lastDate = customers.find(c => c.userId === item.userId)?.reservationDate ?? "-";
                                     return (
                                         <TableRow key={`black-${item.userId}`}>
-                                            <TableCell>{item.userName}</TableCell>
+                                            <TableCell>{item.userName} ({item.nickName})</TableCell>
                                             <TableCell>{item.reason}</TableCell>
                                             <TableCell>{lastDate}</TableCell>
                                         </TableRow>

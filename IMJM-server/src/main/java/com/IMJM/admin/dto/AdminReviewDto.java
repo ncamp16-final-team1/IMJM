@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AdminReviewDto {
     private Long reviewId;
+    private String nickName;
     private String userName;
     private LocalDateTime regDate;
     private Boolean answered;

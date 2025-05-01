@@ -14,6 +14,7 @@ import java.util.List;
 public class ReviewDetailDto {
     private Long id;
     private String userName;        // 고객 이름
+    private String nickName;
     private String stylistName;         // 스타일리스트 이름
     private LocalDate visitDate;        // 방문일
     private LocalTime visitTime;        // 방문 시간
