@@ -43,4 +43,12 @@ public class AlarmController {
         alarmService.markAsRead(id);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/read-all")
+    public ResponseEntity<Void> markAllAsRead(
+            @AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        String userId = userDetails.getId();
+        alarmService.markAllAsRead(userId);
+        return ResponseEntity.ok().build();
+    }
 }
