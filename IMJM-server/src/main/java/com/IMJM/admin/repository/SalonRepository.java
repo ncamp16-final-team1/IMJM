@@ -22,7 +22,7 @@ public interface SalonRepository extends JpaRepository<Salon, String> {
            "(6371 * acos(cos(radians(:latitude)) * cos(radians(s.latitude)) * " +
            "cos(radians(s.longitude) - radians(:longitude)) + " +
            "sin(radians(:latitude)) * sin(radians(s.latitude)))) AS distance " +
-           "FROM imjm.salon s" +
+           "FROM salon s" +
            ") AS salon_with_distance " +
            "WHERE distance <= :radius " +
            "ORDER BY distance",

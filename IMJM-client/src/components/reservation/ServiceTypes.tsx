@@ -52,7 +52,6 @@ const ServiceTypes = ({
                 height: '28px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 border: '1px solid #f8bbd0',
                 cursor: 'pointer',
                 ml: 0.5,
@@ -114,11 +113,16 @@ const ServiceTypes = ({
                     backgroundColor: selectedType === type ? '#FDC7BF' : 'white',
                     color: selectedType === type ? 'white' : '#F06292',
                     borderColor: '#F06292',
+                    boxShadow: 'none', 
                     '&:hover': {
                       backgroundColor: selectedType === type ? '#FDE4D0' : '#FEE5EC',
                       borderColor: '#E91E63',
+                      boxShadow: 'none', 
                     },
-                    pointerEvents: 'auto', 
+                    pointerEvents: 'auto',
+                    '&.Mui-disabled': {
+                      boxShadow: 'none', 
+                    },
                   }}
                 >
                   {type}
@@ -144,7 +148,6 @@ const ServiceTypes = ({
                 height: '28px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 border: '1px solid #f8bbd0',
                 cursor: 'pointer',
                 mr: 0.5,
