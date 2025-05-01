@@ -115,7 +115,6 @@ public class ReservationStylistService {
                 .collect(Collectors.toList());
     }
 
-    // 쿠폰 정보를 가져오는 메소드
     public List<SalonCouponDto> getCoupons(String salonId, int totalAmount, String userId) {
         log.info("쿠폰 조회 파라미터 - salonId: {}, totalAmount: {}, userId: {}", salonId, totalAmount, userId);
         List<Coupon> coupons = couponRepository.findBySalonId(salonId);
@@ -160,7 +159,6 @@ public class ReservationStylistService {
         return couponDtos;
     }
 
-    // 유저의 사용가능한 포인트 조회
     public UserPointDto getUserPoint(String userId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(userId));
@@ -168,7 +166,6 @@ public class ReservationStylistService {
     }
 
 
-    // 예약처리..
     @Transactional
     public ReservationRequestDto completeReservation(ReservationRequestDto request, String userId) {
         log.info("예약 완료 처리 시작: {}", request);
@@ -199,7 +196,7 @@ public class ReservationStylistService {
             PointUsage rewardLog = PointUsage.builder()
                     .user(user)
                     .usageType("SAVE")
-                    .price(rewardPoint)  // 포인트 부여 시 양수
+                    .price(rewardPoint)
                     .useDate(LocalDateTime.now())
                     .content(stylist.getSalon().getName() + " 예약 포인트")
                     .build();
@@ -215,8 +212,7 @@ public class ReservationStylistService {
             if (request.getPaymentRequest().getCouponData() != null) {
                 processCouponUsage(request, savedReservation);
             }
-
-            // 예약 처리가 완료된 후 채팅방 생성
+            
             String salonId = stylist.getSalon().getId();
             log.info("예약 완료 후 채팅방 생성 시작 - 사용자: {}, 미용실: {}", userId, salonId);
 

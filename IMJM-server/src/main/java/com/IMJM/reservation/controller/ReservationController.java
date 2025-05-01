@@ -34,7 +34,6 @@ public class ReservationController {
                 : ResponseEntity.ok(stylists);
     }
 
-    // 예약가능한
     @GetMapping("/reservation/{stylistId}")
     public ResponseEntity<?> getStylistDetailAndHoliday(@PathVariable Long stylistId) {
         try {
