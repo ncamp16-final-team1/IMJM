@@ -114,12 +114,7 @@ const ChatList: React.FC = () => {
                                                     {room.salonName}
                                                 </Typography>
                                                 {room.unreadCount > 0 && (
-                                                    <Box
-                                                        className={styles.unreadBadge}
-                                                        sx={{
-                                                            ml: 1,
-                                                        }}
-                                                    >
+                                                    <Box className={styles.unreadBadge}>
                                                         {room.unreadCount}
                                                     </Box>
                                                 )}
