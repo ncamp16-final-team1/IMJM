@@ -1,6 +1,6 @@
 package com.IMJM.salon.service;
 
-import com.IMJM.common.PageResponseDto;
+import com.IMJM.common.page.PageResponseDto;
 import com.IMJM.common.entity.Review;
 import com.IMJM.salon.dto.ReviewDto;
 import com.IMJM.salon.repository.ReviewRepository;
@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
