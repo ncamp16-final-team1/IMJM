@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Menu } from '../../type/reservation/reservation';
@@ -21,17 +20,14 @@ export const useServiceTypes = () => {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
 
-
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-
-  
+    
     setShowLeftArrow(container.scrollLeft > 0);
 
     const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
     setShowRightArrow(!isAtEnd);
   };
-
 
   const fetchServiceTypes = async (salonId: string | undefined) => {
     if (!salonId) {
@@ -56,7 +52,6 @@ export const useServiceTypes = () => {
     }
   };
 
-
   const handleTypeChange = (type: string) => {
     if (selectedType === type) {
       setSelectedType(null);
@@ -68,19 +63,16 @@ export const useServiceTypes = () => {
       setSelectedMenu(null);
       setSelectedMenuName(null);
       
-
       const filteredMenus = allServiceMenus.filter(menu => 
         menu.serviceType === type || 
         (menu.serviceType && menu.serviceType.toLowerCase() === type.toLowerCase())
       );
       
-
       if (filteredMenus.length > 0) {
         setServiceMenus(filteredMenus);
       }
     }
   };
-
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!sliderRef.current) return;
@@ -98,6 +90,9 @@ export const useServiceTypes = () => {
     const x = e.pageX - sliderRef.current.offsetLeft;
     const walk = (x - startX) * 2; 
     sliderRef.current.scrollLeft = scrollLeft - walk;
+    
+    // 스크롤 위치에 따라 화살표 업데이트
+    updateArrows();
   };
 
   const handleMouseUpOrLeave = () => {
@@ -106,7 +101,6 @@ export const useServiceTypes = () => {
       sliderRef.current.style.cursor = 'grab';
     }
   };
-
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!sliderRef.current) return;
@@ -122,8 +116,19 @@ export const useServiceTypes = () => {
     const x = e.touches[0].pageX - sliderRef.current.offsetLeft;
     const walk = (x - startX) * 2;
     sliderRef.current.scrollLeft = scrollLeft - walk;
+    
+    updateArrows();
   };
 
+  const updateArrows = () => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    
+    setShowLeftArrow(slider.scrollLeft > 0);
+    
+    const isAtEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 5;
+    setShowRightArrow(!isAtEnd);
+  };
 
   const handleArrowClick = (direction: 'left' | 'right') => {
     if (!sliderRef.current) return;
@@ -133,8 +138,11 @@ export const useServiceTypes = () => {
       left: scrollAmount,
       behavior: 'smooth'
     });
+    
+    setTimeout(() => {
+      updateArrows();
+    }, 300); 
   };
-
 
   useEffect(() => {
     const slider = sliderRef.current;
@@ -146,6 +154,28 @@ export const useServiceTypes = () => {
       };
     }
   }, []);
+
+  useEffect(() => {
+    const checkArrows = () => {
+      updateArrows();
+    };
+    
+    checkArrows(); 
+    
+    window.addEventListener('resize', checkArrows);
+    
+    return () => {
+      window.removeEventListener('resize', checkArrows);
+    };
+  }, [serviceTypes]);
+
+  useEffect(() => {
+    if (!isMenuLoading && serviceTypes.length > 0) {
+      setTimeout(() => {
+        updateArrows();
+      }, 100);
+    }
+  }, [isMenuLoading, serviceTypes]);
 
   return {
     showServiceType,

@@ -14,7 +14,7 @@ import ServiceMenus from '../../components/reservation/ServiceMenus';
 import { useStylistSchedule } from '../../hooks/reservation/useStylistSchedule';
 import { useTimeSlots } from '../../hooks/reservation/useTimeSlots';
 import { useServiceTypes } from '../../hooks/reservation/useServiceTypes';
-import { useReservation } from '../../hooks/reservation/useDispatch';
+import { useReservation } from '../../hooks/reservation/useReservation';
 
 import { isHoliday, isAM } from '../../utils/reservation/dateUtils';
 
@@ -69,7 +69,6 @@ const Reservation = () => {
     handleArrowClick
   } = useServiceTypes();
 
-  // useReservation 훅 호출
   const {
     selectedDate,
     reservationInfo,
@@ -77,14 +76,11 @@ const Reservation = () => {
     handleMenuSelect: baseHandleMenuSelect,
   } = useReservation();
 
-  // salonName 업데이트 로직
   useEffect(() => {
-    // 네비게이션에서 받은 salonName이 있으면 그것을 사용
     if (salonNameFromNavigation) {
       setSalonName(salonNameFromNavigation);
 
     } 
-    // 스타일리스트 스케줄에서 살롱 이름을 가져올 수 있으면 사용
     else if (stylistSchedule?.salonName && !salonName) {
       setSalonName(stylistSchedule.salonName);
 
@@ -114,8 +110,6 @@ const Reservation = () => {
         setShowServiceType(true);
         setSelectedType(null); 
         setServiceMenus([]); 
-
-        // salonId를 명시적으로 사용
         const currentSalonId = stylistSchedule?.salonId || salonId;
         if (currentSalonId) {
           fetchServiceTypes(currentSalonId);
@@ -156,20 +150,19 @@ const Reservation = () => {
       setSelectedMenuObj(menu); 
     }
 
-    // 현재 가지고 있는 salonName 사용
     const currentSalonId = stylistSchedule?.salonId || salonId || '';
     
     baseHandleMenuSelect(
       currentSalonId,
-      menu,
+      salonName,
+      menu, 
       stylistSchedule?.stylistId || null,
       stylistSchedule?.name || '',
       selectedDate,
       selectedTime,
       selectedType,
-      setSelectedMenuName,
-      salonName // salonName을 추가로 전달
-    );
+      setSelectedMenuName
+  );
   };
 
   // 초기 데이터 로딩
