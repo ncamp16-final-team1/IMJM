@@ -82,6 +82,7 @@ interface Review {
     reservation_id: number;
     photos?: ReviewPhoto[];
     user_nickname?: string;
+
 }
 
 interface ServiceMenu {
@@ -170,7 +171,7 @@ function SalonDetail() {
                         content: review.content,
                         review_tag: review.reviewTag,
                         reservation_id: review.reservationId,
-                        user_nickname: '사용자',
+                        user_nickname: review.userNickname,
                         photos: review.photos || []
                     };
                 }));
@@ -635,9 +636,6 @@ function SalonDetail() {
                 <div className="info-header reviews-header">
                     <StarIcon/>
                     <h2>리뷰</h2>
-                    <Link to={`/reviews/${salon.id}`} className="view-all-link">
-                        모두보기 <KeyboardArrowRightIcon/>
-                    </Link>
                 </div>
                 <div className="reviews-list">
                     {reviews.length > 0 ? (

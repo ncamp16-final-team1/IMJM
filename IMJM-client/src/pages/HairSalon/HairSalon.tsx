@@ -648,7 +648,7 @@ function HairSalon() {
                                 <h2>{salon.name}</h2>
                                 <div className="salon-business-hours">
                                     {salon.start_time && salon.end_time ? (
-                                        <p>영업시간: {salon.start_time} - {salon.end_time}</p>
+                                        <p>영업시간: {salon.start_time.slice(0, 5)} - {salon.end_time.slice(0, 5)}</p>
                                     ) : (
                                         <p>영업시간 정보가 없습니다.</p>
                                     )}
