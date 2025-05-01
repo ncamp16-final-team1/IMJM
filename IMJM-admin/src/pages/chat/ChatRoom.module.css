@@ -72,6 +72,7 @@
 .messageText {
     font-size: 14px;
     line-height: 1.4;
+    white-space: pre-line;
 }
 
 .messageTime {
@@ -152,4 +153,11 @@
     height: 20px !important;
     font-size: 12px !important;
     padding: 0 !important;
+}
+
+.translatedMessage {
+    color: #666;
+    font-style: italic;
+    white-space: pre-line;
+    border-top: 1px dashed #666;
 }
