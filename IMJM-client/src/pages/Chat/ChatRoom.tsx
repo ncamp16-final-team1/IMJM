@@ -9,12 +9,7 @@ import {
     Paper,
     InputAdornment,
     CircularProgress,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText,
-    DialogActions
+    Button
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
@@ -23,6 +18,10 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Box from '@mui/material/Box';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import styles from './ChatRoom.module.css';
 import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
 import WebSocketService from '../../services/chat/WebSocketService';
@@ -58,13 +57,6 @@ const ChatRoom: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const [userId, setUserId] = useState<string>('');
-    const [errorModal, setErrorModal] = useState<{
-        open: boolean;
-        message: string;
-    }>({
-        open: false,
-        message: ''
-    });
 
     useEffect(() => {
         if (!roomId || !userId) return;
@@ -320,18 +312,9 @@ const ChatRoom: React.FC = () => {
                 );
             }
 
-        } catch (error: any) {
+        } catch (error) {
             console.error('메시지 전송 실패:', error);
-
-            if (error.message === '존재하지 않는 채팅방입니다.') {
-                // 채팅방 없음 에러 처리
-                setErrorModal({
-                    open: true,
-                    message: error.message
-                });
-            } else {
-                alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
-            }
+            alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
         } finally {
             setLoading(false);
         }
