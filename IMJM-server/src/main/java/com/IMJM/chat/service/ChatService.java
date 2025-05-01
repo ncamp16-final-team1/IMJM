@@ -3,6 +3,7 @@ package com.IMJM.chat.service;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
+import com.IMJM.chat.exception.ChatRoomNotFountException;
 import com.IMJM.chat.exception.TranslationException;
 import com.IMJM.chat.repository.*;
 import com.IMJM.common.cloud.StorageService;
@@ -93,9 +94,9 @@ public class ChatService {
     // 메시지 저장 및 전송
     @Transactional
     public ChatMessageDto sendMessage(ChatMessageDto messageDto) {
-        // 채팅방 조회
+        // 채팅방 존재 여부 확인
         ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatRoomId())
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+                .orElseThrow(() -> new ChatRoomNotFountException("채팅방을 찾을 수 없습니다."));
 
         // 번역 처리
         TranslationResult translationResult = translateMessageIfNeeded(messageDto.getMessage(), chatRoom, messageDto.getSenderType());
