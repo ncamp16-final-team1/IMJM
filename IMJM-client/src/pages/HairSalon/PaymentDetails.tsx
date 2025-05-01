@@ -21,7 +21,6 @@ import GooglePay from "../../assets/images/google-pay.svg";
 import applePay from "../../assets/images/apple-pay.svg";
 import GooglePayButton from "@google-pay/button-react";
 
-// 예약정보
 export interface ReservationRequest {
   stylistId: number;
   reservationDate: string;
@@ -32,7 +31,6 @@ export interface ReservationRequest {
   salonId: string;
 }
 
-// 포인트정보
 export type UsageType = "USE" | "SAVE";
 
 export interface PointUsageRequest {
@@ -41,13 +39,11 @@ export interface PointUsageRequest {
   content: string;
 }
 
-// 선택한 쿠폰 정보
 export interface CouponUsageRequest {
   couponId: number;
   discountAmount: number;
 }
 
-// 쿠폰 인터페이스 정의
 interface Coupon {
   couponId: number;
   couponName: string;
@@ -61,7 +57,6 @@ interface Coupon {
   totalAmount: number;
 }
 
-// 결제 정보를 위한 타입 정의
 export interface PaymentInfo {
   price: number;
   paymentMethod: "google" | "apple" | "credit_card" | "other";
@@ -69,7 +64,6 @@ export interface PaymentInfo {
   transactionId: string;
 }
 
-// 결제 요청 타입 정의
 export interface PaymentRequest {
   price: number;
   pointUsage?: PointUsageRequest;
@@ -77,7 +71,6 @@ export interface PaymentRequest {
   reservation?: ReservationRequest;
 }
 
-// Google Pay 결제 시스템 요청 타입 정의
 export interface AllowedPaymentMethod {
   type: "CARD";
   parameters: {
@@ -133,7 +126,6 @@ function PaymentDetails() {
     salonId,
   } = location.state || {};
 
-  // 상태 변수들
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [userPoint, setUserPoint] = useState<number>(0);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
@@ -155,53 +147,43 @@ function PaymentDetails() {
 
   const totalAmount = selectedMenu?.price || 0;
 
-  // 할인 금액 계산
   const couponDiscountAmount = selectedCoupon
     ? selectedCoupon.discountType === "percentage"
       ? Math.floor((totalAmount * selectedCoupon.discountValue) / 100)
       : selectedCoupon.discountValue
     : 0;
 
-  // 최종 금액 계산
   const finalAmount = selectedCoupon
     ? (selectedCoupon.discountType === "percentage"
         ? totalAmount - (totalAmount * selectedCoupon.discountValue) / 100
         : totalAmount - selectedCoupon.discountValue) - usedPoints
     : totalAmount - usedPoints;
 
-  // 포인트 관련 변수 추가
   const [pointApplied, setPointApplied] = useState<boolean>(false);
   const [effectiveFinalAmount, setEffectiveFinalAmount] =
     useState<number>(finalAmount);
 
-  // 모든 약관 동의 여부
   const allChecked = termsChecked && privacyChecked && refundPolicyChecked;
 
-  // 포인트 적용 함수
   const applyPoint = () => {
     if (isPointValid() && usedPoints > 0) {
-      // 포인트 적용 상태로 변경
       setPointApplied(true);
 
-      // 최종 금액 계산
       const discountedAmount = selectedCoupon
         ? selectedCoupon.discountType === "percentage"
           ? totalAmount - (totalAmount * selectedCoupon.discountValue) / 100
           : totalAmount - selectedCoupon.discountValue
         : totalAmount;
 
-      // 계산된 최종 금액에서 포인트 차감
       setEffectiveFinalAmount(Math.max(0, discountedAmount - usedPoints));
     }
   };
 
-  // 포인트 초기화 함수
   const resetPoint = () => {
     setUsedPoints(0);
     setPointError("");
     setPointApplied(false);
 
-    // 포인트 없이 최종 금액 다시 계산
     const discountedAmount = selectedCoupon
       ? selectedCoupon.discountType === "percentage"
         ? totalAmount - (totalAmount * selectedCoupon.discountValue) / 100
@@ -211,7 +193,6 @@ function PaymentDetails() {
     setEffectiveFinalAmount(discountedAmount);
   };
 
-  // 예약 데이터 객체
   const reservationData: ReservationRequest = {
     stylistId: Number(stylistId),
     reservationDate: selectedDate,
@@ -222,7 +203,6 @@ function PaymentDetails() {
     salonId: salonId,
   };
 
-  // 결제 요청 객체
   const paymentRequest: PaymentRequest = {
     price: effectiveFinalAmount,
     pointUsage:
@@ -273,7 +253,6 @@ function PaymentDetails() {
     },
   };
 
-  // 체크박스 변경 핸들러
   const handleCheckboxChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: string
@@ -293,7 +272,6 @@ function PaymentDetails() {
     }
   };
 
-  // 전체 동의 체크박스 핸들러
   const handleAgreeAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setAgreeAllChecked(checked);
@@ -302,14 +280,12 @@ function PaymentDetails() {
     setRefundPolicyChecked(checked);
   };
 
-  // 포인트 유효성 검사
   const isPointValid = () => {
     return (
       usedPoints === 0 || (usedPoints % 10 === 0 && usedPoints <= userPoint)
     );
   };
 
-  // 쿠폰 선택 핸들러
   const handleSelectCoupon = (coupon: Coupon) => {
     if (!coupon.isAvailable) return;
 
@@ -329,11 +305,9 @@ function PaymentDetails() {
     }
   };
 
-  // 포인트 변경 핸들러
   const handlePointChange = (e: any) => {
     const value = parseInt(e.target.value, 10);
 
-    // 포인트 변경 시 적용 상태 해제
     setPointApplied(false);
 
     if (isNaN(value)) {
@@ -358,7 +332,6 @@ function PaymentDetails() {
     setPointError("");
   };
 
-  // 쿠폰이나 포인트 변경 시 최종 금액 업데이트
   useEffect(() => {
     const discountedAmount = selectedCoupon
       ? selectedCoupon.discountType === "percentage"
@@ -373,7 +346,6 @@ function PaymentDetails() {
     );
   }, [selectedCoupon, totalAmount, pointApplied, usedPoints]);
 
-  // 결제 성공 핸들러
   const handlePaymentSuccess = async (paymentData: any) => {
     try {
       let paymentMethod = "구글페이";
@@ -388,7 +360,6 @@ function PaymentDetails() {
         }
       }
 
-      // 예약 데이터 구성
       const reservationData = {
         price: effectiveFinalAmount,
         paymentMethod: paymentMethod,
@@ -410,7 +381,6 @@ function PaymentDetails() {
         },
       };
 
-      // 서버에 예약 요청 보내기
       const response = await axios.post(
         "/api/salon/reservation/complete",
         reservationData,
@@ -440,7 +410,7 @@ function PaymentDetails() {
     }
   };
 
-  // 날짜 포맷팅 함수
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(
@@ -449,7 +419,6 @@ function PaymentDetails() {
     )}. ${String(date.getDate()).padStart(2, "0")}`;
   };
 
-  // 쿠폰 비활성화 메시지 반환 함수
   const getDisabledMessage = (coupon: Coupon): string => {
     if (!coupon.isActive) return "이 쿠폰은 현재 비활성화 상태입니다.";
     if (coupon.minimumPurchase > totalAmount)
@@ -464,7 +433,7 @@ function PaymentDetails() {
 
     return "이미 사용한 쿠폰입니다.";
   };
-  // 쿠폰 및 포인트 정보 가져오기
+ 
   useEffect(() => {
     if (!salonId || !totalAmount) {
       setError("예약 정보가 올바르지 않습니다.");
@@ -474,7 +443,6 @@ function PaymentDetails() {
 
     const fetchCoupons = async () => {
       try {
-        // 쿠폰과 포인트 정보를 동시에 요청
         const [couponsRes, pointsRes] = await Promise.allSettled([
           axios.get<Coupon[]>(`/api/salon/reservation/coupons`, {
             params: {
@@ -487,7 +455,6 @@ function PaymentDetails() {
           ),
         ]);
 
-        // 쿠폰 정보 처리
         if (couponsRes.status === "fulfilled") {
           setCoupons(couponsRes.value.data);
         } else {
@@ -495,7 +462,6 @@ function PaymentDetails() {
           setError("쿠폰을 불러오는 데 실패했습니다.");
         }
 
-        // 포인트 정보 처리
         if (pointsRes.status === "fulfilled") {
           setUserPoint(pointsRes.value.data.points);
         } else {
@@ -512,7 +478,6 @@ function PaymentDetails() {
     fetchCoupons();
   }, [salonId, totalAmount]);
 
-  // 컴포넌트 마운트 시 effectiveFinalAmount 초기화
   useEffect(() => {
     setEffectiveFinalAmount(finalAmount);
   }, [finalAmount]);
@@ -528,7 +493,6 @@ function PaymentDetails() {
     setIsSafariBrowser(isSafari());
   }, []);
 
-  // 약관 전체 동의 상태 업데이트
   useEffect(() => {
     if (termsChecked && privacyChecked && refundPolicyChecked) {
       setAgreeAllChecked(true);
@@ -537,7 +501,6 @@ function PaymentDetails() {
     }
   }, [termsChecked, privacyChecked, refundPolicyChecked]);
 
-  // 로딩 상태 표시
   if (loading) {
     return (
       <Box sx={{ maxWidth: 400, mx: "auto", p: 2 }}>
@@ -550,7 +513,6 @@ function PaymentDetails() {
     );
   }
 
-  // 에러 상태 표시
   if (error) {
     return (
       <Box

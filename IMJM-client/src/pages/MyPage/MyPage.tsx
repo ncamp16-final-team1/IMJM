@@ -16,9 +16,7 @@ export default function MyPage() {
       right: point !== null ? `${point.toLocaleString()} P` : "Loading...",
     },
     { label: "Appointment history", path: "/my/appointments" },
-    { label: "My Review", path: "/my/reviews" },
     { label: "My Acahive", path: "/my/acahive" },
-    { label: "My Community", path: "/my/community" },
     { label: "Announcement", path: "/my/announcements" },
     { label: "Logout", path: "/logout", isLogout: true },
   ];
