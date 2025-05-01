@@ -31,6 +31,12 @@ public class AlarmService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 사용자의 알림 설정 확인
+        if (!user.isNotification()) {
+            log.info("알림 설정이 비활성화되어 있어 알림을 생성하지 않습니다. 사용자 ID: {}", userId);
+            return null;
+        }
+
         Alarm alarm = Alarm.builder()
                 .user(user)
                 .title(title)

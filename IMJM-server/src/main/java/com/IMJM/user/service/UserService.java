@@ -250,4 +250,13 @@ public class UserService {
                         .build())
                 .toList();
     }
+
+    @Transactional
+    public void updateNotificationSettings(String userId, boolean isNotificationEnabled) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setNotification(isNotificationEnabled);
+        userRepository.save(user);
+    }
 }
