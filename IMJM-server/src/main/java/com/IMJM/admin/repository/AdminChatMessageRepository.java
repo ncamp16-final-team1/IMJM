@@ -19,4 +19,7 @@ public interface AdminChatMessageRepository extends JpaRepository<ChatMessage, L
     void updateMessagesAsRead(@Param("chatRoomId") Long chatRoomId);
 
     Optional<ChatMessage> findTopByChatRoomIdOrderBySentAtDesc(Long chatRoomId);
+
+    @Query("SELECT COUNT(cm) FROM ChatMessage cm WHERE cm.chatRoom.id = :chatRoomId AND cm.senderType = :senderType AND cm.isRead = false")
+    int countByReadFalseAndSenderType(@Param("chatRoomId") Long chatRoomId, @Param("senderType") String senderType);
 }

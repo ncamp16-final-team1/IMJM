@@ -125,6 +125,10 @@ public class AdminChatServiceImpl implements AdminChatRepository {
         Optional<ChatMessage> lastMessage = adminChatMessageRepository
                 .findTopByChatRoomIdOrderBySentAtDesc(chatRoom.getId());
 
+        int unreadCount = adminChatMessageRepository.countByReadFalseAndSenderType(
+                chatRoom.getId(), "USER"
+        );
+
         return ChatRoomDto.builder()
                 .id(chatRoom.getId())
                 .userId(chatRoom.getUser().getId())
@@ -134,6 +138,7 @@ public class AdminChatServiceImpl implements AdminChatRepository {
                 .createdAt(chatRoom.getCreatedAt())
                 .lastMessageTime(chatRoom.getLastMessageTime())
                 .lastMessage(lastMessage.map(ChatMessage::getMessage).orElse(null))
+                .unreadCount(unreadCount)
                 .build();
     }
 
