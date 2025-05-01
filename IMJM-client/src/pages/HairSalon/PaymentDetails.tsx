@@ -263,7 +263,7 @@ function PaymentDetails() {
       },
     ],
     merchantInfo: {
-      merchantName: "Your Merchant Name",
+      merchantName: salonName,
       merchantId: "exampleMerchantId",
     },
     transactionInfo: {
@@ -393,7 +393,7 @@ function PaymentDetails() {
         price: effectiveFinalAmount,
         paymentMethod: paymentMethod,
         transactionId: transactionId,
-        paymentStatus: "completed",
+        paymentStatus: "true",
         paymentInfo: {
           discount_amount: couponDiscountAmount,
           pointUsed: pointApplied ? usedPoints : 0,
@@ -543,21 +543,8 @@ function PaymentDetails() {
       <Box sx={{ maxWidth: 400, mx: "auto", p: 2 }}>
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-            쿠폰
+            로딩중...
           </Typography>
-        </Box>
-
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-            포인트
-          </Typography>
-          <Typography sx={{ mb: 1 }}>사용 가능한 포인트: 로딩 중...</Typography>
-          <TextField
-            fullWidth
-            variant="outlined"
-            label="사용할 포인트 입력"
-            disabled
-          />
         </Box>
       </Box>
     );
@@ -602,7 +589,6 @@ function PaymentDetails() {
             variant="caption"
             sx={{ color: "#757575", cursor: "pointer" }}
           >
-            전체보기 &gt;
           </Typography>
         </Box>
 
@@ -806,21 +792,20 @@ function PaymentDetails() {
             }}
           >
             {pointApplied ? "포인트 초기화" : "포인트 적용하기"}
+            {/* {pointApplied ? "Reset Points" : "Apply Points"} */}
           </Button>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-          <Typography>남은 포인트:</Typography>
-          <Typography>
-            {userPoint
+          <Typography>남은 포인트: {userPoint
               ? (userPoint - (pointApplied ? usedPoints : 0)).toLocaleString()
-              : 0}
-            포인트
+              : 0}포인트
           </Typography>
         </Box>
         {pointApplied && usedPoints > 0 && (
           <Box sx={{ mt: 1, p: 1, bgcolor: "#e3f2fd", borderRadius: 1 }}>
             <Typography variant="body2" color="primary">
               {usedPoints.toLocaleString()}포인트가 성공적으로 적용되었습니다!
+              {/* {usedPoints.toLocaleString()}Points have been successfully applied! */}
             </Typography>
           </Box>
         )}
@@ -840,7 +825,7 @@ function PaymentDetails() {
             ["선택 날짜", selectedDate],
             ["선택 시간", selectedTime],
             ["서비스 타입", selectedType],
-            ["서비스 메뉴", selectedMenu?.serviceName],
+            ["서비스 네임", selectedMenu?.serviceName],
             ["가격", `${selectedMenu?.price?.toLocaleString() || 0}원`],
           ].map(([label, value], idx) => (
             <Box
@@ -910,7 +895,7 @@ function PaymentDetails() {
       {/* 결제 방법 선택 */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
-          결제 수단
+          {/*결제 수단*/}Payment Method 
         </Typography>
 
         <Grid container spacing={2} justifyContent="center">
@@ -1057,8 +1042,9 @@ function PaymentDetails() {
                 onChange={(e) => handleCheckboxChange(e, "terms")}
               />
             }
-            label="이용약관에 동의합니다."
-          />
+            // label="이용약관에 동의합니다."
+            label="I agree to the Terms and Conditions"
+            />
           <FormControlLabel
             control={
               <Checkbox
@@ -1066,7 +1052,8 @@ function PaymentDetails() {
                 onChange={(e) => handleCheckboxChange(e, "privacy")}
               />
             }
-            label="개인정보 처리방침에 동의합니다."
+            // label="개인정보 처리방침에 동의합니다."
+            label="I have read and agree to the Privacy Policy"
           />
           <FormControlLabel
             control={
@@ -1075,7 +1062,8 @@ function PaymentDetails() {
                 onChange={(e) => handleCheckboxChange(e, "refundPolicy")}
               />
             }
-            label="취소 및 환불 정책에 동의합니다."
+            // label="취소 및 환불 정책에 동의합니다."
+            label="I agree to the Cancellation and Refund Policy"
           />
 
           <Box sx={{ mt: 1 }}>
@@ -1083,7 +1071,8 @@ function PaymentDetails() {
               control={
                 <Checkbox checked={agreeAll} onChange={handleAgreeAllChange} />
               }
-              label="전체 동의"
+              // label="전체 동의"
+              label="I accept all terms"
             />
           </Box>
         </Box>
@@ -1121,14 +1110,14 @@ function PaymentDetails() {
           (pointApplied || usedPoints === 0)
         ) && (
           <Box sx={{ mt: 3, textAlign: "center" }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2"  sx={{ color: 'error.main' }}>
               {!selectedPayment
-                ? "결제 수단을 선택해주세요."
+                ? /*"결제 수단을 선택해주세요."*/"Please choose the payment method."
                 : !allChecked
-                ? "모든 약관에 동의해주세요."
+                ? /*"모든 약관에 동의해주세요."*/"Please agree to all the terms and conditions."
                 : usedPoints > 0 && !pointApplied
-                ? "포인트 적용하기 버튼을 눌러 포인트를 적용해주세요."
-                : "결제를 진행해주세요."}
+                ? /*"포인트 적용하기 버튼을 눌러 포인트를 적용해주세요."*/"Press the Apply Point button to apply the point."
+                : /*"결제를 진행해주세요."*/"Please proceed with the payment."}
             </Typography>
           </Box>
         )}
