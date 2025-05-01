@@ -183,15 +183,15 @@
 }
 
 .removeButton {
-    position: absolute;
+    position: absolute !important;
     top: -8px;
     right: -8px;
     background-color: rgba(0, 0, 0, 0.5) !important;
     color: white !important;
-    padding: 2px !important;
-    min-width: 20px !important;
     width: 20px !important;
     height: 20px !important;
+    font-size: 12px !important;
+    padding: 0 !important;
 }
 
 .originalMessage {
