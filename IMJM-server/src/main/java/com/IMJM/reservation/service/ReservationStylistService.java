@@ -178,10 +178,10 @@ public class ReservationStylistService {
             Users user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-            AdminStylist stylist = adminStylistRepository.findById(request.getPaymentRequest().getReservation().getStylist_id())
+            AdminStylist stylist = adminStylistRepository.findById(request.getPaymentRequest().getReservation().getStylistId())
                     .orElseThrow(() -> new RuntimeException("스타일리스트를 찾을 수 없습니다."));
 
-            ServiceMenu serviceMenu = serviceMenuRepository.findById(request.getPaymentRequest().getReservation().getService_menu_id())
+            ServiceMenu serviceMenu = serviceMenuRepository.findById(request.getPaymentRequest().getReservation().getServiceMenuId())
                     .orElseThrow(() -> new RuntimeException("서비스 메뉴를 찾을 수 없습니다."));
 
             Reservation reservation = createReservation(request, user, stylist, serviceMenu);
@@ -192,10 +192,11 @@ public class ReservationStylistService {
             Payment savedPayment = paymentRepository.save(payment);
             log.info("결제 정보 저장 완료. 결제 ID: {}", savedPayment.getId());
 
-            if (request.getPayment_info().getPoint_used() > 0) {
+            if (request.getPaymentInfo().getPointUsed() > 0) {
                 processPointUsage(request, user);
 
-                updateUserPoints(user, request.getPayment_info().getPoint_used());
+                //user.usePoint(request.getPaymentInfo().getPoint_used());
+                updateUserPoints(user, request.getPaymentInfo().getPointUsed());
             }
 
             if (request.getPaymentRequest().getCouponData() != null) {
@@ -250,8 +251,8 @@ public class ReservationStylistService {
     private Reservation createReservation(ReservationRequestDto request, Users user, AdminStylist stylist, ServiceMenu serviceMenu) {
         var reservationData = request.getPaymentRequest().getReservation();
 
-        LocalDate reservationDate = LocalDate.parse(reservationData.getReservation_date());
-        LocalTime reservationTime = LocalTime.parse(reservationData.getReservation_time());
+        LocalDate reservationDate = LocalDate.parse(reservationData.getReservationDate());
+        LocalTime reservationTime = LocalTime.parse(reservationData.getReservationTime());
 
         return Reservation.builder()
                 .user(user)
@@ -271,8 +272,8 @@ public class ReservationStylistService {
         return Payment.builder()
                 .reservation(reservation)
                 .price(request.getPaymentRequest().getPrice().intValue())
-                .paymentMethod(request.getPayment_method())
-                .paymentStatus(request.getPayment_status())
+                .paymentMethod(request.getPaymentMethod())
+                .paymentStatus(request.getPaymentStatus())
                 .transactionId("TRANS_" + System.currentTimeMillis())
                 .paymentDate(LocalDateTime.now())
                 .isCanceled(false)
@@ -285,7 +286,7 @@ public class ReservationStylistService {
 
         PointUsage pointUsage = PointUsage.builder()
                 .user(user)
-                .usageType(pointUsageData.getUsage_type())
+                .usageType(pointUsageData.getUsageType())
                 .price(pointUsageData.getPrice())
                 .useDate(LocalDateTime.now())
                 .content(pointUsageData.getContent())
@@ -313,17 +314,17 @@ public class ReservationStylistService {
     private void processCouponUsage(ReservationRequestDto request, Reservation reservation) {
         var couponData = request.getPaymentRequest().getCouponData();
 
-        Coupon coupon = couponRepository.findById(couponData.getCoupon_id())
-                .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다: " + couponData.getCoupon_id()));
+        Coupon coupon = couponRepository.findById(couponData.getCouponId())
+                .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다: " + couponData.getCouponId()));
 
         ReservationCoupon reservationCoupon = ReservationCoupon.builder()
                 .reservation(reservation)
                 .coupon(coupon)
-                .discountAmount(couponData.getDiscount_amount().intValue())
+                .discountAmount(couponData.getDiscountAmount().intValue())
                 .build();
 
         reservationCouponRepository.save(reservationCoupon);
         log.info("쿠폰 사용 내역 저장 완료. 쿠폰 ID: {}, 할인 금액: {}",
-                couponData.getCoupon_id(), couponData.getDiscount_amount());
+                couponData.getCouponId(), couponData.getDiscountAmount());
     }
 }

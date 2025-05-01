@@ -15,17 +15,6 @@ const TimeSlotsSection = ({
     isAM
   }: TimeSlotsSectionProps) => {
     if (isSelectedDateHoliday) return null;
-  
-
-    // const availabilityCheck = allTimeSlots.map(time => ({
-    //   time,
-    //   isAvailable: isTimeSlotAvailable(time, isSelectedDateHoliday, selectedDate)
-    // }));
-    // console.log('시간대별 가용성:', availabilityCheck);
-    
-    // const hasAvailableTimeSlots = allTimeSlots.some(time => isTimeSlotAvailable(time, isSelectedDateHoliday, selectedDate ));
-    // console.log('예약 가능 시간대 존재 여부:', hasAvailableTimeSlots);
-  
     return (
       <Box sx={{ mt: 2 }}>
         <Divider sx={{ marginY: 5, borderColor: 'grey.500', borderWidth: 2 }} />

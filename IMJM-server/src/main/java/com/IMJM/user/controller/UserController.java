@@ -105,4 +105,9 @@ public class UserController {
     public ResponseEntity<?> getMyPoint(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
         return ResponseEntity.ok().body(userService.getMyPoint(userDetails.getId()));
     }
+
+    @GetMapping("/my-point-history")
+    public ResponseEntity<?> getMyPointHistory(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        return ResponseEntity.ok().body(userService.getMyPointHistory(userDetails.getId()));
+    }
 }

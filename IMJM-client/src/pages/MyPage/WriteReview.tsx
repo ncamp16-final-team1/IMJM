@@ -32,7 +32,7 @@ interface LocationState {
   reservationTime?: string;
   price?: number;
   salonPhotoUrl?: string;
-  reservationServiceName?: string;
+  serviceName?: string;
   stylistName?: string;
 }
 
@@ -148,7 +148,7 @@ export default function WriteReview() {
     reservationTime,
     price,
     salonPhotoUrl,
-    reservationServiceName,
+    serviceName,
     stylistName,
   } = (location.state as LocationState) || {};
   
@@ -267,7 +267,7 @@ export default function WriteReview() {
       showAlert('리뷰가 성공적으로 제출되었습니다!');
       
       setTimeout(() => {
-        navigate('/myPage/appointments'); 
+        navigate('/my/appointments'); 
       }, 1500);
       
     } catch (error: any) { 
@@ -344,7 +344,7 @@ export default function WriteReview() {
             fontWeight: 500, 
           }}
         >
-          {reservationServiceName}
+          {serviceName}
         </Typography>  
       </Box>
 
