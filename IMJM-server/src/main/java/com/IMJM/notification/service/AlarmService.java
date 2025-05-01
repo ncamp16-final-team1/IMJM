@@ -79,6 +79,15 @@ public class AlarmService {
         alarmRepository.save(alarm);
     }
 
+    @Transactional
+    public void markAllAsRead(String userId) {
+        List<Alarm> unreadAlarms = alarmRepository.findByUserIdAndIsReadFalse(userId);
+
+        unreadAlarms.forEach(alarm -> alarm.setIsRead(true));
+
+        alarmRepository.saveAll(unreadAlarms);
+    }
+
     @Transactional(readOnly = true)
     public int countUnreadAlarms(String userId) {
         return alarmRepository.countByUserIdAndIsReadFalse(userId);
