@@ -103,6 +103,7 @@
     color: #666;
     font-style: italic;
     border-top: 1px dashed #ccc;
+    white-space: pre-line;
 }
 
 .translationError {
@@ -191,4 +192,8 @@
     min-width: 20px !important;
     width: 20px !important;
     height: 20px !important;
+}
+
+.originalMessage {
+    white-space: pre-line;
 }
