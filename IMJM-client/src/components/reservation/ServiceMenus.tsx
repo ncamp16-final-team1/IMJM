@@ -67,7 +67,7 @@ const ServiceMenus = ({
             pb: 1
           }}
         >
-          {selectedType} 서비스 메뉴
+          {selectedType} 
         </Typography>
 
         {isMenuLoading ? (
@@ -115,7 +115,7 @@ const ServiceMenus = ({
                     size="small" 
                     variant="outlined" 
                     color="primary"
-                    onClick={() => handleMenuSelectInternal(menu)} // 메뉴 선택 핸들러
+                    onClick={() => handleMenuSelectInternal(menu)} 
                     sx={{ 
                       minWidth: '80px',
                       borderColor: '#F06292',
