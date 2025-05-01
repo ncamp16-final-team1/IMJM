@@ -2,13 +2,11 @@ package com.IMJM.chat.controller;
 
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
-import com.IMJM.chat.exception.ChatRoomNotFountException;
-import com.IMJM.chat.repository.ChatRoomRepository;
 import com.IMJM.chat.service.ChatService;
 import com.IMJM.common.entity.ChatRoom;
+import com.IMJM.chat.repository.ChatRoomRepository;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -30,18 +28,14 @@ public class ChatController {
     private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
+    // 메시지 전송 REST 엔드포인트
     @PostMapping("/message")
-    public ResponseEntity<?> sendMessage(@RequestBody ChatMessageDto chatMessageDto) {
-        try {
-            ChatMessageDto sentMessage = chatService.sendMessage(chatMessageDto);
-            return ResponseEntity.ok(sentMessage);
-        } catch (ChatRoomNotFountException e) {
-            // 채팅방을 찾을 수 없는 경우
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "존재하지 않는 채팅방입니다."));
-        }
+    public ResponseEntity<ChatMessageDto> sendMessage(@RequestBody ChatMessageDto chatMessageDto) {
+        ChatMessageDto sentMessage = chatService.sendMessage(chatMessageDto);
+        return ResponseEntity.ok(sentMessage);
     }
 
+    // WebSocket 메시지 전송
     @MessageMapping("/chat.sendMessage")
     public void handleWebSocketMessage(@Payload ChatMessageDto chatMessageDto) {
         // 메시지 처리 및 저장

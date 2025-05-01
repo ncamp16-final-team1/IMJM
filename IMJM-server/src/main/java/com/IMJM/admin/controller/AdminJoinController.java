@@ -42,23 +42,7 @@ public class AdminJoinController {
 
     @GetMapping("/check-login")
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
-        String token = null;
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("AdminToken")) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (token == null || jwtUtil.isExpired(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"error\": \"Token expired or not provided\"}");
-        }
-        return ResponseEntity.ok().build();
+        return adminJoinService.checkLogin(request);
     }
 
     @GetMapping("/salons/my")
