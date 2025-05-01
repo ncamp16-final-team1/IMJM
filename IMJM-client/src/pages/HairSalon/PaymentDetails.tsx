@@ -545,7 +545,8 @@ function PaymentDetails() {
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            쿠폰
+            {/* 쿠폰 */}
+            Coupon
           </Typography>
           <Typography
             variant="caption"
@@ -705,7 +706,8 @@ function PaymentDetails() {
       {/* 포인트 섹션 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: "bold" }} gutterBottom>
-          포인트
+          {/* 포인트 */}
+          Point
         </Typography>
         <Typography sx={{ mb: 2 }}>
           보유 포인트: {userPoint ? userPoint.toLocaleString() : 0}포인트
@@ -778,7 +780,8 @@ function PaymentDetails() {
       {/* 예약 정보 요약 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
-          예약 정보
+          {/* 예약 정보 */}
+          Reservation information
         </Typography>
         <Box sx={{ backgroundColor: "#FDF6F3", borderRadius: 5, p: 3 }}>
           {[
@@ -806,7 +809,8 @@ function PaymentDetails() {
       {/* 결제 내역 섹션 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
-          결제 내역
+          {/* 결제 내역 */}
+          Payment history
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
           <Typography>{selectedMenu?.serviceName}:</Typography>
@@ -962,7 +966,8 @@ function PaymentDetails() {
             gutterBottom
             sx={{ fontWeight: "bold", mb: 5 }}
           >
-            요청사항
+            {/* 요청사항 */}
+            Request Details
           </Typography>
           <TextField
             multiline
