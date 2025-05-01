@@ -128,25 +128,29 @@ public class ChatService {
         }
 
         // 알림 생성 (수신자가 발신자가 아닌 경우만)
-        if (!recipientId.equals(messageDto.getSenderId())) {
-            // 메시지 내용이 너무 길면 짧게 요약
-            String messagePreview = messageDto.getMessage().length() > 30
-                    ? messageDto.getMessage().substring(0, 30) + "..."
-                    : messageDto.getMessage();
+        if ("SALON".equals(messageDto.getSenderType())) {
+            try {
+                // 메시지 요약 생성
+                String messagePreview = messageDto.getMessage().length() > 30
+                        ? messageDto.getMessage().substring(0, 30) + "..."
+                        : messageDto.getMessage();
 
-            // 사진이 있을 경우 메시지 내용 변경
-            if (messageDto.getPhotos() != null && !messageDto.getPhotos().isEmpty()) {
-                messagePreview = "📷 사진을 보냈습니다.";
+                if (messageDto.getPhotos() != null && !messageDto.getPhotos().isEmpty()) {
+                    messagePreview = "📷 사진을 보냈습니다.";
+                }
+
+                alarmService.createAlarm(
+                        chatRoom.getUser().getId(), // 반드시 User ID
+                        "새 메시지 알림",
+                        senderName + "님이 메시지를 보냈습니다: " + messagePreview,
+                        "CHAT",
+                        chatRoom.getId().intValue()
+                );
+            } catch (Exception e) {
+                System.out.println("⚠️ 알림 생성 중 오류 발생 (무시됨): " + e.getMessage());
             }
-
-            alarmService.createAlarm(
-                    recipientId,
-                    "새 메시지 알림",
-                    senderName + "님이 메시지를 보냈습니다: " + messagePreview,
-                    "CHAT",
-                    chatRoom.getId().intValue()
-            );
         }
+
 
         return responseDto;
     }
@@ -465,5 +469,28 @@ public class ChatService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteChatRoom(Long chatRoomId) {
+        // 1. 채팅방의 모든 사진 먼저 삭제
+        List<ChatMessage> messages = chatMessageRepository.findByChatRoomId(chatRoomId);
+        messages.forEach(message -> {
+            chatPhotosRepository.deleteByChatMessageId(message.getId());
+        });
+
+        // 2. 채팅 메시지 삭제
+        chatMessageRepository.deleteByChatRoomId(chatRoomId);
+
+        // 3. 채팅방 삭제
+        chatRoomRepository.deleteById(chatRoomId);
+
+        // 4. 스토리지에서도 폴더 삭제
+        try {
+            String folderPrefix = "chat/" + chatRoomId + "/";
+            storageService.deleteFolder(folderPrefix);
+        } catch (Exception e) {
+            throw new RuntimeException("스토리지에서 채팅 이미지 삭제 중 오류 발생", e);
+        }
     }
 }
