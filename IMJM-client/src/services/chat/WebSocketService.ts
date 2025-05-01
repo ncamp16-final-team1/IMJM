@@ -79,7 +79,6 @@ class WebSocketService {
     }
 
     // 메시지 전송 (사진 포함)
-    // WebSocketService.ts의 sendMessageWithPhotos 메서드 수정
     async sendMessageWithPhotos(chatRoomId: number, content: string, senderType: string, photos: ChatPhoto[] = []) {
         console.log("메시지 전송 시작:", { chatRoomId, content, senderType, photos });
 
@@ -92,7 +91,7 @@ class WebSocketService {
             chatRoomId,
             message: content || (photos.length > 0 ? '사진을 보냈습니다.' : ''),
             senderType,
-            senderId: this.userId || '',
+            senderId: this.userId,
             photos,
         };
 
@@ -101,25 +100,6 @@ class WebSocketService {
             destination: '/app/chat.sendMessage',
             body: JSON.stringify(messagePayload)
         });
-
-        // REST API 전송은 제거하거나 주석 처리
-        /*
-        try {
-            const response = await fetch('/api/chat/message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(messagePayload)
-            });
-
-            if (response.ok) {
-                return await response.json();
-            }
-        } catch (error) {
-            console.error('REST API 메시지 전송 실패:', error);
-        }
-        */
 
         return messagePayload; // 임시 응답으로 원본 페이로드 반환
     }
