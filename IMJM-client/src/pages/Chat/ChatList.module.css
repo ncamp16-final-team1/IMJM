@@ -47,6 +47,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 85%;
+    display: block; /* 확실한 블록 레벨 요소로 만들기 */
 }
 
 .unreadBadge {
