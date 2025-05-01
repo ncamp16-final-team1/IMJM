@@ -210,7 +210,7 @@ function PaymentDetails() {
         ? {
             usageType: "USE",
             price: usedPoints,
-            content: "결제에 사용된 포인트",
+            content: salonName,
           }
         : undefined,
     couponData: selectedCoupon

@@ -26,8 +26,6 @@ public class ReservationController {
 
     private final ReservationStylistService reservationStylistService;
 
-
-    // 특정 살롱의 스타일리스트 조회
     @GetMapping("/stylists/{salonId}")
     public ResponseEntity<?> getStylistsBySalon(@PathVariable String salonId) {
         List<ReservationStylistDto> stylists = reservationStylistService.getStylistsBySalon(salonId);
@@ -50,7 +48,6 @@ public class ReservationController {
         }
     }
 
-    // 날짜 클릭 시 예약 가능한 시간대 반환
     @GetMapping("/reservations/available-times")
     public ResponseEntity<?> getAvailableTimes(
             @RequestParam("stylistId") Long stylistId,
@@ -62,14 +59,12 @@ public class ReservationController {
         return ResponseEntity.ok(result);
     }
 
-    // 살롱의 서비스_메뉴 조회
     @GetMapping("/reservations/service-menus/{salonId}")
     public ResponseEntity<?> getServiceMenu(@PathVariable String salonId) {
         List<ReservationServiceMenuDto> menus = reservationStylistService.getServiceMenusBySalonId(salonId);
         return ResponseEntity.ok(menus);
     }
 
-    // 쿠폰 조회
     @GetMapping("/reservation/coupons")
     public ResponseEntity<List<SalonCouponDto>> getCoupons(
             @RequestParam String salonId,
@@ -91,7 +86,6 @@ public class ReservationController {
         }
     }
 
-    // 사용자의 사용가능한 포인트 조회
     @GetMapping("/points/available")
     public ResponseEntity<?> getUserPoint(
         @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
@@ -110,7 +104,6 @@ public class ReservationController {
         }
     }
 
-    // 결제된척 디비 저장
     @PostMapping("/reservation/complete")
     public ResponseEntity<?> completeReservation(@RequestBody ReservationRequestDto  request,
         @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
@@ -118,13 +111,11 @@ public class ReservationController {
         try {
             String userId = customOAuth2UserDto.getId();
             log.info("예약 완료 요청: {}", request);
-            System.out.println(request);
             reservationStylistService.completeReservation(request, userId);
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
             successResponse.put("message", "예약이 성공적으로 완료되었습니다.");
-            // 필요한 경우 추가 정보를 응답에 포함
 
             return ResponseEntity.ok(successResponse);
         } catch (Exception e) {
