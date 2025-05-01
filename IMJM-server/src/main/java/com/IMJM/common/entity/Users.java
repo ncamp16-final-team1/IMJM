@@ -8,7 +8,6 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -122,5 +121,9 @@ public class Users {
 
     public void savePoint(int point) {
         this.point += point;
+    }
+
+    public void changeNotificationSetting(boolean isNotification) {
+        this.isNotification = isNotification;
     }
 }

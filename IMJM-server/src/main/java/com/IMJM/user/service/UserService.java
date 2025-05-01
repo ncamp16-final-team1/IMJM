@@ -256,7 +256,6 @@ public class UserService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setNotification(isNotificationEnabled);
-        userRepository.save(user);
+        user.changeNotificationSetting(isNotificationEnabled);
     }
 }
