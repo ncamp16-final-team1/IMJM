@@ -204,11 +204,11 @@ export default function AppointmentCard({
                             backgroundColor: 'transparent', 
                             borderColor: '#FF9080', 
                             color: '#FF9080',
-                            boxShadow: 'none', // ✅ 그림자 제거
+                            boxShadow: 'none', 
                             '&:hover': {
                             backgroundColor: 'rgba(255, 144, 128, 0.1)', 
                             borderColor: '#FF9080',
-                            boxShadow: 'none', // ✅ hover 시에도 그림자 제거
+                            boxShadow: 'none', 
                             },
                         }} 
                         startIcon={<ChatIcon fontSize="small" />}
