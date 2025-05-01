@@ -1,4 +1,4 @@
-package com.IMJM.common;
+package com.IMJM.common.page;
 
 import lombok.*;
 import org.springframework.data.domain.Page;
