@@ -1,18 +1,37 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Divider } from '@mui/material';
 import AdminChatList from './AdminChatList';
 import AdminChatRoom from './AdminChatRoom';
 
 function AdminChat() {
+    const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
     return (
-        <Box sx={{ p: 3, width: '100%' }}>
-            <Typography variant="h5" fontWeight="bold" mb={3}>채팅 관리</Typography>
-            <Routes>
-                <Route index element={<AdminChatList />} />
-                <Route path=":roomId/:userId" element={<AdminChatRoom />} />
-                <Route path="*" element={<Navigate to="." replace />} />
-            </Routes>
+        <Box sx={{ display: 'flex', width: '100%', height: 'calc(100vh - 100px)', p: 2, gap: 2 }}>
+            {/* 좌측 채팅 목록 */}
+            <Box sx={{ width: '30%', overflowY: 'auto' }}>
+                <Typography variant="h6" fontWeight="bold" mb={2}>채팅 목록</Typography>
+                <AdminChatList
+                    onSelectRoom={(roomId, userId) => {
+                        setSelectedRoomId(roomId);
+                        setSelectedUserId(userId);
+                    }}
+                />
+            </Box>
+
+            <Divider orientation="vertical" flexItem />
+
+            {/* 우측 채팅방 */}
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                {selectedRoomId && selectedUserId ? (
+                    <AdminChatRoom roomId={selectedRoomId} userId={selectedUserId} />
+                ) : (
+                    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography color="text.secondary">채팅방을 선택해주세요.</Typography>
+                    </Box>
+                )}
+            </Box>
         </Box>
     );
 }

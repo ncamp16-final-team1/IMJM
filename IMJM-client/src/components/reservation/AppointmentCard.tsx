@@ -30,7 +30,7 @@ export default function AppointmentCard({
     serviceName,
     reservationId,
     reviewId,
-    stylistName,  
+    stylistName,
 }: UserReservations) {
 
     const navigate = useNavigate();
@@ -189,7 +189,7 @@ export default function AppointmentCard({
                         variant="outlined" 
                         size="medium" 
                         onClick={() => {
-                            // navigate(`/myPage/chat/${reservationId}`);
+                            
                         }}
                         sx={{
                             borderRadius: 4,
