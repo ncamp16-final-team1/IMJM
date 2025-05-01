@@ -6,6 +6,7 @@ export interface ChatRoom {
     userId: string;
     salonId: string;
     userName: string;
+    salonName: string;
     createdAt: string;
     lastMessageTime: string;
     lastMessage: string;
@@ -33,30 +34,17 @@ export interface ChatPhoto {
     photoUrl: string;
 }
 
-// 채팅 서비스 클래스
-class ChatService {
-    private baseUrl = '/api/chat';
+// 어드민 채팅 서비스 클래스
+class AdminChatService {
+    private baseUrl = '/api/admin/chat';
 
     // 미용실 기준 채팅방 목록 조회
-    async getSalonChatRooms(salonId: string): Promise<ChatRoom[]> {
+    async getSalonChatRooms(): Promise<ChatRoom[]> {
         try {
-            const response = await axios.get(`${this.baseUrl}/rooms/salon/${salonId}`);
+            const response = await axios.get(`${this.baseUrl}/rooms`);
             return response.data;
         } catch (error) {
             console.error('Failed to fetch salon chat rooms:', error);
-            throw error;
-        }
-    }
-
-    // 채팅방 생성 또는 조회
-    async getChatRoom(userId: string, salonId: string): Promise<ChatRoom> {
-        try {
-            const response = await axios.post(`${this.baseUrl}/room`, null, {
-                params: { userId, salonId }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to get chat room:', error);
             throw error;
         }
     }
@@ -73,11 +61,9 @@ class ChatService {
     }
 
     // 메시지 읽음 처리
-    async markMessagesAsRead(chatRoomId: number, senderType: string): Promise<boolean> {
+    async markMessagesAsRead(chatRoomId: number): Promise<boolean> {
         try {
-            const response = await axios.put(`${this.baseUrl}/messages/read/${chatRoomId}`, null, {
-                params: { senderType }
-            });
+            const response = await axios.put(`${this.baseUrl}/messages/read/${chatRoomId}`);
             return response.data.success;
         } catch (error) {
             console.error('Failed to mark messages as read:', error);
@@ -85,19 +71,26 @@ class ChatService {
         }
     }
 
-    // 읽지 않은 메시지 수 조회
-    async getUnreadCount(chatRoomId: number, senderType: string): Promise<number> {
+    // 이미지 업로드
+    async uploadImage(file: File, chatRoomId: number): Promise<string> {
         try {
-            const response = await axios.get(`${this.baseUrl}/messages/unread/count/${chatRoomId}`, {
-                params: { senderType }
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('chatRoomId', chatRoomId.toString());
+
+            const response = await axios.post(`${this.baseUrl}/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
-            return response.data.count;
+
+            return response.data.fileUrl;
         } catch (error) {
-            console.error('Failed to get unread count:', error);
+            console.error('Failed to upload image:', error);
             throw error;
         }
     }
 }
 
 // 싱글톤으로 내보내기
-export default new ChatService();
+export default new AdminChatService();

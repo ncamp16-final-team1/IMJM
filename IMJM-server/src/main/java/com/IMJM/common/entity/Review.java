@@ -27,7 +27,7 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "review_tag", length = 100)
+    @Column(name = "review_tag", length = 255)
     private String reviewTag;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,4 +41,7 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
+
+    @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
+    private ReviewReply reviewReply;
 }

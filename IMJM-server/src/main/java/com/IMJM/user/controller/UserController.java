@@ -86,4 +86,28 @@ public class UserController {
         userService.updateUserLocation(userDetails.getId(), latitude, longitude);
         return ResponseEntity.ok("위치 정보가 업데이트되었습니다.");
     }
+
+    @GetMapping("/my-profile")
+    public ResponseEntity<?> getMyProfile(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        UserDto userDto = userService.getUserProfile(userDetails.getId());
+        return ResponseEntity.ok().body(userDto);
+    }
+
+    @PostMapping("/update-profile")
+    public ResponseEntity<?> updateUserProfile(@AuthenticationPrincipal CustomOAuth2UserDto userDetails,
+                                               @RequestParam("nickname") String nickname,
+                                               @RequestParam(value = "profileImage", required = false) MultipartFile profileImage) {
+        userService.updateUserProfile(userDetails.getId(), nickname, profileImage);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/my-point")
+    public ResponseEntity<?> getMyPoint(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        return ResponseEntity.ok().body(userService.getMyPoint(userDetails.getId()));
+    }
+
+    @GetMapping("/my-point-history")
+    public ResponseEntity<?> getMyPointHistory(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        return ResponseEntity.ok().body(userService.getMyPointHistory(userDetails.getId()));
+    }
 }

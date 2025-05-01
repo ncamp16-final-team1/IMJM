@@ -1,5 +1,6 @@
 package com.IMJM.chat.service;
 
+import com.IMJM.notification.service.AlarmService;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
@@ -8,13 +9,13 @@ import com.IMJM.chat.repository.*;
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -38,6 +39,9 @@ public class ChatService {
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
+
+    @Autowired
+    private AlarmService alarmService;
 
     // 채팅방 생성 또는 조회
     @Transactional
@@ -87,7 +91,8 @@ public class ChatService {
     @Transactional
     public ChatMessageDto sendMessage(ChatMessageDto messageDto) {
         // 채팅방 조회
-        ChatRoom chatRoom = findChatRoomById(messageDto.getChatRoomId());
+        ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatRoomId())
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
         // 번역 처리
         TranslationResult translationResult = translateMessageIfNeeded(messageDto.getMessage(), chatRoom, messageDto.getSenderType());
@@ -106,6 +111,47 @@ public class ChatService {
         // 웹소켓으로 메시지 전송
         sendWebSocketMessage(chatRoom, responseDto);
 
+        // 메시지 저장 및 처리 후, 수신자에게 알림 생성
+        String recipientId;
+        String senderName;
+
+        if ("USER".equals(messageDto.getSenderType())) {
+            // 사용자가 보낸 메시지는 미용실에 알림
+            recipientId = chatRoom.getSalon().getId();
+            senderName = chatRoom.getUser().getNickname() != null ?
+                    chatRoom.getUser().getNickname() :
+                    chatRoom.getUser().getFirstName() + " " + chatRoom.getUser().getLastName();
+        } else {
+            // 미용실이 보낸 메시지는 사용자에게 알림
+            recipientId = chatRoom.getUser().getId();
+            senderName = chatRoom.getSalon().getName();
+        }
+
+        // 알림 생성 (수신자가 발신자가 아닌 경우만)
+        if ("SALON".equals(messageDto.getSenderType())) {
+            try {
+                // 메시지 요약 생성
+                String messagePreview = messageDto.getMessage().length() > 30
+                        ? messageDto.getMessage().substring(0, 30) + "..."
+                        : messageDto.getMessage();
+
+                if (messageDto.getPhotos() != null && !messageDto.getPhotos().isEmpty()) {
+                    messagePreview = "📷 사진을 보냈습니다.";
+                }
+
+                alarmService.createAlarm(
+                        chatRoom.getUser().getId(), // 반드시 User ID
+                        "새 메시지 알림",
+                        senderName + "님이 메시지를 보냈습니다: " + messagePreview,
+                        "CHAT",
+                        chatRoom.getId().intValue()
+                );
+            } catch (Exception e) {
+                System.out.println("⚠️ 알림 생성 중 오류 발생 (무시됨): " + e.getMessage());
+            }
+        }
+
+
         return responseDto;
     }
 
@@ -122,6 +168,18 @@ public class ChatService {
             this.translatedMessage = translatedMessage;
             this.translationStatus = translationStatus;
         }
+    }
+
+    public String getSalonIdFromChatRoom(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+        return chatRoom.getSalon().getId();
+    }
+
+    public String getUserIdFromChatRoom(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+        return chatRoom.getUser().getId();
     }
 
     private TranslationResult translateMessageIfNeeded(String message, ChatRoom chatRoom, String senderType) {
@@ -361,7 +419,6 @@ public class ChatService {
         if ("USER".equals(senderType)) {
             // 사용자가 발신자인 경우 사용자의 언어 반환
             String userLanguage = chatRoom.getUser().getLanguage();
-            System.out.println("사용자 언어 설정: " + userLanguage);
             return userLanguage != null ? userLanguage : "ko";
         } else {
             // 미용실이 발신자인 경우 한국어로 가정
@@ -376,7 +433,6 @@ public class ChatService {
         } else {
             // 미용실이 발신자인 경우 수신자는 사용자이므로 사용자 언어 반환
             String userLanguage = chatRoom.getUser().getLanguage();
-            System.out.println("수신자 언어 설정: " + userLanguage);
             return userLanguage != null ? userLanguage : "ko";
         }
     }
@@ -413,5 +469,24 @@ public class ChatService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteChatRoom(Long chatRoomId) {
+        List<ChatMessage> messages = chatMessageRepository.findByChatRoomId(chatRoomId);
+        messages.forEach(message -> {
+            chatPhotosRepository.deleteByChatMessageId(message.getId());
+        });
+
+        chatMessageRepository.deleteByChatRoomId(chatRoomId);
+
+        chatRoomRepository.deleteById(chatRoomId);
+
+        try {
+            String folderPrefix = "chat/" + chatRoomId + "/";
+            storageService.deleteFolder(folderPrefix);
+        } catch (Exception e) {
+            throw new RuntimeException("스토리지에서 채팅 이미지 삭제 중 오류 발생", e);
+        }
     }
 }

@@ -1,25 +1,24 @@
 package com.IMJM.reservation.service;
 
 import com.IMJM.admin.repository.CouponRepository;
-
 import com.IMJM.admin.repository.ReservationCouponRepository;
+import com.IMJM.admin.repository.ServiceMenuRepository;
+import com.IMJM.chat.dto.ChatMessageDto;
+import com.IMJM.chat.dto.ChatRoomDto;
+import com.IMJM.chat.service.ChatService;
 import com.IMJM.common.entity.*;
-import com.IMJM.common.entity.AdminStylist;
-import com.IMJM.common.entity.Coupon;
-import com.IMJM.common.entity.ReservationCoupon;
-import com.IMJM.common.entity.ServiceMenu;
 import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
 import com.IMJM.reservation.repository.PaymentRepository;
 import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
-import com.IMJM.admin.repository.ServiceMenuRepository;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -47,6 +46,7 @@ public class ReservationStylistService {
 
     private final PointUsageRepository pointUsageRepository;
 
+    private final ChatService chatService;
 
     @Transactional(readOnly = true)
     public List<ReservationStylistDto> getStylistsBySalon(String salonId) {
@@ -124,7 +124,6 @@ public class ReservationStylistService {
         List<ReservationCoupon> usedCoupons = reservationCouponRepository
                 .findByReservation_User_idAndCoupon_Salon_id(userId, salonId);
 
-        // 사용한 쿠폰 ID만 추출
         Set<Long> usedCouponIds = usedCoupons.stream()
                 .map(rc -> rc.getCoupon().getId())
                 .collect(Collectors.toSet());
@@ -179,10 +178,10 @@ public class ReservationStylistService {
             Users user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-            AdminStylist stylist = adminStylistRepository.findById(request.getPaymentRequest().getReservation().getStylist_id())
+            AdminStylist stylist = adminStylistRepository.findById(request.getPaymentRequest().getReservation().getStylistId())
                     .orElseThrow(() -> new RuntimeException("스타일리스트를 찾을 수 없습니다."));
 
-            ServiceMenu serviceMenu = serviceMenuRepository.findById(request.getPaymentRequest().getReservation().getService_menu_id())
+            ServiceMenu serviceMenu = serviceMenuRepository.findById(request.getPaymentRequest().getReservation().getServiceMenuId())
                     .orElseThrow(() -> new RuntimeException("서비스 메뉴를 찾을 수 없습니다."));
 
             Reservation reservation = createReservation(request, user, stylist, serviceMenu);
@@ -193,15 +192,53 @@ public class ReservationStylistService {
             Payment savedPayment = paymentRepository.save(payment);
             log.info("결제 정보 저장 완료. 결제 ID: {}", savedPayment.getId());
 
-            if (request.getPayment_info().getPoint_used() > 0) {
+            if (request.getPaymentInfo().getPointUsed() > 0) {
                 processPointUsage(request, user);
 
-                updateUserPoints(user, request.getPayment_info().getPoint_used());
+                //user.usePoint(request.getPaymentInfo().getPoint_used());
+                updateUserPoints(user, request.getPaymentInfo().getPointUsed());
             }
 
             if (request.getPaymentRequest().getCouponData() != null) {
                 processCouponUsage(request, savedReservation);
             }
+
+            // 예약 처리가 완료된 후 채팅방 생성
+            String salonId = stylist.getSalon().getId();
+            log.info("예약 완료 후 채팅방 생성 시작 - 사용자: {}, 미용실: {}", userId, salonId);
+
+            // 채팅방 생성 (이미 존재하면 기존 채팅방 반환됨)
+            ChatRoomDto chatRoom = chatService.getChatRoom(userId, salonId);
+            log.info("채팅방 생성 완료. 채팅방 ID: {}", chatRoom.getId());
+
+            // 예약 완료 환영 메시지 전송
+            LocalDate reservationDate = LocalDate.parse(request.getPaymentRequest().getReservation().getReservationDate());
+            LocalTime reservationTime = LocalTime.parse(request.getPaymentRequest().getReservation().getReservationTime());
+            String serviceName = serviceMenu.getServiceName();
+
+            // 미용실에서 사용자에게 보내는 메시지
+            String welcomeMessage = String.format(
+                    "안녕하세요! 예약이 완료되었습니다.\n" +
+                            "예약 일시: %s월 %s일 %s시\n" +
+                            "담당 스타일리스트: %s\n" +
+                            "시술 종류: %s\n" +
+                            "문의 사항이 있으시면 언제든지 채팅으로 연락주세요😊",
+                    reservationDate.getMonthValue(),
+                    reservationDate.getDayOfMonth(),
+                    reservationTime.getHour(),
+                    stylist.getName(),
+                    serviceName
+            );
+
+            ChatMessageDto messageDto = ChatMessageDto.builder()
+                    .chatRoomId(chatRoom.getId())
+                    .senderType("SALON") // 미용실에서 보내는 메시지
+                    .senderId(salonId)
+                    .message(welcomeMessage)
+                    .photos(new ArrayList<>()) // 빈 사진 목록
+                    .build();
+
+            chatService.sendMessage(messageDto);
 
             return request;
         } catch (Exception e) {
@@ -214,9 +251,8 @@ public class ReservationStylistService {
     private Reservation createReservation(ReservationRequestDto request, Users user, AdminStylist stylist, ServiceMenu serviceMenu) {
         var reservationData = request.getPaymentRequest().getReservation();
 
-        // LocalDate와 LocalTime으로 변환
-        LocalDate reservationDate = LocalDate.parse(reservationData.getReservation_date());
-        LocalTime reservationTime = LocalTime.parse(reservationData.getReservation_time());
+        LocalDate reservationDate = LocalDate.parse(reservationData.getReservationDate());
+        LocalTime reservationTime = LocalTime.parse(reservationData.getReservationTime());
 
         return Reservation.builder()
                 .user(user)
@@ -224,10 +260,10 @@ public class ReservationStylistService {
                 .serviceMenu(serviceMenu)
                 .reservationDate(reservationDate)
                 .reservationTime(reservationTime)
-                .reservationServiceType(serviceMenu.getServiceType()) // 서비스 메뉴에서 가져옴
-                .reservationServiceName(serviceMenu.getServiceName()) // 서비스 메뉴에서 가져옴
-                .reservationPrice(serviceMenu.getPrice()) // 서비스 메뉴의 원래 가격 사용
-                .isPaid(true) // 항상 true로 설정
+                .reservationServiceType(serviceMenu.getServiceType())
+                .reservationServiceName(serviceMenu.getServiceName())
+                .reservationPrice(serviceMenu.getPrice())
+                .isPaid(true)
                 .requirements(reservationData.getRequirements())
                 .build();
     }
@@ -236,9 +272,9 @@ public class ReservationStylistService {
         return Payment.builder()
                 .reservation(reservation)
                 .price(request.getPaymentRequest().getPrice().intValue())
-                .paymentMethod(request.getPayment_method())
-                .paymentStatus(request.getPayment_status())
-                .transactionId("TRANS_" + System.currentTimeMillis()) // 트랜잭션 ID 생성
+                .paymentMethod(request.getPaymentMethod())
+                .paymentStatus(request.getPaymentStatus())
+                .transactionId("TRANS_" + System.currentTimeMillis())
                 .paymentDate(LocalDateTime.now())
                 .isCanceled(false)
                 .isRefunded(false)
@@ -250,7 +286,7 @@ public class ReservationStylistService {
 
         PointUsage pointUsage = PointUsage.builder()
                 .user(user)
-                .usageType(pointUsageData.getUsage_type())
+                .usageType(pointUsageData.getUsageType())
                 .price(pointUsageData.getPrice())
                 .useDate(LocalDateTime.now())
                 .content(pointUsageData.getContent())
@@ -261,7 +297,6 @@ public class ReservationStylistService {
     }
 
     private void updateUserPoints(Users user, int usedPoints) {
-        // Users 엔티티에 setPoint 메서드가 없어 리포지토리에서 직접 업데이트 필요
         int currentPoints = user.getPoint();
         int newPoints = currentPoints - usedPoints;
 
@@ -279,17 +314,17 @@ public class ReservationStylistService {
     private void processCouponUsage(ReservationRequestDto request, Reservation reservation) {
         var couponData = request.getPaymentRequest().getCouponData();
 
-        Coupon coupon = couponRepository.findById(couponData.getCoupon_id())
-                .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다: " + couponData.getCoupon_id()));
+        Coupon coupon = couponRepository.findById(couponData.getCouponId())
+                .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다: " + couponData.getCouponId()));
 
         ReservationCoupon reservationCoupon = ReservationCoupon.builder()
                 .reservation(reservation)
                 .coupon(coupon)
-                .discountAmount(couponData.getDiscount_amount().intValue())
+                .discountAmount(couponData.getDiscountAmount().intValue())
                 .build();
 
         reservationCouponRepository.save(reservationCoupon);
         log.info("쿠폰 사용 내역 저장 완료. 쿠폰 ID: {}, 할인 금액: {}",
-                couponData.getCoupon_id(), couponData.getDiscount_amount());
+                couponData.getCouponId(), couponData.getDiscountAmount());
     }
 }

@@ -71,6 +71,7 @@ public class AdminCouponService {
         couponRepository.delete(coupon);
     }
 
+    @Transactional
     public void updateCoupon(Long id, CouponDto couponDto) {
         Coupon coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Coupon Not Found"));

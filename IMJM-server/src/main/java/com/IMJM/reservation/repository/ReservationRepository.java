@@ -1,6 +1,7 @@
 package com.IMJM.reservation.repository;
 
 import com.IMJM.common.entity.Reservation;
+import com.IMJM.user.dto.UserReservationResponseDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,5 +37,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             """)
     List<Reservation> findPastReservationsBySalonIdOrderByDateTimeDesc(String salonId);
 
-    List<Reservation> findByStylist_Salon_id(String salonId);
+    // 예약상세 조회
+    Optional<Reservation> findById(Long id);
+
+    // 사용자 ID로 예약을 날짜 내림차순으로 조회
+    List<Reservation> findByUser_IdOrderByReservationDateDesc(String userId);
 }
+
+
+

@@ -2,10 +2,13 @@ package com.IMJM.user.service;
 
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.ClientStylist;
+import com.IMJM.common.entity.PointUsage;
 import com.IMJM.common.entity.Users;
 import com.IMJM.jwt.JWTUtil;
+import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.LocationDto;
+import com.IMJM.user.dto.PointHistoryResponseDto;
 import com.IMJM.user.dto.UserDto;
 import com.IMJM.user.repository.ClientStylistRepository;
 import com.IMJM.user.repository.UserRepository;
@@ -26,6 +29,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -40,10 +45,12 @@ public class UserService {
     private final ClientStylistRepository stylistRepository;
     private final JWTUtil jwtUtil;
     private final ClientStylistRepository clientStylistRepository;
+    private final PointUsageRepository pointUsageRepository;
 
     private static final String ANONYMOUS_USER = "anonymous";
     private static final BigDecimal LAT = new BigDecimal("37.498297");
     private static final BigDecimal LON = new BigDecimal("127.027733");
+    private static final int MEMBERSHIP_POINT = 1000;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -85,6 +92,19 @@ public class UserService {
                 dto.getRegion(),
                 dto.isIs_notification(),
                 dto.isTermsAgreed());
+
+        if(!pointUsageRepository.existsByUserIdAndContent(user.getId(), "Membership Points Earned")){
+            PointUsage pointUsage = PointUsage.builder()
+                    .user(user)
+                    .usageType("SAVE")
+                    .price(MEMBERSHIP_POINT)
+                    .useDate(LocalDateTime.now())
+                    .content("Membership Points Earned")
+                    .build();
+
+            pointUsageRepository.save(pointUsage);
+            user.savePoint(MEMBERSHIP_POINT);
+        }
     }
 
     public String uploadProfileImage(String userId, MultipartFile profileFile) {
@@ -185,5 +205,49 @@ public class UserService {
 
     public boolean isNicknameAvailable(String nickname) {
         return !userRepository.existsByNickname(nickname);
+    }
+
+    public UserDto getUserProfile(String userId) {
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("not found user"));
+
+        return UserDto.builder()
+                .profile(user.getProfile())
+                .nickname(user.getNickname())
+                .gender(user.getGender())
+                .birthday(String.valueOf(user.getBirthday()))
+                .region(user.getRegion())
+                .build();
+    }
+
+    @Transactional
+    public void updateUserProfile(String id, String nickname, MultipartFile profileImage) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("not found user"));
+
+        String profile = uploadProfileImage(id, profileImage);
+
+        user.updateUserProfile(nickname, profile);
+    }
+
+    public int getMyPoint(String id) {
+
+        return userRepository.findById(id)
+                .map(Users::getPoint)
+                .orElse(0);
+    }
+
+    public List<PointHistoryResponseDto> getMyPointHistory(String id) {
+        List<PointUsage> pointUsages = pointUsageRepository.findByUserIdOrderByUseDateDesc(id);
+
+        return pointUsages.stream()
+                .map(pointUsage -> PointHistoryResponseDto.builder()
+                        .usageType(pointUsage.getUsageType())
+                        .price(pointUsage.getPrice())
+                        .useDate(String.valueOf(pointUsage.getUseDate()))
+                        .content(pointUsage.getContent())
+                        .build())
+                .toList();
     }
 }

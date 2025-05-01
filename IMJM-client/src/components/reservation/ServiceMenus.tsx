@@ -11,9 +11,9 @@ const ServiceMenus = ({
   selectedMenu,
   stylistName,
   selectedDate, 
-  selectedTime, 
+  selectedTime,
+  salonName, 
 }: ServiceMenusSectionProps) => {
-
   const { salonId,stylistId } = useParams(); 
   const navigate = useNavigate(); 
 
@@ -28,7 +28,7 @@ const ServiceMenus = ({
   };
 
   const handleNextPage = () => {
-    navigate(`/salon/${salonId}/reservation/${stylistId}/paymentDetails`, {
+    navigate(`/salon/${salonId}/reservation/${stylistId}/payment-details`, {
       state: {
         salonId: salonId ?? '',
         stylistId: stylistId ? parseInt(stylistId) : null,
@@ -36,6 +36,7 @@ const ServiceMenus = ({
         selectedDate: selectedDate,
         selectedTime: selectedTime, 
         selectedType: selectedType,
+        salonName: salonName,
         selectedMenu: selectedMenu
           ? {
               serviceName: selectedMenu.serviceName,
@@ -66,7 +67,7 @@ const ServiceMenus = ({
             pb: 1
           }}
         >
-          {selectedType} 서비스 메뉴
+          {selectedType} 
         </Typography>
 
         {isMenuLoading ? (
@@ -114,7 +115,7 @@ const ServiceMenus = ({
                     size="small" 
                     variant="outlined" 
                     color="primary"
-                    onClick={() => handleMenuSelectInternal(menu)} // 메뉴 선택 핸들러
+                    onClick={() => handleMenuSelectInternal(menu)} 
                     sx={{ 
                       minWidth: '80px',
                       borderColor: '#F06292',
@@ -126,7 +127,7 @@ const ServiceMenus = ({
                       }
                     }}
                   >
-                    {selectedMenuName === menu.serviceName ? '취소' : '선택'} {/* 선택된 경우 취소 버튼 표시 */}
+                    {selectedMenuName === menu.serviceName ? '취소' : '선택'}
                   </Button>
                 </Box>
               </Box>

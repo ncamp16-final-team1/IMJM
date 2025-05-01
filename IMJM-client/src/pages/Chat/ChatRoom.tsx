@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
     Typography,
     IconButton,
@@ -13,9 +14,17 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Box from '@mui/material/Box';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import styles from './ChatRoom.module.css';
 import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
-import RabbitMQService from '../../services/chat/RabbitMQService';
+import WebSocketService from '../../services/chat/WebSocketService';
 import TranslationService from '../../services/chat/TranslationService';
 import FileUploadService from '../../services/chat/FileUploadService';
 
@@ -27,7 +36,6 @@ interface ChatRoomInfo {
     salonLanguage: string;
 }
 
-// 번역 상태를 관리하기 위한 인터페이스
 interface TranslationState {
     isLoading: boolean;
     text: string | null;
@@ -35,7 +43,7 @@ interface TranslationState {
 }
 
 const ChatRoom: React.FC = () => {
-    const { roomId, salonId } = useParams<{ roomId: string; salonId: string }>();
+    const { roomId } = useParams<{ roomId: string }>();
     const [messages, setMessages] = useState<ChatMessageDto[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
     const [chatRoom, setChatRoom] = useState<ChatRoomInfo | null>(null);
@@ -48,36 +56,24 @@ const ChatRoom: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const [userId] = useState<string>('user1'); // 테스트용 사용자 ID (실제로는 인증 서비스에서 가져와야 함)
+    const [userId, setUserId] = useState<string>('');
 
-    // RabbitMQ 연결 및 메시지 수신 설정
     useEffect(() => {
-        if (!roomId) return;
+        if (!roomId || !userId) return;
 
-        // RabbitMQ 초기화
-        RabbitMQService.initialize(userId);
-
-        // 특정 채팅방 구독
-        RabbitMQService.subscribeToRoom(Number(roomId));
-
-        // 메시지 수신 리스너 등록
         const handleNewMessage = (messageData: ChatMessageDto) => {
-            console.log("새 메시지 수신:", messageData);
 
-            // 현재 채팅방과 관련된 메시지인지 확인
             if (messageData.chatRoomId === Number(roomId)) {
-                setMessages(prev => {
-                    // 이미 같은 메시지가 있는지 확인
-                    const messageExists = prev.some(msg =>
+                setMessages(prevMessages => {
+                    const isDuplicate = prevMessages.some(msg =>
                         msg.id === messageData.id ||
                         (msg.message === messageData.message &&
                             msg.senderType === messageData.senderType &&
                             Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000)
                     );
 
-                    if (messageExists) {
-                        // ID가 있는 메시지로 임시 메시지 교체
-                        return prev.map(msg =>
+                    if (isDuplicate) {
+                        return prevMessages.map(msg =>
                             (msg.id === messageData.id ||
                                 (msg.message === messageData.message &&
                                     msg.senderType === messageData.senderType &&
@@ -85,61 +81,61 @@ const ChatRoom: React.FC = () => {
                                 ? messageData : msg
                         );
                     } else {
-                        // 새 메시지 추가
-                        console.log("새 메시지 추가:", messageData);
-                        return [...prev, messageData];
+                        const newMessages = [...prevMessages, messageData];
+                        return newMessages;
                     }
                 });
 
-                // 메시지 읽음 처리 - 본인이 보낸 메시지가 아닌 경우만
                 if (messageData.senderType !== 'USER') {
                     ChatService.markMessagesAsRead(Number(roomId), 'USER')
                         .catch(err => console.error("메시지 읽음 처리 실패:", err));
                 }
+            } else {
             }
         };
 
-        RabbitMQService.addListener('message', handleNewMessage);
+        WebSocketService.addListener('message', handleNewMessage);
 
-        // 컴포넌트 언마운트 시 리스너 제거 및 연결 해제
         return () => {
-            RabbitMQService.removeListener('message', handleNewMessage);
+            WebSocketService.removeListener('message', handleNewMessage);
         };
     }, [userId, roomId]);
 
-    // 채팅방 정보와 메시지 로드
     useEffect(() => {
-        const fetchChatRoom = async () => {
+        const fetchUserAndChatRoom = async () => {
             try {
                 if (!roomId) return;
 
-                // 채팅방 정보를 서버에서 가져오는 API가 없어서 간단한 정보로 대체
+                const userResponse = await axios.get('/api/chat/user/current');
+                const currentUserId = userResponse.data.id;
+                setUserId(currentUserId);
+
+                WebSocketService.initialize(currentUserId);
+
+                const roomResponse = await axios.get(`/api/chat/room/${roomId}`);
                 setChatRoom({
                     id: Number(roomId),
-                    salonId: salonId || '',
-                    salonName: 'Beauty Salon', // 실제로는 API에서 받아와야 함
-                    userLanguage: 'en', // 사용자 언어
-                    salonLanguage: 'ko', // 미용실 언어
+                    salonId: roomResponse.data.salonId,
+                    salonName: roomResponse.data.salonName,
+                    userLanguage: roomResponse.data.userLanguage,
+                    salonLanguage: roomResponse.data.salonLanguage
                 });
 
-                // 채팅 메시지 로드
                 const chatMessages = await ChatService.getChatMessages(Number(roomId));
                 setMessages(chatMessages);
 
-                // 메시지 읽음 처리
                 await ChatService.markMessagesAsRead(Number(roomId), 'USER');
 
                 setLoading(false);
             } catch (err) {
-                console.error('채팅방 정보를 불러오는데 실패했습니다:', err);
+                navigate('/chat');
                 setLoading(false);
             }
         };
 
-        fetchChatRoom();
-    }, [roomId, salonId]);
+        fetchUserAndChatRoom();
+    }, [roomId]);
 
-    // 메시지 스크롤 처리
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -152,12 +148,10 @@ const ChatRoom: React.FC = () => {
         navigate('/chat');
     };
 
-    // 파일 선택 핸들러
     const handleFileSelect = () => {
         fileInputRef.current?.click();
     };
 
-    // 파일 변경 핸들러
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -175,26 +169,21 @@ const ChatRoom: React.FC = () => {
         setSelectedFiles(prev => [...prev, ...newFiles]);
         setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
 
-        // 파일 선택 후 input 값 초기화 (같은 파일 다시 선택 가능하도록)
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
 
-    // 선택한 파일 제거 핸들러
     const removeSelectedFile = (index: number) => {
         URL.revokeObjectURL(previewUrls[index]); // 메모리 누수 방지
         setSelectedFiles(prev => prev.filter((_, i) => i !== index));
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
 
-    // 번역 요청 및 토글 함수
     const handleTranslateRequest = async (message: ChatMessageDto) => {
         const messageId = message.id;
 
-        // 이미 번역이 로드되었으면 토글 수행
         if (translations[messageId] && !translations[messageId].isLoading) {
-            // 이미 번역이 표시되어 있으면 제거
             if (!translations[messageId].error && translations[messageId].text) {
                 setTranslations(prev => {
                     const newTranslations = { ...prev };
@@ -204,9 +193,7 @@ const ChatRoom: React.FC = () => {
                 return;
             }
 
-            // 에러가 있으면 다시 시도
             if (translations[messageId].error) {
-                // 로딩 상태로 설정
                 setTranslations(prev => ({
                     ...prev,
                     [messageId]: { isLoading: true, text: null, error: null }
@@ -221,7 +208,6 @@ const ChatRoom: React.FC = () => {
             return;
         }
 
-        // 로딩 상태로 설정
         setTranslations(prev => ({
             ...prev,
             [messageId]: { isLoading: true, text: null, error: null }
@@ -238,7 +224,6 @@ const ChatRoom: React.FC = () => {
         }
     };
 
-    // 실제 번역 요청을 수행하는 함수
     const requestTranslation = async (message: ChatMessageDto) => {
         if (!chatRoom) return;
 
@@ -267,20 +252,17 @@ const ChatRoom: React.FC = () => {
     };
 
     const handleSendMessage = async () => {
-        if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom) return;
+        if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom || !userId) return;
 
         setLoading(true); // 메시지 전송 중 로딩 상태 설정
 
         try {
-            // 사진이 있는 경우 먼저 업로드
             let photoAttachments: ChatPhoto[] = [];
 
             if (selectedFiles.length > 0) {
                 try {
-                    // 여러 이미지를 개별적으로 업로드
                     const uploadResults = await FileUploadService.uploadMultipleImages(selectedFiles, chatRoom.id);
 
-                    // 업로드 결과를 ChatPhoto 형식으로 변환
                     photoAttachments = uploadResults.map((result, index) => ({
                         photoId: Date.now() + index, // 고유 ID 생성
                         photoUrl: result.fileUrl
@@ -293,7 +275,6 @@ const ChatRoom: React.FC = () => {
                 }
             }
 
-            // 임시 메시지 객체 생성 (UI에 즉시 표시용)
             const tempMessage: ChatMessageDto = {
                 id: Date.now(), // 임시 ID
                 chatRoomId: chatRoom.id,
@@ -307,37 +288,71 @@ const ChatRoom: React.FC = () => {
                 photos: photoAttachments
             };
 
-            // 메시지를 즉시 UI에 추가
             setMessages(prev => [...prev, tempMessage]);
 
-            // RabbitMQ를 통해 메시지 전송
-            const response = await RabbitMQService.sendMessageWithPhotos(
+            setNewMessage('');
+            setSelectedFiles([]);
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            setPreviewUrls([]);
+
+            const response = await WebSocketService.sendMessageWithPhotos(
                 chatRoom.id,
-                newMessage,
+                tempMessage.message,
                 'USER',
                 photoAttachments
             );
 
             console.log("메시지 전송 응답:", response);
 
-            // 서버 응답 후 임시 메시지를 실제 메시지로 업데이트
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg.id === tempMessage.id ? response : msg
-                )
-            );
-
-            // 입력 필드 및 선택된 파일 초기화
-            setNewMessage('');
-            setSelectedFiles([]);
-            previewUrls.forEach(url => URL.revokeObjectURL(url));
-            setPreviewUrls([]);
+            if (response && response.id && response.id !== tempMessage.id) {
+                setMessages(prev =>
+                    prev.map(msg =>
+                        msg.id === tempMessage.id ? response : msg
+                    )
+                );
+            }
 
         } catch (error) {
             console.error('메시지 전송 실패:', error);
             alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const openMenu = Boolean(anchorEl);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deletedOpen, setDeletedOpen] = useState(false);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+    const handleDeleteRoom = async () => {
+        try {
+            await axios.delete(`/api/chat/room/${roomId}`);
+            navigate('/chat'); // 삭제 후 채팅방 목록으로 이동
+        } catch (error) {
+            console.error('채팅방 삭제 실패:', error);
+            alert('채팅방 삭제에 실패했습니다.');
+        }
+    };
+
+    const handleDeleteMenuClick = () => {
+        setConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await axios.delete(`/api/chat/room/${roomId}`);
+            setConfirmOpen(false);
+            setDeletedOpen(true);
+        } catch (error) {
+            console.error('채팅방 삭제 실패:', error);
+            alert('삭제에 실패했습니다.');
         }
     };
 
@@ -352,11 +367,23 @@ const ChatRoom: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <IconButton onClick={handleBackClick} size="small">
-                    <ArrowBackIcon />
+            <div className={styles.header} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton onClick={handleBackClick} size="small">
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>
+                        {chatRoom?.salonName || userName || '채팅방'}
+                    </Typography>
+                </Box>
+
+                {/* 오른쪽 케밥 메뉴 */}
+                <IconButton onClick={handleMenuOpen}>
+                    <MoreVertIcon />
                 </IconButton>
-                <Typography variant="h6">{chatRoom?.salonName || '채팅방'}</Typography>
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                    <MenuItem onClick={handleDeleteMenuClick}>채팅방 삭제</MenuItem>
+                </Menu>
             </div>
 
             <div className={styles.messagesContainer}>
@@ -466,7 +493,12 @@ const ChatRoom: React.FC = () => {
                     placeholder="메시지를 입력하세요..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault(); // 기본 동작 방지
+                            handleSendMessage();
+                        }
+                    }}
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
@@ -493,6 +525,40 @@ const ChatRoom: React.FC = () => {
                     }}
                 />
             </div>
+
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>채팅방 삭제</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        채팅방을 삭제하면 모든 메시지와 사진이 함께 삭제됩니다. 계속하시겠습니까?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)}>취소</Button>
+                    <Button onClick={handleConfirmDelete} color="error">삭제</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={deletedOpen} onClose={() => {
+                setDeletedOpen(false);
+                navigate('/chat');
+            }}>
+                <DialogTitle>삭제 완료</DialogTitle>
+                <DialogContent>
+                    <Typography>채팅방이 성공적으로 삭제되었습니다.</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setDeletedOpen(false);
+                            navigate('/chat');
+                        }}
+                        autoFocus
+                    >
+                        확인
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

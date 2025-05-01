@@ -74,10 +74,10 @@ public class ReservationController {
     public ResponseEntity<List<SalonCouponDto>> getCoupons(
             @RequestParam String salonId,
             @RequestParam String totalAmount,
-      @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
     ) {
     String userId = customOAuth2UserDto.getId();
-//        String userId = "user001";
+
         try {
             int totalAmountInt = Integer.parseInt(totalAmount);
 
@@ -105,13 +105,12 @@ public class ReservationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "User not found with id: " + userId));
         } catch (Exception e) {
-            // 기타 예외 처리
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Error retrieving user points: " + e.getMessage()));
         }
     }
 
-    // 결제 완료후 디비 저장?
+    // 결제된척 디비 저장
     @PostMapping("/reservation/complete")
     public ResponseEntity<?> completeReservation(@RequestBody ReservationRequestDto  request,
         @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
@@ -119,7 +118,7 @@ public class ReservationController {
         try {
             String userId = customOAuth2UserDto.getId();
             log.info("예약 완료 요청: {}", request);
-
+            System.out.println(request);
             reservationStylistService.completeReservation(request, userId);
 
             Map<String, Object> successResponse = new HashMap<>();

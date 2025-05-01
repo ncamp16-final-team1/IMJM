@@ -2,6 +2,7 @@ package com.IMJM.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -95,6 +96,11 @@ public class Users {
         this.termsAgreed = termsAgreed;
     }
 
+    public void updateUserProfile(String nickname, String profile) {
+        this.nickname = nickname;
+        this.profile = profile;
+    }
+
     public void updateLocation(BigDecimal latitude, BigDecimal longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
@@ -108,5 +114,14 @@ public class Users {
         this.region = null;
         this.isNotification = false;
         this.termsAgreed = false;
+        this.point = 0;
+    }
+
+    public void usePoint(int point) {
+        this.point -= point;
+    }
+
+    public void savePoint(int point) {
+        this.point += point;
     }
 }

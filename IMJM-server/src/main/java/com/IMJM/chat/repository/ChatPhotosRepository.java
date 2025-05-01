@@ -10,4 +10,6 @@ public interface ChatPhotosRepository extends JpaRepository<ChatPhotos, Long> {
     List<ChatPhotos> findByChatMessageId(Long chatMessageId);
 
     List<ChatPhotos> findByChatMessageIdIn(List<Long> chatMessageIds);
+
+    void deleteByChatMessageId(Long chatMessageId);
 }

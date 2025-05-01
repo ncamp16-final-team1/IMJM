@@ -63,8 +63,6 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 
 	implementation 'org.json:json:20231013'
-
-	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 }
 
 tasks.named('test') {

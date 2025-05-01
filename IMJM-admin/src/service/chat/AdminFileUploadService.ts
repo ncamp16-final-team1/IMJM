@@ -6,8 +6,8 @@ interface UploadResult {
     fileSize: number;
 }
 
-class FileUploadService {
-    private baseUrl = '/api/chat';
+class AdminFileUploadService {
+    private baseUrl = '/api/admin/chat';
     private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     // 단일 이미지 업로드
@@ -50,4 +50,4 @@ class FileUploadService {
     }
 }
 
-export default new FileUploadService();
+export default new AdminFileUploadService();

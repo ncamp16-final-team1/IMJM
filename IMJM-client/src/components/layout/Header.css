@@ -16,11 +16,10 @@
 }
 
 .logo {
-    height: 150px;
-    width: 150px;
-    position: relative;
-    left: -20px;
-    top: 5px;
+    height: 38px;
+    width: 115px;
+    margin-left: 5px;
+    cursor: pointer;
 }
 
 .header-actions {

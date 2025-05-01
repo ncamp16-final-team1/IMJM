@@ -38,4 +38,8 @@ public class Alarm {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    public void setIsRead(boolean isRead) {
+        this.isRead = isRead;
+    }
 }
