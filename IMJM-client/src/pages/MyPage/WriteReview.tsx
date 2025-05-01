@@ -254,8 +254,8 @@ export default function WriteReview() {
     const formData = new FormData();
     formData.append('reviewData', new Blob([JSON.stringify(reviewData)], {type: 'application/json'}));
     
-    uploadedImages.forEach((image, index) => {
-      formData.append(`image${index}`, image);
+    uploadedImages.forEach((image) => {
+      formData.append('images', image);
     });
     
     try {
@@ -577,6 +577,7 @@ interface TagCheckboxProps {
 
 const TagCheckbox = ({ tag, selected, onToggle }: TagCheckboxProps) => (
   <Paper
+    elevation={0}
     sx={{
       display: 'inline-flex',
       borderRadius: '20px',

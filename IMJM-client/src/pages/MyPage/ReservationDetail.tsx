@@ -4,8 +4,6 @@ import axios from "axios";
 import {
   Box,
   Typography,
-  TextField,
-  Button,
   Paper,
   Stack,
   Divider,
@@ -19,7 +17,6 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PaymentIcon from "@mui/icons-material/Payment";
 import PersonIcon from "@mui/icons-material/Person";
 
-// PaymentInfoDto 인터페이스 정의
 interface PaymentInfoDto {
   paymentMethod: string;
   paymentStatus: string;
@@ -29,7 +26,6 @@ interface PaymentInfoDto {
   canceled: boolean;
 }
 
-// CouponInfoDto 인터페이스 정의
 interface CouponInfoDto {
   couponName: string;
   discountType: string;
@@ -37,13 +33,11 @@ interface CouponInfoDto {
   discountAmount: number;
 }
 
-// PointUsageDto 인터페이스 정의
 interface PointUsageDto {
   points: number;
   useDate: string;
 }
 
-// ReservationDetailResponseDto 인터페이스 정의
 interface ReservationDetailResponseDto {
   reservationId: number;
   reservationDate: string;
@@ -113,11 +107,8 @@ const ReservationDetail = () => {
         )}
 
         <Divider sx={{ mb: 3 }} />
-
         
         <Box sx = {{ px:3 }}>
-
-          {/* 예약 기본 정보 */}
           <Grid container spacing={10} justifyContent="" sx={{ mb: 3 }}>
             <Grid item xs={12} sm={5} ml={0}>
               <Stack
@@ -154,7 +145,6 @@ const ReservationDetail = () => {
             </Grid>
           </Grid>
 
-          {/* 매장 주소 */}
           <Box sx={{ mb: 3 }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
               <LocationOnIcon sx={{ color: "#FF9080" }} />
@@ -169,107 +159,122 @@ const ReservationDetail = () => {
 
           <Divider sx={{ mb: 3 }} />
 
-            <Box>
-              {/* 제목 + 아이콘 */}
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+          <Box>
+            <Stack 
+              direction="row" 
+              alignItems="center" 
+              sx={{ mb: 1 }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <PaymentIcon sx={{ color: "#FF9080" }} />
-                <Typography variant="subtitle1" fontWeight="bold">결제 정보</Typography>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  결제 정보
+                </Typography>
               </Stack>
+              
+              <Typography variant="body1" sx={{ ml: 21 }}>
+                결제 일시 : {reservation.paymentInfo?.paymentDate
+                  ? formatDate(reservation.paymentInfo.paymentDate)
+                  : '없음'} 
+              </Typography>
+            </Stack>
 
-              {/* 결제 정보 카드 */}
-              <Paper elevation={0} sx={{   px:3 }}>
-                
-                <Grid container spacing={2} sx={{ mb: 1 }}>
-                  <Grid item xs={6}>
-                  <Typography variant="body1">
-                    {reservation.paymentInfo?.paymentDate
-                      ? formatDate(reservation.paymentInfo.paymentDate)
-                      : '없음'} 
-                  </Typography>
-                  </Grid>
-                </Grid>
+            <Paper elevation={0} sx={{ px: 3 }}>
 
-                {/* 쿠폰 정보 */}
-                <Grid container spacing={2} sx={{ mb: 2 }}>
-                  <Grid item xs={6}>
-                    <Typography variant="body1" color="text.secondary">쿠폰 이름</Typography>
+              <Grid container spacing={10} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6}>
+                  <Stack direction="row" sx={{ mb: 2 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                      쿠폰 이름 : 
+                    </Typography>
                     <Typography variant="body2">
                       {reservation.couponInfo?.couponName || '없음'}
                     </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body1" color="text.secondary">할인 금액</Typography>
+                  </Stack>
+                  
+                  <Stack direction="row" sx={{ mb: 2 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                      할인 금액 :
+                    </Typography>
                     <Typography variant="body2">
                       {reservation.couponInfo?.discountAmount != null
-                        ? `${reservation.couponInfo.discountAmount.toLocaleString()}원`
-                        : '0원'}
+                        ? `${reservation.couponInfo.discountAmount.toLocaleString()} KRW`
+                        : '0 KRW'}
                     </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body1" color="text.secondary">사용 포인트</Typography>
+                  </Stack>
+                  
+                  <Stack direction="row" sx={{ mb: 2 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                      사용 포인트 :
+                    </Typography>
                     <Typography variant="body2">
                       {reservation.pointUsage?.points != null
                         ? `${reservation.pointUsage.points.toLocaleString()}P`
                         : '0P'}
                     </Typography>
-                  </Grid>
+                  </Stack>
                 </Grid>
-              </Paper>
 
-              
+                <Grid item xs={12} sm={6}>
+                  
+                  <Stack direction="row" sx={{ mb: 2 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                      결제 방법 :
+                    </Typography>
+                    <Chip
+                      label={reservation.paymentInfo?.paymentMethod || "결제 정보 없음"}
+                      color="primary"
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Stack>
+                  
 
-              <Divider sx={{ my: 2 }} />
-              <Paper elevation={0} sx={{   px:3, pb:5 }}>
-              {/* 결제 금액, 방법, 상태 */}
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="body1" color="text.secondary">결제 금액</Typography>
-                  <Typography variant="body2" fontWeight="bold">
-                    {reservation.paymentInfo?.price?.toLocaleString()} 원
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" color="text.secondary">결제 방법</Typography>
-                  <Chip
-                    label={reservation.paymentInfo?.paymentMethod || "결제 정보 없음"}
-                    color="primary"
-                    size="small"
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" color="text.secondary">결제 상태</Typography>
-                  <Chip
-                    label={reservation.paymentInfo?.paymentStatus ? "승인" : "미확인"}
-                    color={reservation.paymentInfo?.paymentStatus ? "success" : "error"}
-                    size="small"
-                  />
+                  <Stack direction="row" sx={{ mb: 2 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                      결제 상태 :
+                    </Typography>
+                    <Chip
+                      label={reservation.paymentInfo?.paymentStatus ? "승인" : "미확인"}
+                      color={reservation.paymentInfo?.paymentStatus ? "success" : "error"}
+                      size="small"
+                    />
+                  </Stack>
+
+                  <Stack direction="row" sx={{ mb: 2 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                      결제 금액 :
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {reservation.paymentInfo?.price?.toLocaleString()} KRW
+                    </Typography>
+                  </Stack>
                 </Grid>
               </Grid>
             </Paper>
           </Box>
         </Box>
 
-        {/* 추가 요구사항 */}
-        {reservation.requirements && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: "bold" }}>
-              추가 요구사항
+        <Box sx={{ mb: 3, px: 3 }}>
+        <Divider sx={{ mb: 3 }} />
+          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: "bold" }}>
+            추가 요구사항
+          </Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              backgroundColor: "grey.50",
+              minHeight: 120, 
+            }}
+          >
+            <Typography variant="body2">
+              {reservation.requirements && reservation.requirements.trim() !== '' 
+                ? reservation.requirements 
+                : '요청사항이 없습니다.'}
             </Typography>
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2,
-                backgroundColor: "grey.50",
-                minHeight: 120, 
-              }}
-            >
-              <Typography variant="body2">
-                {reservation.requirements}
-              </Typography>
-            </Paper>
-          </Box>
-        )}
+          </Paper>
+        </Box>
       </Paper>
       <Divider sx={{ marginY: 3, borderColor: "grey.500", borderWidth: 2 }} />
     </Box>

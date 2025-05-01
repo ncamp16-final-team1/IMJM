@@ -592,9 +592,7 @@ function PaymentDetails() {
                     opacity: coupon.isAvailable ? 1 : 0.6,
                     position: "relative",
                     "&:hover": {
-                      boxShadow: coupon.isAvailable
-                        ? "0 2px 8px rgba(0,0,0,0.15)"
-                        : "none",
+                      boxShadow: "none", // 그림자 제거
                     },
                     "&::after": !coupon.isAvailable
                       ? {
@@ -640,7 +638,7 @@ function PaymentDetails() {
                       variant="caption"
                       sx={{ color: "#757575", fontWeight: "bold" }}
                     >
-                      헤어
+                      {salonName}
                     </Typography>
                     {coupon.discountType === "percentage" ? (
                       <Typography variant="body1" sx={{ fontWeight: "bold" }}>
@@ -750,13 +748,17 @@ function PaymentDetails() {
               height: "56px",
               minWidth: "140px",
               backgroundColor: pointApplied ? "#f44336" : "#2196f3",
+              boxShadow: 'none', 
               "&:hover": {
                 backgroundColor: pointApplied ? "#d32f2f" : "#1976d2",
+                boxShadow: 'none', 
+              },
+              "&.Mui-disabled": {
+                boxShadow: 'none', 
               },
             }}
           >
             {pointApplied ? "포인트 초기화" : "포인트 적용하기"}
-            {/* {pointApplied ? "Reset Points" : "Apply Points"} */}
           </Button>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
@@ -768,8 +770,8 @@ function PaymentDetails() {
         {pointApplied && usedPoints > 0 && (
           <Box sx={{ mt: 1, p: 1, bgcolor: "#e3f2fd", borderRadius: 1 }}>
             <Typography variant="body2" color="primary">
-              {usedPoints.toLocaleString()}포인트가 성공적으로 적용되었습니다!
-              {/* {usedPoints.toLocaleString()}Points have been successfully applied! */}
+              {/* {usedPoints.toLocaleString()}포인트가 성공적으로 적용되었습니다! */}
+              {usedPoints.toLocaleString()}Points have been successfully applied!
             </Typography>
           </Box>
         )}
@@ -785,13 +787,13 @@ function PaymentDetails() {
         </Typography>
         <Box sx={{ backgroundColor: "#FDF6F3", borderRadius: 5, p: 3 }}>
           {[
-            ["매장 이름", salonName],
-            ["스타일리스트 이름", stylistName],
-            ["선택 날짜", selectedDate],
-            ["선택 시간", selectedTime],
-            ["서비스 타입", selectedType],
-            ["서비스 네임", selectedMenu?.serviceName],
-            ["가격", `${selectedMenu?.price?.toLocaleString() || 0}원`],
+            ["salonName", salonName],
+            ["stylistName", stylistName],
+            ["selectedDat", selectedDate],
+            ["selectedTime", selectedTime],
+            ["hairService", selectedType],
+            ["serviceName", selectedMenu?.serviceName],
+            ["price", `${selectedMenu?.price?.toLocaleString() || 0}원`],
           ].map(([label, value], idx) => (
             <Box
               key={idx}
@@ -817,7 +819,8 @@ function PaymentDetails() {
           <Typography>{totalAmount.toLocaleString()}원</Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography>쿠폰 할인:</Typography>
+          {/* <Typography>쿠폰 할인:</Typography> */}
+          <Typography>Coupon Discount:</Typography>
           <Typography color="error">
             {selectedCoupon
               ? selectedCoupon.discountType === "percentage"
@@ -830,7 +833,8 @@ function PaymentDetails() {
           </Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography>포인트 사용:</Typography>
+          {/* <Typography>포인트 사용:</Typography> */}
+          <Typography>Points Used:</Typography>
           <Typography color="error">
             {pointApplied && usedPoints > 0
               ? `-${usedPoints.toLocaleString()}P`
@@ -839,7 +843,7 @@ function PaymentDetails() {
         </Box>
         <Divider sx={{ my: 1, borderWidth: 2 }} />
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="h6">총 결제금액:</Typography>
+          <Typography variant="h6">{/*총 결제금액*/}Total Amoun:</Typography>
           <Typography variant="h6" color="error">
             {Math.max(0, effectiveFinalAmount).toLocaleString()}원
           </Typography>
@@ -853,7 +857,8 @@ function PaymentDetails() {
             mt: 0.5,
           }}
         >
-          *부가세 10% 포함
+          {/* *부가세 10% 포함 */}
+          *Including 10% VAT
         </Typography>
       </Box>
 
@@ -880,12 +885,13 @@ function PaymentDetails() {
                 padding: "0px",
                 display: "flex",
                 justifyContent: "center",
-                boxShadow: "none",
+                boxShadow: "none", 
                 border: "1px solid #000",
                 alignItems: "center",
                 textTransform: "none",
                 "&:hover": {
                   backgroundColor: "#333",
+                  boxShadow: "none", 
                   "& img": {
                     filter: "brightness(2)",
                   },
@@ -898,53 +904,52 @@ function PaymentDetails() {
                 width="100%"
                 height="100%"
                 style={{
-                  filter:
-                    selectedPayment === "google" ? "brightness(2)" : "none",
+                  filter: selectedPayment === "google" ? "brightness(2)" : "none",
                 }}
               />
             </Button>
           </Grid>
 
           <Grid item>
-            <Button
-              variant="contained"
-              disabled={!isSafariBrowser}
-              onClick={() => setSelectedPayment("apple")}
-              sx={{
-                width: "200px",
-                height: "50px",
-                backgroundColor: selectedPayment === "apple" ? "#333" : "#fff",
-                color: "#fff",
-                fontSize: "16px",
-                fontWeight: "bold",
-                borderRadius: "4px",
-                padding: "0px",
-                display: "flex",
-                justifyContent: "center",
-                boxShadow: "none",
-                border: "1px solid #000",
-                alignItems: "center",
-                textTransform: "none",
-                "&:hover": {
-                  backgroundColor: "#333",
-                  "& img": {
-                    filter: "brightness(2)",
-                  },
+          <Button
+            variant="contained"
+            disabled={!isSafariBrowser}
+            onClick={() => setSelectedPayment("apple")}
+            sx={{
+              width: "200px",
+              height: "50px",
+              backgroundColor: selectedPayment === "apple" ? "#333" : "#fff",
+              color: "#fff",
+              fontSize: "16px",
+              fontWeight: "bold",
+              borderRadius: "4px",
+              padding: "0px",
+              display: "flex",
+              justifyContent: "center",
+              boxShadow: "none", 
+              border: "1px solid #000",
+              alignItems: "center",
+              textTransform: "none",
+              "&:hover": {
+                backgroundColor: "#333",
+                boxShadow: "none", 
+                "& img": {
+                  filter: "brightness(2)",
                 },
+              },
+            }}
+          >
+            <img
+              src={applePay}
+              alt="Apple Pay"
+              style={{
+                width: "auto",
+                height: "100%",
+                maxWidth: "100%",
+                filter: selectedPayment === "apple" ? "brightness(2)" : "none",
               }}
-            >
-              <img
-                src={applePay}
-                alt="Apple Pay"
-                style={{
-                  width: "auto",
-                  height: "100%",
-                  maxWidth: "100%",
-                  filter:
-                    selectedPayment === "apple" ? "brightness(2)" : "none",
-                }}
-              />
-            </Button>
+            />
+          </Button>
             {!isSafariBrowser && (
               <Typography
                 variant="caption"
@@ -971,7 +976,8 @@ function PaymentDetails() {
           </Typography>
           <TextField
             multiline
-            label="요청사항을 작성해주세요."
+            // label="요청사항을 작성해주세요."
+            label="Please enter any special requests."
             fullWidth
             value={requirements}
             rows={4}
@@ -1109,14 +1115,12 @@ function PaymentDetails() {
           >
             예약 완료
           </DialogTitle>
-          <DialogContent sx={{ padding: 4, minWidth: "300px" }}>
-            <DialogContentText sx={{ textAlign: "center", mb: 2 }}>
-              예약이 성공적으로 완료되었습니다!
-            </DialogContentText>
+          <DialogContent sx={{ padding: 3, minWidth: "300px", mt:2 }}>
             <DialogContentText
               sx={{ textAlign: "center", fontSize: "14px", color: "#666" }}
             >
               예약 정보는 마이페이지에서 확인하실 수 있습니다.
+              {/* You can check the reservation information on my page. */}
             </DialogContentText>
           </DialogContent>
           <DialogActions sx={{ padding: 2, justifyContent: "center" }}>
@@ -1127,12 +1131,14 @@ function PaymentDetails() {
               }}
               variant="contained"
               sx={{
-                backgroundColor: "#000",
+                backgroundColor: "#FDC7BF",
                 color: "#fff",
-                "&:hover": {
-                  backgroundColor: "#333",
-                },
                 width: "80%",
+                boxShadow: "none", 
+                "&:hover": {
+                  backgroundColor: "#FF9080",
+                  boxShadow: "none", 
+                },
               }}
             >
               확인

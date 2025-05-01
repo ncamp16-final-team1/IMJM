@@ -18,7 +18,7 @@ const TimeSlotsSection = ({
     return (
       <Box sx={{ mt: 2 }}>
         <Divider sx={{ marginY: 5, borderColor: 'grey.500', borderWidth: 2 }} />
-        <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ fontWeight: 'bold', fontSize: '18px' }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ fontWeight: 'bold', fontSize: '18px' }}>
           Reservation time
         </Typography>
         

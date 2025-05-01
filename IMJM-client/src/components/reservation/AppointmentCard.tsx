@@ -185,47 +185,52 @@ export default function AppointmentCard({
                 </Typography>
 
                 <Stack direction="row" spacing={1}>
-                    <Button 
-                        variant="outlined" 
-                        size="medium" 
-                        onClick={() => {
-                            // navigate(`/myPage/chat/${reservationId}`);
-                        }}
-                        sx={{
-                            borderRadius: 4,
-                            textTransform: 'none',
-                            backgroundColor: 'transparent', 
-                            borderColor: '#FF9080', 
-                            color: '#FF9080', 
-                            '&:hover': {
-                                backgroundColor: 'rgba(255, 144, 128, 0.1)', 
-                                borderColor: '#FF9080',
-                            },
-                        }} 
-                        startIcon={<ChatIcon fontSize="small" />}
+                <Button 
+                    variant="outlined" 
+                    size="medium" 
+                    onClick={() => {
+                        // navigate(`/myPage/chat/${reservationId}`);
+                    }}
+                    sx={{
+                        borderRadius: 4,
+                        textTransform: 'none',
+                        backgroundColor: 'transparent', 
+                        borderColor: '#FF9080', 
+                        color: '#FF9080',
+                        boxShadow: 'none',
+                        '&:hover': {
+                        backgroundColor: 'rgba(255, 144, 128, 0.1)', 
+                        borderColor: '#FF9080',
+                        boxShadow: 'none', 
+                        },
+                    }} 
+                    startIcon={<ChatIcon fontSize="small" />}
                     >
-                        1:1 Chat
+                    1:1 Chat
                     </Button>
 
                     <Button
-                        variant="contained"
-                        size="medium"
-                        sx={{
-                            borderRadius: 4,
-                            textTransform: 'none',
-                            backgroundColor: buttonConfig.color, 
-                            borderColor: buttonConfig.color, 
-                            color: 'white', 
-                            '&:hover': {
-                                backgroundColor: buttonConfig.color,
-                                opacity: 0.9,
-                            },
-                        }}
-                        onClick={buttonConfig.action}
-                        startIcon={buttonConfig.icon}
+                    variant="contained"
+                    size="medium"
+                    sx={{
+                        borderRadius: 4,
+                        textTransform: 'none',
+                        backgroundColor: buttonConfig.color, 
+                        borderColor: buttonConfig.color, 
+                        color: 'white',
+                        boxShadow: 'none',
+                        '&:hover': {
+                        backgroundColor: buttonConfig.color,
+                        opacity: 0.9,
+                        boxShadow: 'none', 
+                        },
+                    }}
+                    onClick={buttonConfig.action}
+                    startIcon={buttonConfig.icon}
                     >
-                        {buttonConfig.label}
+                    {buttonConfig.label}
                     </Button>
+
                 </Stack>
             </Box>
         </Paper>

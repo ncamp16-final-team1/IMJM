@@ -32,7 +32,7 @@ const ProfileSection = ({ stylistSchedule }: ProfileSectionProps) => {
         >
           {/* 이미지 없을 경우 "이미지가 없습니다" 텍스트 */}
           {!stylistSchedule.profile && (
-            <Typography variant="body2" sx={{ textAlign: 'center', padding: 1, color: 'white' }}>
+            <Typography variant="h5" sx={{ textAlign: 'center', padding: 1, color: 'white' }}>
               이미지가 없습니다.
             </Typography>
           )}

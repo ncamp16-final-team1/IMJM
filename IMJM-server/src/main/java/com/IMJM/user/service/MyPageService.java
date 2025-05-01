@@ -108,6 +108,11 @@ public class MyPageService {
 
     @Transactional
     public Long saveReview(ReviewSaveRequestDto requestDto, List<MultipartFile> images) {
+        // images가 null인 경우 빈 리스트로 초기화
+        if (images == null) {
+            images = new ArrayList<>();
+        }
+
         Users user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
