@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Typography, Button, Box, CircularProgress} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -127,7 +127,6 @@ const Archive: React.FC = () => {
                         sx={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: 2
                         }}
                     >
                         {archiveList.map((archive) => (

@@ -9,6 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 public class ArchiveLikeDto {
     private Long archiveId;
-    private Long userId;
+    private String userId;
     private String username;
 }

@@ -1,7 +1,6 @@
 package com.IMJM.archive.dto;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,16 +9,19 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ArchiveDto {
+public class ArchiveDetailDto {
     private Long id;
     private String userId;
     private String username;
-    private String profileUrl;
     private String content;
     private String service;
     private String gender;
     private String color;
     private String length;
+    private String profileUrl;
     private LocalDateTime regDate;
     private List<String> photoUrls;
+    private List<ArchiveCommentDto> comments;
+    private long likeCount;
+    private boolean isLiked;
 }

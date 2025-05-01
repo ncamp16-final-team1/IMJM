@@ -13,8 +13,9 @@ import java.util.List;
 public class ArchiveCommentDto {
     private Long id;
     private Long archiveId;
-    private Long userId;
+    private String userId;
     private String username;
+    private String profileUrl;
     private LocalDateTime regDate;
     private String content;
     private boolean isCommentForComment;

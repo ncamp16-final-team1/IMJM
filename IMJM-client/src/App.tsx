@@ -21,6 +21,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Archive from "./pages/Archive/Archive";
 import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
 import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
+import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
 
 function App() {
     return (
@@ -74,6 +75,11 @@ function App() {
                         <Route path="/archive/:id" element={
                             <ProtectedRoute>
                                 <ArchiveDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/edit/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveEdit />
                             </ProtectedRoute>
                         } />
 
