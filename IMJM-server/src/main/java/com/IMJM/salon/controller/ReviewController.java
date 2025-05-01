@@ -1,6 +1,6 @@
 package com.IMJM.salon.controller;
 
-import com.IMJM.common.PageResponseDto;
+import com.IMJM.common.page.PageResponseDto;
 import com.IMJM.salon.dto.ReviewDto;
 import com.IMJM.salon.service.ReviewService;
 import lombok.RequiredArgsConstructor;
