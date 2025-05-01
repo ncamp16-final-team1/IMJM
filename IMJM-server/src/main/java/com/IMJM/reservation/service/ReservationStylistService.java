@@ -212,8 +212,8 @@ public class ReservationStylistService {
             log.info("채팅방 생성 완료. 채팅방 ID: {}", chatRoom.getId());
 
             // 예약 완료 환영 메시지 전송
-            LocalDate reservationDate = LocalDate.parse(request.getPaymentRequest().getReservation().getReservation_date());
-            LocalTime reservationTime = LocalTime.parse(request.getPaymentRequest().getReservation().getReservation_time());
+            LocalDate reservationDate = LocalDate.parse(request.getPaymentRequest().getReservation().getReservationDate());
+            LocalTime reservationTime = LocalTime.parse(request.getPaymentRequest().getReservation().getReservationTime());
             String serviceName = serviceMenu.getServiceName();
 
             // 미용실에서 사용자에게 보내는 메시지
