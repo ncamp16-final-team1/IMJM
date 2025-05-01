@@ -7,12 +7,14 @@ import {
   Typography,
   Divider,
   Stack,
-  Button
+  Button,
+  Switch
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
+import NotificationService from '../../services/notification/NotificationService';
 
 const UserProfile = () => {
   const [nickname, setNickname] = useState('');
@@ -25,6 +27,7 @@ const UserProfile = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isChanged, setIsChanged] = useState(false);
+  const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
 
   useEffect(() => {
     axios.get('/api/user/my-profile',
@@ -37,6 +40,7 @@ const UserProfile = () => {
         setBirthday(data.birthday);
         setRegion(data.region);
         setProfile(data.profile);
+        setIsNotificationEnabled(data.isNotification);
       })
       .catch(err => {
         console.log('유저 정보 호출 실패: ', err);
@@ -102,6 +106,18 @@ const UserProfile = () => {
       .catch(err => {
         console.log('닉네임 중복 확인 실패:', err);
       });
+  };
+
+  // 알림 설정 토글 핸들러 추가
+  const handleNotificationToggle = async () => {
+    try {
+      // NotificationService의 updateNotificationSettings 메서드 호출
+      await NotificationService.updateNotificationSettings(!isNotificationEnabled);
+      setIsNotificationEnabled(!isNotificationEnabled);
+    } catch (error) {
+      console.error('알림 설정 변경 실패', error);
+      alert('알림 설정 변경에 실패했습니다.');
+    }
   };
 
   return (
@@ -202,29 +218,53 @@ const UserProfile = () => {
         <Divider sx={{ mt: 4 }} />
       </Stack>
 
+      {/* 알림 설정 섹션 추가 */}
+      <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          py={2}
+      >
+        <Typography fontWeight="bold">알림 수신</Typography>
+        <Switch
+            checked={isNotificationEnabled}
+            onChange={handleNotificationToggle}
+            color="primary"
+        />
+      </Box>
+      <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mt: 1, textAlign: 'right' }}
+      >
+        {isNotificationEnabled
+            ? '모든 알림을 받고 있습니다.'
+            : '모든 알림이 차단되었습니다.'}
+      </Typography>
+
       <Box display="flex" justifyContent="center" mt={4}>
         <Button
-          variant='contained'
-          disabled={
-            !isChanged ||
-            (editingNickname && nicknameValid !== true)
-          }
-          sx={{
-            mt: 2,
-            width: '150px',
-            bgcolor: '#FF9080',
-            color: 'white',
-            boxShadow: 'none',
-            '&:hover': {
-              bgcolor: '#FF7A6B',
-              boxShadow: 'none'
-            },
-            '&.Mui-disabled': {
-              bgcolor: '#f5f5f5',
-              color: '#ccc'
+            variant='contained'
+            disabled={
+                !isChanged ||
+                (editingNickname && nicknameValid !== true)
             }
-          }}
-          onClick={handleSave}
+            sx={{
+              mt: 2,
+              width: '150px',
+              bgcolor: '#FF9080',
+              color: 'white',
+              boxShadow: 'none',
+              '&:hover': {
+                bgcolor: '#FF7A6B',
+                boxShadow: 'none'
+              },
+              '&.Mui-disabled': {
+                bgcolor: '#f5f5f5',
+                color: '#ccc'
+              }
+            }}
+            onClick={handleSave}
         >
           Save
         </Button>

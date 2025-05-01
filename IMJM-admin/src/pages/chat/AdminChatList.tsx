@@ -18,7 +18,7 @@ import AdminWebSocketService from '../../service/chat/AdminWebSocketService';
 import styles from './ChatRoom.module.css';
 import axios from 'axios';
 
-const AdminChatList: React.FC = () => {
+const AdminChatList: React.FC<{ onSelectRoom: (roomId: number, userId: string) => void }> = ({ onSelectRoom }) => {
     const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
@@ -69,7 +69,7 @@ const AdminChatList: React.FC = () => {
     }, [salonId]);
 
     const handleChatRoomClick = (roomId: number, userId: string) => {
-        navigate(`/chat/${roomId}/${userId}`);
+        onSelectRoom(roomId, userId);
     };
 
     const formatTimeToDisplay = (dateString: string) => {

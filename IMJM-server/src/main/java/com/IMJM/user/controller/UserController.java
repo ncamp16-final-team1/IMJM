@@ -110,4 +110,13 @@ public class UserController {
     public ResponseEntity<?> getMyPointHistory(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
         return ResponseEntity.ok().body(userService.getMyPointHistory(userDetails.getId()));
     }
+
+    @PutMapping("/notification-settings")
+    public ResponseEntity<?> updateNotificationSettings(
+            @AuthenticationPrincipal CustomOAuth2UserDto userDetails,
+            @RequestParam boolean isNotificationEnabled
+    ) {
+        userService.updateNotificationSettings(userDetails.getId(), isNotificationEnabled);
+        return ResponseEntity.ok().build();
+    }
 }

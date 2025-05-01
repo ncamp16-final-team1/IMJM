@@ -36,8 +36,7 @@ interface TranslationState {
     error: string | null;
 }
 
-const AdminChatRoom: React.FC = () => {
-    const { roomId, userId } = useParams<{ roomId: string; userId: string }>();
+const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, userId }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
@@ -227,10 +226,6 @@ const AdminChatRoom: React.FC = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleBackClick = () => {
-        navigate('/chat');
-    };
-
     // 파일 선택 핸들러
     const handleFileSelect = () => {
         fileInputRef.current?.click();
@@ -376,9 +371,6 @@ const AdminChatRoom: React.FC = () => {
             {/* 헤더 */}
             <Box className={styles.header} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <IconButton onClick={handleBackClick} size="small">
-                        <ArrowBackIcon />
-                    </IconButton>
                     <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>{userName}</Typography>
                 </Box>
                 <IconButton onClick={handleMenuOpen}>

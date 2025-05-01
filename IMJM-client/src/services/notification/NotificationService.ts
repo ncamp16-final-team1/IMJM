@@ -1,5 +1,6 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import axios from 'axios';
 
 export interface AlarmDto {
     id: number;
@@ -21,11 +22,35 @@ class NotificationService {
     private listeners: NotificationListener[] = [];
     private userId: string | null = null;
     private connected: boolean = false;
+    private isNotificationEnabled: boolean = false;
 
     initialize(userId: string) {
         this.userId = userId;
         console.log(`알림 서비스 초기화: 사용자 ID ${userId}`);
 
+        // 알림 설정 확인
+        this.checkNotificationSettings()
+            .then(() => {
+                if (this.isNotificationEnabled) {
+                    this.setupWebSocket();
+                }
+            });
+    }
+
+    // 알림 설정 확인
+    private async checkNotificationSettings() {
+        try {
+            const response = await axios.get('/api/user/my-profile');
+            this.isNotificationEnabled = response.data.isNotification;
+            console.log(`알림 설정 상태: ${this.isNotificationEnabled}`);
+        } catch (error) {
+            console.error('알림 설정 불러오기 실패', error);
+            this.isNotificationEnabled = false;
+        }
+    }
+
+    // WebSocket 설정
+    private setupWebSocket() {
         // 이미 연결되어 있으면 기존 연결 해제
         if (this.client && this.client.connected) {
             this.disconnect();
@@ -34,7 +59,9 @@ class NotificationService {
         // 새로운 STOMP 클라이언트 생성
         this.client = new Client({
             webSocketFactory: () => new SockJS('/ws'),
-            debug: (str) => console.log('STOMP: ' + str),
+            debug: function (str) {
+                console.log('STOMP: ' + str);
+            },
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
@@ -50,26 +77,41 @@ class NotificationService {
                 try {
                     console.log('새 알림 수신:', message.body);
                     const notification = JSON.parse(message.body);
-                    this.notifyListeners(notification);
+
+                    // 알림 설정 확인 후 리스너에 전달
+                    if (this.isNotificationEnabled) {
+                        this.notifyListeners(notification);
+                    } else {
+                        console.log('알림 설정이 비활성화되어 있어 알림을 무시합니다.');
+                    }
                 } catch (e) {
                     console.error('알림 파싱 오류:', e);
                 }
             });
         };
 
-        // 오류 핸들러
-        this.client.onStompError = (frame) => {
-            console.error('STOMP 오류:', frame.headers['message'], frame.body);
-        };
-
-        // 연결 해제 핸들러
-        this.client.onWebSocketClose = (evt) => {
-            console.log('WebSocket 연결 종료:', evt);
-            this.connected = false;
-        };
-
         // 연결 시작
         this.client.activate();
+    }
+
+    // 알림 설정 업데이트
+    async updateNotificationSettings(enabled: boolean) {
+        try {
+            await axios.put('/api/user/notification-settings', null, {
+                params: { isNotificationEnabled: enabled }
+            });
+
+            this.isNotificationEnabled = enabled;
+
+            // 알림 설정에 따라 WebSocket 연결 관리
+            if (enabled) {
+                this.setupWebSocket();
+            } else {
+                this.disconnect();
+            }
+        } catch (error) {
+            console.error('알림 설정 변경 실패', error);
+        }
     }
 
     disconnect() {
@@ -128,7 +170,7 @@ class NotificationService {
             return data.count;
         } catch (error) {
             console.error('읽지 않은 알림 수 조회 실패:', error);
-            return 0; // 에러 발생 시 기본값 0 반환
+            return 0;
         }
     }
 
@@ -162,32 +204,49 @@ class NotificationService {
         }
     }
 
-    isConnected(): boolean {
-        return this.connected;
+    async deleteNotification(id: number): Promise<boolean> {
+        try {
+            await axios.delete(`/api/alarms/${id}`);
+            return true;
+        } catch (error) {
+            console.error('알람 삭제 실패:', error);
+            return false;
+        }
     }
 
-    // 테스트용 메서드
-    async createTestNotification(title: string, content: string): Promise<AlarmDto> {
+    async deleteNotifications(ids: number[]): Promise<boolean> {
         try {
-            const response = await fetch('/api/alarms/test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ title, content, type: 'TEST' })
-            });
-
-            if (!response.ok) {
-                throw new Error('테스트 알림 생성 실패');
-            }
-
-            return await response.json();
+            await axios.delete('/api/alarms/batch', { data: ids });
+            return true;
         } catch (error) {
-            console.error('테스트 알림 생성 실패:', error);
-            throw error;
+            console.error('알람 일괄 삭제 실패:', error);
+            return false;
+        }
+    }
+
+    async deleteNotification(id: number): Promise<boolean> {
+        try {
+            await axios.delete(`/api/alarms/${id}`);
+            // 삭제 이벤트 발생
+            this.notifyListeners('alarmDeleted', { id });
+            return true;
+        } catch (error) {
+            console.error('알람 삭제 실패:', error);
+            return false;
+        }
+    }
+
+    async deleteNotifications(ids: number[]): Promise<boolean> {
+        try {
+            await axios.delete('/api/alarms/batch', { data: ids });
+            // 삭제 이벤트 발생
+            this.notifyListeners('alarmDeleted', { ids });
+            return true;
+        } catch (error) {
+            console.error('알람 일괄 삭제 실패:', error);
+            return false;
         }
     }
 }
 
-// 싱글톤 인스턴스로 내보내기
 export default new NotificationService();

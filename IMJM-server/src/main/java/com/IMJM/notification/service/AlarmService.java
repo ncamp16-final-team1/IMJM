@@ -31,6 +31,12 @@ public class AlarmService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 사용자의 알림 설정 확인
+        if (!user.isNotification()) {
+            log.info("알림 설정이 비활성화되어 있어 알림을 생성하지 않습니다. 사용자 ID: {}", userId);
+            return null;
+        }
+
         Alarm alarm = Alarm.builder()
                 .user(user)
                 .title(title)
@@ -73,8 +79,30 @@ public class AlarmService {
         alarmRepository.save(alarm);
     }
 
+    @Transactional
+    public void markAllAsRead(String userId) {
+        List<Alarm> unreadAlarms = alarmRepository.findByUserIdAndIsReadFalse(userId);
+
+        unreadAlarms.forEach(alarm -> alarm.setIsRead(true));
+
+        alarmRepository.saveAll(unreadAlarms);
+    }
+
     @Transactional(readOnly = true)
     public int countUnreadAlarms(String userId) {
         return alarmRepository.countByUserIdAndIsReadFalse(userId);
+    }
+
+    @Transactional
+    public void deleteAlarm(Long alarmId) {
+        Alarm alarm = alarmRepository.findById(alarmId)
+                .orElseThrow(() -> new RuntimeException("Alarm not found"));
+
+        alarmRepository.delete(alarm);
+    }
+
+    @Transactional
+    public void deleteAlarms(List<Long> alarmIds) {
+        alarmRepository.deleteAllByIdIn(alarmIds);
     }
 }

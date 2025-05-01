@@ -65,14 +65,12 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead 
 
     const handleNotificationClick = async (notification: AlarmDto) => {
         try {
-            // 알림 읽음 처리 (read 속성 사용)
-            if (!notification.read) {
-                await NotificationService.markAsRead(notification.id);
+            // 읽음 표시하는 대신 알람 삭제
+            const success = await NotificationService.deleteNotification(notification.id);
 
-                // 알림 상태 업데이트
-                setNotifications(notifications.map(n =>
-                    n.id === notification.id ? { ...n, read: true } : n
-                ));
+            if (success) {
+                // 상태에서 알람 제거
+                setNotifications(notifications.filter(n => n.id !== notification.id));
 
                 // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달
                 if (onNotificationRead) {
@@ -94,13 +92,19 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead 
     };
 
     const handleMarkAllAsRead = async () => {
-        try {
-            await NotificationService.markAllAsRead();
-            setNotifications(notifications.map(n => ({ ...n, read: true })));
+        if (notifications.length === 0) return;
 
-            // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달
-            if (onNotificationRead) {
-                onNotificationRead();
+        try {
+            const allIds = notifications.map(n => n.id);
+
+            const success = await NotificationService.deleteNotifications(allIds);
+
+            if (success) {
+                setNotifications([]);
+
+                if (onNotificationRead) {
+                    onNotificationRead();
+                }
             }
         } catch (error) {
             console.error('모든 알림 읽음 처리 실패:', error);
@@ -173,7 +177,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead 
                         startIcon={<MarkChatReadIcon />}
                         onClick={handleMarkAllAsRead}
                     >
-                        모두 읽음
+                        모두 삭제
                     </Button>
                 )}
             </Box>

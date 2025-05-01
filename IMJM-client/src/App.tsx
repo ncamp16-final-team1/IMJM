@@ -32,6 +32,7 @@ import axios from 'axios';
 import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
 import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
 import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
+import Archive from './pages/Archive/Archive.tsx';
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -73,7 +74,7 @@ function App() {
                         {/* 기존 라우트들 */}
                         <Route path="/" element={<Home />} />
                         <Route path="/salon" element={<HairSalon />} />
-                        <Route path="/archive" element={<div>Archive Page (준비 중)</div>} />
+                        <Route path="/archive" element={<Archive />} />
                         <Route path="/community" element={<div>Community Page (준비 중)</div>} />
                         <Route path="/salon/:id" element={<SalonDetail />} />
 
