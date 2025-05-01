@@ -192,10 +192,23 @@ public class ReservationStylistService {
             Payment savedPayment = paymentRepository.save(payment);
             log.info("결제 정보 저장 완료. 결제 ID: {}", savedPayment.getId());
 
+            int rewardPoint = 100;
+            user.savePoint(rewardPoint);
+            userRepository.save(user);
+
+            PointUsage rewardLog = PointUsage.builder()
+                    .user(user)
+                    .usageType("SAVE")
+                    .price(rewardPoint)  // 포인트 부여 시 양수
+                    .useDate(LocalDateTime.now())
+                    .content(stylist.getSalon().getName() + " 예약 포인트")
+                    .build();
+
+            pointUsageRepository.save(rewardLog);
+            log.info("예약 완료 포인트 지급 완료: {}포인트", rewardPoint);
+
             if (request.getPaymentInfo().getPointUsed() > 0) {
                 processPointUsage(request, user);
-
-                //user.usePoint(request.getPaymentInfo().getPoint_used());
                 updateUserPoints(user, request.getPaymentInfo().getPointUsed());
             }
 
@@ -300,12 +313,10 @@ public class ReservationStylistService {
         int currentPoints = user.getPoint();
         int newPoints = currentPoints - usedPoints;
 
-        // 음수 포인트 방지 체크
         if (newPoints < 0) {
             throw new IllegalArgumentException("사용 가능한 포인트보다 많은 포인트를 사용할 수 없습니다.");
         }
 
-        // 포인트 업데이트
         userRepository.updatePoints(user.getId(), newPoints);
 
         log.info("사용자 포인트 업데이트: {} -> {}", currentPoints, newPoints);

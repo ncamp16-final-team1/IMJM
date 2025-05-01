@@ -108,7 +108,6 @@ public class MyPageService {
 
     @Transactional
     public Long saveReview(ReviewSaveRequestDto requestDto, List<MultipartFile> images) {
-        // images가 null인 경우 빈 리스트로 초기화
         if (images == null) {
             images = new ArrayList<>();
         }
@@ -142,6 +141,20 @@ public class MyPageService {
         if (images != null && !images.isEmpty()) {
             saveReviewImages(savedReview, images);
         }
+
+        int pointsToGive = 10;
+        user.savePoint(pointsToGive);
+        userRepository.save(user);
+
+        PointUsage pointUsage = PointUsage.builder()
+                .user(user)
+                .usageType("SAVE")
+                .price(pointsToGive)
+                .useDate(LocalDateTime.now())
+                .content(salon.getName() + " 리뷰 작성")
+                .build();
+
+        pointUsageRepository.save(pointUsage);
 
         updateSalonScore(salon.getId());
 
