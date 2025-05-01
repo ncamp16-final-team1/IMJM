@@ -203,6 +203,50 @@ class NotificationService {
             throw error;
         }
     }
+
+    async deleteNotification(id: number): Promise<boolean> {
+        try {
+            await axios.delete(`/api/alarms/${id}`);
+            return true;
+        } catch (error) {
+            console.error('알람 삭제 실패:', error);
+            return false;
+        }
+    }
+
+    async deleteNotifications(ids: number[]): Promise<boolean> {
+        try {
+            await axios.delete('/api/alarms/batch', { data: ids });
+            return true;
+        } catch (error) {
+            console.error('알람 일괄 삭제 실패:', error);
+            return false;
+        }
+    }
+
+    async deleteNotification(id: number): Promise<boolean> {
+        try {
+            await axios.delete(`/api/alarms/${id}`);
+            // 삭제 이벤트 발생
+            this.notifyListeners('alarmDeleted', { id });
+            return true;
+        } catch (error) {
+            console.error('알람 삭제 실패:', error);
+            return false;
+        }
+    }
+
+    async deleteNotifications(ids: number[]): Promise<boolean> {
+        try {
+            await axios.delete('/api/alarms/batch', { data: ids });
+            // 삭제 이벤트 발생
+            this.notifyListeners('alarmDeleted', { ids });
+            return true;
+        } catch (error) {
+            console.error('알람 일괄 삭제 실패:', error);
+            return false;
+        }
+    }
 }
 
 export default new NotificationService();

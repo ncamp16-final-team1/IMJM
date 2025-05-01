@@ -92,4 +92,17 @@ public class AlarmService {
     public int countUnreadAlarms(String userId) {
         return alarmRepository.countByUserIdAndIsReadFalse(userId);
     }
+
+    @Transactional
+    public void deleteAlarm(Long alarmId) {
+        Alarm alarm = alarmRepository.findById(alarmId)
+                .orElseThrow(() -> new RuntimeException("Alarm not found"));
+
+        alarmRepository.delete(alarm);
+    }
+
+    @Transactional
+    public void deleteAlarms(List<Long> alarmIds) {
+        alarmRepository.deleteAllByIdIn(alarmIds);
+    }
 }

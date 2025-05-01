@@ -51,4 +51,16 @@ public class AlarmController {
         alarmService.markAllAsRead(userId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAlarm(@PathVariable Long id) {
+        alarmService.deleteAlarm(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/batch")
+    public ResponseEntity<Void> deleteAlarms(@RequestBody List<Long> alarmIds) {
+        alarmService.deleteAlarms(alarmIds);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -30,14 +30,23 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({ onClick }) => {
             setUnreadCount(prev => prev + 1);
         };
 
+        // 알림 삭제 이벤트 리스너 등록
+        NotificationService.addListener('alarmDeleted', handleAlarmDeleted);
+
         // 알림 리스너 등록
         NotificationService.addListener(handleNewNotification);
 
         // 컴포넌트 언마운트 시 리스너 제거
         return () => {
             NotificationService.removeListener(handleNewNotification);
+            NotificationService.removeListener('alarmDeleted', handleAlarmDeleted);
         };
     }, []);
+
+    const handleAlarmDeleted = () => {
+        // 삭제 후 다시 알람 수 조회
+        fetchUnreadCount();
+    };
 
     return (
         <IconButton color="inherit" onClick={onClick} sx={{ position: 'relative' }}>
