@@ -34,18 +34,6 @@ const Stylists = () => {
       return false;
     }
   };
-  // const checkLoginStatus = (): boolean => {
-  //   // 로컬 스토리지에서 유저 아이디를 확인
-  //   const userId = localStorage.getItem('userId');
-  
-  //   // 유저 아이디가 있으면 로그인 상태로 간주
-  //   if (userId) {
-  //     return true;
-  //   }
-  
-  //   // 없으면 로그인되지 않은 상태
-  //   return false;
-  // };
 
   // 예약 클릭 핸들러
   const handleReservationClick = async (stylistId: number) => {

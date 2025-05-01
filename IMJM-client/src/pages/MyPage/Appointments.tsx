@@ -138,7 +138,7 @@ export default function Appointments() {
             price={item.price}
             salonPhotoUrl={item.salonPhotoUrl}
             isReviewed={item.isReviewed}
-            reservationServiceName={item.reservationServiceName}
+            serviceName={item.serviceName}
             reservationId={item.reservationId}
             reviewId={item.reviewId}
             stylistName={item.stylistName}          

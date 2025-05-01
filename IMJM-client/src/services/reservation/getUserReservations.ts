@@ -1,20 +1,23 @@
 import axios from 'axios';
 
 export type UserReservations = {
-	salonId: string;
-	salonName: string;         
-	salonAddress: string;     
-	salonPhotoUrl: string;     
-	salonScore: number;     
-	reviewCount: number;       
-	reservationDate: string;   
-	reservationTime: string;   
-	reservationServiceName: string;
-	price: number;     
-	isReviewed: boolean; 
-	reservationId: number;    
-	reviewId: number;
-	stylistName: string;   
+    salonId: string;
+    salonName: string;         
+    salonAddress: string;     
+    salonPhotoUrl: string;     
+    salonScore: number;     
+    reviewCount: number;       
+    reservationDate: string;   
+    reservationTime: string;   
+    serviceName: string;
+    price: number;     
+    isReviewed: boolean; 
+    reservationId: number;    
+    reviewId: number | null; 
+    stylistName: string;   
+    isPaid?: boolean; 
+    serviceType?: string; 
+    paymentMethod?: string;  
 };
 
 export const getUserReservations = async (): Promise<UserReservations[]> => {
