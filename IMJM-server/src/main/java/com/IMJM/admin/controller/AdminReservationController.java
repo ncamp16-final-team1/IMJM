@@ -9,7 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/reservation")
@@ -33,5 +36,21 @@ public class AdminReservationController {
         adminReservationService.updateReservation(reservationId, adminReservationUpdateDto);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getAdminReservationStats(@AuthenticationPrincipal CustomSalonDetails salonDetails) {
+        Map<String, Long> weekly = adminReservationService.getWeeklyReservationStats(salonDetails.getSalonId());
+        Map<String, Long> monthly = adminReservationService.getMonthlyReservationStats(salonDetails.getSalonId());
+
+        System.out.println(weekly);
+        System.out.println(monthly);
+
+        Map<String, Map<String, Long>> result = new HashMap<>();
+
+        result.put("weekly", weekly);
+        result.put("monthly", monthly);
+
+        return ResponseEntity.ok().body(result);
     }
 }

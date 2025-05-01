@@ -1,5 +1,6 @@
 package com.IMJM.reservation.repository;
 
+import com.IMJM.admin.dto.DayCountDto;
 import com.IMJM.common.entity.Reservation;
 import com.IMJM.user.dto.UserReservationResponseDto;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,10 +21,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r.reservationTime FROM Reservation r WHERE r.stylist.stylistId = :stylistId AND r.reservationDate = :date")
     List<LocalTime> findBookedTimesByStylistAndDate(Long stylistId, LocalDate date);
 
-    @Query("SELECT r.user.id, COUNT(r) " +
-            "FROM Reservation r " +
-            "WHERE r.user.id IN :userIds " +
-            "GROUP BY r.user.id")
+    @Query("""
+            SELECT r.user.id, COUNT(r)
+            FROM Reservation r
+            WHERE r.user.id IN :userIds
+                  AND (
+                        r.reservationDate < CURRENT_DATE OR
+                        (r.reservationDate = CURRENT_DATE AND r.reservationTime < CURRENT_TIME)
+                      )
+            GROUP BY r.user.id
+            """)
     List<Object[]> countVisitByUserIds(@Param("userIds") List<String> userIds);
 
     @Query("""
@@ -42,6 +49,23 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // 사용자 ID로 예약을 날짜 내림차순으로 조회
     List<Reservation> findByUser_IdOrderByReservationDateDesc(String userId);
+
+    @Query(value = """
+    SELECT EXTRACT(DOW FROM r.reservation_date) AS day_of_week, COUNT(*) AS count
+    FROM reservation r
+    WHERE r.reservation_date BETWEEN :startDate AND :endDate
+      AND r.stylist_id IN (
+          SELECT s.stylist_id
+          FROM admin_stylist s
+          WHERE s.salon_id = :salonId
+      )
+    GROUP BY EXTRACT(DOW FROM r.reservation_date)
+    ORDER BY day_of_week
+    """, nativeQuery = true)
+    List<DayCountDto> countReservationsByDayOfWeekBetween(
+            @Param("salonId") String salonId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }
 
 

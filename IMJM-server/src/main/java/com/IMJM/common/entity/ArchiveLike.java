@@ -4,21 +4,23 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "archive_like")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "archive_like")
-@IdClass(ArchiveLikeId.class)
+@IdClass(ArchiveLikeId.class)  // 복합 키 클래스 지정
 public class ArchiveLike {
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "archive_id", nullable = false)
+    @JoinColumn(name = "archive_id")
     private Archive archive;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private Users user;
+
 }

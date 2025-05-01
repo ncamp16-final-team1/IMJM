@@ -80,28 +80,35 @@ class WebSocketService {
 
     // 메시지 전송 (사진 포함)
     async sendMessageWithPhotos(chatRoomId: number, content: string, senderType: string, photos: ChatPhoto[] = []) {
-        console.log("메시지 전송 시작:", { chatRoomId, content, senderType, photos });
 
         if (!this.client || !this.client.connected) {
             console.error('WebSocket is not connected');
             throw new Error('WebSocket is not connected');
         }
 
-        const messagePayload = {
-            chatRoomId,
-            message: content || (photos.length > 0 ? '사진을 보냈습니다.' : ''),
-            senderType,
-            senderId: this.userId,
-            photos,
-        };
+        try {
+            const response = await axios.post('/api/chat/message', {
+                chatRoomId,
+                message: content || (photos.length > 0 ? '사진을 보냈습니다.' : ''),
+                senderType,
+                senderId: this.userId,
+                photos,
+            });
 
-        // WebSocket을 통한 메시지 전송만 수행
-        this.client.publish({
-            destination: '/app/chat.sendMessage',
-            body: JSON.stringify(messagePayload)
-        });
+            // WebSocket을 통한 메시지 전송
+            this.client.publish({
+                destination: '/app/chat.sendMessage',
+                body: JSON.stringify(response.data)
+            });
 
-        return messagePayload; // 임시 응답으로 원본 페이로드 반환
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.status === 404) {
+                // 채팅방을 찾을 수 없는 경우
+                throw new Error(error.response.data.message || '존재하지 않는 채팅방입니다.');
+            }
+            throw error;
+        }
     }
 
     // 이벤트 리스너 등록

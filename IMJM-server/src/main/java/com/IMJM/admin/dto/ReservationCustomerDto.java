@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class ReservationCustomerDto {
     private String userId;
     private String userName;
+    private String nickName;
     private String serviceName;
     private LocalDate reservationDate;
     private int visitCount;

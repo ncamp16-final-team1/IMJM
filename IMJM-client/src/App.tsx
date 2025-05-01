@@ -29,6 +29,10 @@ import NotificationService from './services/notification/NotificationService';
 import PointHistory from './pages/MyPage/PointHistory';
 import ReservationDetail from './pages/MyPage/ReservationDetail';
 import axios from 'axios';
+import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
+import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
+import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
+import Archive from './pages/Archive/Archive.tsx';
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -70,7 +74,7 @@ function App() {
                         {/* 기존 라우트들 */}
                         <Route path="/" element={<Home />} />
                         <Route path="/salon" element={<HairSalon />} />
-                        <Route path="/archive" element={<div>Archive Page (준비 중)</div>} />
+                        <Route path="/archive" element={<Archive />} />
                         <Route path="/community" element={<div>Community Page (준비 중)</div>} />
                         <Route path="/salon/:id" element={<SalonDetail />} />
 
@@ -132,6 +136,21 @@ function App() {
                         <Route path="/my/reservation-detail/:reservationId" element={
                             <ProtectedRoute>
                                 <ReservationDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/write" element={
+                            <ProtectedRoute>
+                                <ArchiveWrite />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/edit/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveEdit />
                             </ProtectedRoute>
                         } />
 

@@ -14,6 +14,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import EventIcon from '@mui/icons-material/Event';
 import { useState, useEffect } from 'react';
 import { UserReservations } from '../../services/reservation/getUserReservations';
+import ChatService from '../../services/chat/ChatService';
 import { useNavigate } from 'react-router-dom';
 
 export default function AppointmentCard({
@@ -30,7 +31,7 @@ export default function AppointmentCard({
     serviceName,
     reservationId,
     reviewId,
-    stylistName,  
+    stylistName,
 }: UserReservations) {
 
     const navigate = useNavigate();
@@ -185,50 +186,56 @@ export default function AppointmentCard({
                 </Typography>
 
                 <Stack direction="row" spacing={1}>
-                <Button 
-                    variant="outlined" 
-                    size="medium" 
-                    onClick={() => {
-                        // navigate(`/myPage/chat/${reservationId}`);
-                    }}
-                    sx={{
-                        borderRadius: 4,
-                        textTransform: 'none',
-                        backgroundColor: 'transparent', 
-                        borderColor: '#FF9080', 
-                        color: '#FF9080',
-                        boxShadow: 'none',
-                        '&:hover': {
-                        backgroundColor: 'rgba(255, 144, 128, 0.1)', 
-                        borderColor: '#FF9080',
-                        boxShadow: 'none', 
-                        },
-                    }} 
-                    startIcon={<ChatIcon fontSize="small" />}
-                    >
-                    1:1 Chat
+                    <Button 
+                        variant="outlined" 
+                        size="medium" 
+                        onClick={async () => {
+                            try {
+                            const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
+                            navigate(`/chat/${chatRoom.id}`);
+                            } catch (error) {
+                            console.error('채팅방 이동 중 오류 발생:', error);
+                            alert('채팅방으로 이동할 수 없습니다. 잠시 후 다시 시도해주세요.');
+                            }
+                        }}
+                        sx={{
+                            borderRadius: 4,
+                            textTransform: 'none',
+                            backgroundColor: 'transparent', 
+                            borderColor: '#FF9080', 
+                            color: '#FF9080',
+                            boxShadow: 'none', // ✅ 그림자 제거
+                            '&:hover': {
+                            backgroundColor: 'rgba(255, 144, 128, 0.1)', 
+                            borderColor: '#FF9080',
+                            boxShadow: 'none', // ✅ hover 시에도 그림자 제거
+                            },
+                        }} 
+                        startIcon={<ChatIcon fontSize="small" />}
+                        >
+                        1:1 Chat
                     </Button>
 
                     <Button
-                    variant="contained"
-                    size="medium"
-                    sx={{
-                        borderRadius: 4,
-                        textTransform: 'none',
-                        backgroundColor: buttonConfig.color, 
-                        borderColor: buttonConfig.color, 
-                        color: 'white',
-                        boxShadow: 'none',
-                        '&:hover': {
-                        backgroundColor: buttonConfig.color,
-                        opacity: 0.9,
-                        boxShadow: 'none', 
-                        },
-                    }}
-                    onClick={buttonConfig.action}
-                    startIcon={buttonConfig.icon}
-                    >
-                    {buttonConfig.label}
+                        variant="contained"
+                        size="medium"
+                        sx={{
+                            borderRadius: 4,
+                            textTransform: 'none',
+                            backgroundColor: buttonConfig.color, 
+                            borderColor: buttonConfig.color, 
+                            color: 'white',
+                            boxShadow: 'none',
+                            '&:hover': {
+                            backgroundColor: buttonConfig.color,
+                            opacity: 0.9,
+                            boxShadow: 'none', 
+                            },
+                        }}
+                        onClick={buttonConfig.action}
+                        startIcon={buttonConfig.icon}
+                        >
+                        {buttonConfig.label}
                     </Button>
 
                 </Stack>

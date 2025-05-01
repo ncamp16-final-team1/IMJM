@@ -2,11 +2,9 @@ package com.IMJM.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -123,5 +121,9 @@ public class Users {
 
     public void savePoint(int point) {
         this.point += point;
+    }
+
+    public void changeNotificationSetting(boolean isNotification) {
+        this.isNotification = isNotification;
     }
 }

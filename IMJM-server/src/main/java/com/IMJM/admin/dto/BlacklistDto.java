@@ -11,6 +11,7 @@ import lombok.*;
 public class BlacklistDto {
     private String userId;
     private String userName;
+    private String nickName;
     private String reason;
     private String blockedDate;
 }

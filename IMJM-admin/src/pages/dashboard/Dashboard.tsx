@@ -9,42 +9,57 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const chats = [
   { user: "홍길동", message: "예약 시간 변경 가능한가요?", time: "1분 전" },
 ];
 
-const chartData = [
-  { day: "월", 주간: 45, 월간: 25 },
-  { day: "화", 주간: 30, 월간: 20 },
-  { day: "수", 주간: 35, 월간: 30 },
-  { day: "목", 주간: 45, 월간: 35 },
-  { day: "금", 주간: 15, 월간: 10 },
-  { day: "토", 주간: 40, 월간: 28 },
-  { day: "일", 주간: 38, 월간: 27 },
-];
-
 function Dashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [todayReservations, setTodayReservations] = useState([]);
+  const [weeklyData, setWeeklyData] = useState({});
+  const [monthlyData, setMonthlyData] = useState({});
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("/api/admin/dashboard/reservation")
+    axios.get("/api/admin/dashboard/reservation", { withCredentials: true })
       .then(res => setTodayReservations(res.data))
       .catch(err => console.error("예약 정보 불러오기 실패", err));
+
+    axios.get("/api/admin/reservation/stats", { withCredentials: true })
+      .then(res => {
+        setWeeklyData(res.data.weekly);
+        setMonthlyData(res.data.monthly);
+      })
+      .catch(err => console.error("예약 통계 불러오기 실패", err));
+
     fetchReviews();
   }, []);
 
+  const days = ["월", "화", "수", "목", "금", "토", "일"];
+
+  const chartData = days.map(day => ({
+    day,
+    주간: weeklyData[day] || 0,
+    월간: monthlyData[day] || 0,
+  }));
+
   const fetchReviews = async () => {
-      try {
-        const response = await axios.get("/api/admin/review/list", {
-          withCredentials: true,
-        });
-        setReviews(response.data);
-      } catch (error) {
-        console.error("리뷰 목록 불러오기 실패:", error);
-      }
-    };
+    try {
+      const response = await axios.get("/api/admin/review/list", {
+        withCredentials: true,
+      });
+      setReviews(response.data);
+    } catch (error) {
+      console.error("리뷰 목록 불러오기 실패:", error);
+    }
+  };
+
+  const handleClick = (path) => {
+    navigate(path);
+  };
 
   return (
     <Box width={950} height={780} p={3} mx="auto">
@@ -63,7 +78,9 @@ function Dashboard() {
             }}
           >
             <CardContent>
-              <Typography variant="h6">오늘 예약 현황 ({todayReservations.length})</Typography>
+              <Typography variant="h6" onClick={() => handleClick('/reservation')} style={{ cursor: 'pointer' }}>
+                오늘 예약 현황 ({todayReservations.length})
+              </Typography>
               <Divider sx={{ my: 1 }} />
               <Box component="table" width="100%" sx={{ fontSize: 14 }}>
                 <thead>
@@ -156,12 +173,14 @@ function Dashboard() {
             }}
           >
             <CardContent>
-              <Typography variant="h6">리뷰 관리 ({reviews.length})</Typography>
+              <Typography variant="h6" onClick={() => handleClick('/review')} style={{ cursor: 'pointer' }}>
+                리뷰 관리 ({reviews.length})
+              </Typography>
               <Divider sx={{ my: 1 }} />
               <Box component="table" width="100%" sx={{ fontSize: 14 }}>
                 <thead>
                   <tr>
-                    <th align="left">작성자(고객명)</th>
+                    <th align="left">고객명(닉네임)</th>
                     <th align="center">작성 날짜</th>
                     <th align="center">답변여부</th>
                   </tr>
@@ -169,7 +188,7 @@ function Dashboard() {
                 <tbody>
                   {reviews.map((r, index) => (
                     <tr key={index}>
-                      <td align="left">{r.userName}({r.nickname})</td>
+                      <td align="left">{r.userName}({r.nickName})</td>
                       <td align="center">{new Date(r.regDate).toLocaleDateString()}</td>
                       <td align="center">{r.answered ? "✔️" : "—"}</td>
                     </tr>
