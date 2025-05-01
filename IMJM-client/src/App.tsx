@@ -29,6 +29,9 @@ import NotificationService from './services/notification/NotificationService';
 import PointHistory from './pages/MyPage/PointHistory';
 import ReservationDetail from './pages/MyPage/ReservationDetail';
 import axios from 'axios';
+import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
+import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
+import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -132,6 +135,21 @@ function App() {
                         <Route path="/my/reservation-detail/:reservationId" element={
                             <ProtectedRoute>
                                 <ReservationDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/write" element={
+                            <ProtectedRoute>
+                                <ArchiveWrite />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/edit/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveEdit />
                             </ProtectedRoute>
                         } />
 
