@@ -111,6 +111,17 @@ class ChatService {
             throw error;
         }
     }
+    
+    // 예약 ID를 통해 채팅방 생성 또는 조회
+    async getChatRoomByReservation(reservationId: number): Promise<ChatRoom> {
+        try {
+            const response = await axios.post(`${this.baseUrl}/room/reservation/${reservationId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to get chat room by reservation:', error);
+            throw error;
+        }
+    }
 }
 
 // 싱글톤으로 내보내기

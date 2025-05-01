@@ -1,6 +1,5 @@
 package com.IMJM.chat.service;
 
-import com.IMJM.notification.service.AlarmService;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
@@ -8,6 +7,8 @@ import com.IMJM.chat.exception.TranslationException;
 import com.IMJM.chat.repository.*;
 import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.*;
+import com.IMJM.notification.service.AlarmService;
+import com.IMJM.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,8 @@ public class ChatService {
     private final ChatSalonRepository chatSalonRepository;
 
     private final TranslationService translationService;
+
+    private final ReservationRepository reservationRepository;
 
     private final StorageService storageService;
 
@@ -469,6 +472,34 @@ public class ChatService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    // 예약 ID를 통해 채팅방 생성 또는 조회하는 메서드 추가
+    @Transactional
+    public ChatRoomDto getChatRoomByReservation(Long reservationId) {
+        // 예약 정보 조회
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다: " + reservationId));
+
+        // 예약에서 사용자와 미용실 정보 가져오기
+        Users user = reservation.getUser();
+        Salon salon = reservation.getStylist().getSalon();
+
+        // 채팅방이 있는지 확인, 없으면 생성
+        ChatRoom chatRoom = chatRoomRepository.findByUserIdAndSalonId(user.getId(), salon.getId())
+                .orElseGet(() -> {
+                    return chatRoomRepository.save(
+                            ChatRoom.builder()
+                                    .user(user)
+                                    .salon(salon)
+                                    .createdAt(LocalDateTime.now())
+                                    .lastMessageTime(LocalDateTime.now())
+                                    .build()
+                    );
+                });
+
+        // DTO로 변환하여 반환
+        return convertToChatRoomDto(chatRoom, "USER");
     }
 
     @Transactional

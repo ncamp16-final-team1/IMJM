@@ -14,6 +14,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import EventIcon from '@mui/icons-material/Event';
 import { useState, useEffect } from 'react';
 import { UserReservations } from '../../services/reservation/getUserReservations';
+import ChatService from '../../services/chat/ChatService';
 import { useNavigate } from 'react-router-dom';
 
 export default function AppointmentCard({
@@ -188,8 +189,15 @@ export default function AppointmentCard({
                     <Button 
                         variant="outlined" 
                         size="medium" 
-                        onClick={() => {
-                            
+                        onClick={async () => {
+                            try {
+                                // 예약 ID를 사용하여 채팅방 생성 또는 조회
+                                const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
+                                navigate(`/chat/${chatRoom.id}`);
+                            } catch (error) {
+                                console.error('채팅방 이동 중 오류 발생:', error);
+                                alert('채팅방으로 이동할 수 없습니다. 잠시 후 다시 시도해주세요.');
+                            }
                         }}
                         sx={{
                             borderRadius: 4,

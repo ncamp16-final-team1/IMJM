@@ -158,8 +158,6 @@ public class ChatController {
         return ResponseEntity.ok(roomInfo);
     }
 
-    // ChatController.java에 추가 또는 기존 코드 수정
-
     @GetMapping("/admin/room/{roomId}")
     public ResponseEntity<Map<String, Object>> getAdminChatRoomDetail(@PathVariable Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
@@ -182,6 +180,12 @@ public class ChatController {
         roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
 
         return ResponseEntity.ok(roomInfo);
+    }
+
+    // 예약 ID를 통해 채팅방 생성 또는 조회
+    @PostMapping("/room/reservation/{reservationId}")
+    public ResponseEntity<ChatRoomDto> createChatRoomByReservation(@PathVariable Long reservationId) {
+        return ResponseEntity.ok(chatService.getChatRoomByReservation(reservationId));
     }
 
     @DeleteMapping("/room/{chatRoomId}")
