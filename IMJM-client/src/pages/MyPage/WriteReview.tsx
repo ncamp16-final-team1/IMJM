@@ -409,15 +409,18 @@ export default function WriteReview() {
               backgroundColor: '#ff9f9f',
               border: '1px solid #ff9f9f',
               color: 'white',
+              boxShadow: 'none',
               '&:hover': {
-                backgroundColor: '#FF9080', 
+                backgroundColor: '#FF9080',
                 borderColor: '#FF9080',
-                color: 'white'
+                color: 'white',
+                boxShadow: 'none' 
               },
               '&:active': {
                 backgroundColor: '#ff9f9f',
                 borderColor: '#ff9f9f',
-                color: 'white'
+                color: 'white',
+                boxShadow: 'none' 
               }
             }}
           >
