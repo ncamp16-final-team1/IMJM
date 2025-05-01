@@ -8,6 +8,7 @@ import com.IMJM.jwt.JWTUtil;
 import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.LocationDto;
+import com.IMJM.user.dto.PointHistoryResponseDto;
 import com.IMJM.user.dto.UserDto;
 import com.IMJM.user.repository.ClientStylistRepository;
 import com.IMJM.user.repository.UserRepository;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -234,5 +236,18 @@ public class UserService {
         return userRepository.findById(id)
                 .map(Users::getPoint)
                 .orElse(0);
+    }
+
+    public List<PointHistoryResponseDto> getMyPointHistory(String id) {
+        List<PointUsage> pointUsages = pointUsageRepository.findByUserIdOrderByUseDateDesc(id);
+
+        return pointUsages.stream()
+                .map(pointUsage -> PointHistoryResponseDto.builder()
+                        .usageType(pointUsage.getUsageType())
+                        .price(pointUsage.getPrice())
+                        .useDate(String.valueOf(pointUsage.getUseDate()))
+                        .content(pointUsage.getContent())
+                        .build())
+                .toList();
     }
 }

@@ -26,6 +26,7 @@ import ViewReview from './pages/MyPage/ViewReview';
 import UserProfile from './pages/MyPage/UserProfile';
 import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
+import PointHistory from './pages/MyPage/PointHistory';
 import ReservationDetail from './pages/MyPage/ReservationDetail';
 import axios from 'axios';
 
@@ -121,6 +122,11 @@ function App() {
                         <Route path="/my/profile" element={
                             <ProtectedRoute>
                                 <UserProfile />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/point" element={
+                            <ProtectedRoute>
+                                <PointHistory />
                             </ProtectedRoute>
                         } />
                         <Route path="/my/reservation-detail/:reservationId" element={
