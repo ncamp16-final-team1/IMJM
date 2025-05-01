@@ -7,8 +7,12 @@ import com.IMJM.common.cloud.StorageService;
 import com.IMJM.common.entity.Salon;
 import com.IMJM.admin.repository.SalonRepository;
 import com.IMJM.common.entity.SalonPhotos;
+import com.IMJM.jwt.JWTUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,6 +35,7 @@ public class AdminJoinService {
     private final SalonPhotosRepository salonPhotosRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final StorageService storageService;
+    private final JWTUtil jwtUtil;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -113,5 +119,14 @@ public class AdminJoinService {
 
     public boolean checkId(String id) {
         return !salonRepository.existsById(id);
+    }
+
+    public ResponseEntity<?> checkLogin(HttpServletRequest request) {
+        String token = jwtUtil.resolveAdminToken(request);
+        if (token == null || jwtUtil.isExpired(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("redirect", "GOOGLE_LOGIN"));
+        }
+        return ResponseEntity.ok().build();
     }
 }
