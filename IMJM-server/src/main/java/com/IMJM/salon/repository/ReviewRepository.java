@@ -17,4 +17,15 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByReviewId(@Param("reviewId") Long reviewId);
 
     List<Review> findAllBySalonIdOrderByRegDateDesc(String salonId);
+
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.salon.id = :salonId")
+    long countBySalonId(@Param("salonId") String salonId);
+
+    @Query("SELECT AVG(r.score) FROM Review r WHERE r.salon.id = :salonId")
+    Optional<Double> findAverageRatingBySalonId(@Param("salonId") String salonId);
+
+    Optional<Review> findByReservationIdAndUserId(Long reservationId, String userId);
+
+    boolean existsByReservationId(Long reservationId);
+
 }

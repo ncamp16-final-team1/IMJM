@@ -15,11 +15,11 @@ export default function MyPage() {
       path: "/my/point",
       right: point !== null ? `${point.toLocaleString()} P` : "Loading...",
     },
-    { label: "Appointment history", path: "/myPage/appointments" },
-    { label: "My Review", path: "/myPage/reviews" },
-    { label: "My Acahive", path: "/myPage/acahive" },
-    { label: "My Community", path: "/myPage/community" },
-    { label: "Announcement", path: "/myPage/announcements" },
+    { label: "Appointment history", path: "/my/appointments" },
+    { label: "My Review", path: "/my/reviews" },
+    { label: "My Acahive", path: "/my/acahive" },
+    { label: "My Community", path: "/my/community" },
+    { label: "Announcement", path: "/my/announcements" },
     { label: "Logout", path: "/logout", isLogout: true },
   ];
 

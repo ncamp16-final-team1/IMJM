@@ -26,7 +26,7 @@ function Footer(): React.ReactElement {
         { id: 'chat', path: '/chat', icon: <ChatBubbleIcon />, label: 'chat' },
         { id: 'home', path: '/', icon: <HomeIcon />, label: 'home' },
         { id: 'hairSalon', path: '/salon', icon: <ContentCutIcon />, label: 'hair salon' },
-        { id: 'myPage', path: '/myPage', icon: <PersonIcon />, label: 'my page' }
+        { id: 'myPage', path: '/my', icon: <PersonIcon />, label: 'my page' }
     ];
 
     return (
