@@ -448,8 +448,8 @@ const ImageUploadButton = () => (
   <label htmlFor="review-upload-photos" style={{ display: "inline-block", cursor: "pointer" }}>
     <Box
       sx={{
-        width: 180,
-        height: 150,
+        width: 130,
+        height: 110,
         bgcolor: "#ddd",
         display: "flex",
         justifyContent: "center",
@@ -458,7 +458,7 @@ const ImageUploadButton = () => (
         "&:hover": { bgcolor: "#ccc" },
       }}
     >
-      <Typography fontSize="2rem">＋</Typography>
+      <Typography fontSize="1.5rem">＋</Typography>
     </Box>
   </label>
 );
@@ -476,7 +476,7 @@ const ImagePreviewSection = ({ imagePreviewUrls, onRemoveImage, maxImages }: Ima
         <Avatar
           src={url}
           variant="rounded"
-          sx={{ width: 100, height: 100 }}
+          sx={{ width: 130, height: 110, objectFit: 'cover' }}
         />
         <Button
           size="small"
@@ -507,8 +507,8 @@ const ImagePreviewSection = ({ imagePreviewUrls, onRemoveImage, maxImages }: Ima
       <label htmlFor="review-upload-photos" style={{ display: "inline-block", cursor: "pointer" }}>
         <Box
           sx={{
-            width: 100,
-            height: 100,
+            width: 130,
+            height: 110,
             bgcolor: "#ddd",
             display: "flex",
             justifyContent: "center",
