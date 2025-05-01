@@ -33,11 +33,18 @@
 .salonName {
     font-weight: bold;
     font-size: 16px;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 8px;
 }
 
 .messageTime {
     font-size: 12px;
     color: #666;
+    white-space: nowrap;
+    margin-left: 8px;
 }
 
 .lastMessage {
@@ -47,6 +54,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 85%;
+    display: block;
 }
 
 .unreadBadge {
@@ -59,6 +67,7 @@
     align-items: center;
     justify-content: center;
     font-size: 12px;
+    margin-left: 4px;
 }
 
 .noChatsMessage {

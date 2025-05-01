@@ -1,25 +1,24 @@
 package com.IMJM.reservation.service;
 
 import com.IMJM.admin.repository.CouponRepository;
-
 import com.IMJM.admin.repository.ReservationCouponRepository;
+import com.IMJM.admin.repository.ServiceMenuRepository;
+import com.IMJM.chat.dto.ChatMessageDto;
+import com.IMJM.chat.dto.ChatRoomDto;
+import com.IMJM.chat.service.ChatService;
 import com.IMJM.common.entity.*;
-import com.IMJM.common.entity.AdminStylist;
-import com.IMJM.common.entity.Coupon;
-import com.IMJM.common.entity.ReservationCoupon;
-import com.IMJM.common.entity.ServiceMenu;
 import com.IMJM.reservation.dto.*;
 import com.IMJM.reservation.repository.AdminStylistRepository;
 import com.IMJM.reservation.repository.PaymentRepository;
 import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
-import com.IMJM.admin.repository.ServiceMenuRepository;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -47,6 +46,7 @@ public class ReservationStylistService {
 
     private final PointUsageRepository pointUsageRepository;
 
+    private final ChatService chatService;
 
     @Transactional(readOnly = true)
     public List<ReservationStylistDto> getStylistsBySalon(String salonId) {
@@ -202,6 +202,43 @@ public class ReservationStylistService {
             if (request.getPaymentRequest().getCouponData() != null) {
                 processCouponUsage(request, savedReservation);
             }
+
+            // 예약 처리가 완료된 후 채팅방 생성
+            String salonId = stylist.getSalon().getId();
+            log.info("예약 완료 후 채팅방 생성 시작 - 사용자: {}, 미용실: {}", userId, salonId);
+
+            // 채팅방 생성 (이미 존재하면 기존 채팅방 반환됨)
+            ChatRoomDto chatRoom = chatService.getChatRoom(userId, salonId);
+            log.info("채팅방 생성 완료. 채팅방 ID: {}", chatRoom.getId());
+
+            // 예약 완료 환영 메시지 전송
+            LocalDate reservationDate = LocalDate.parse(request.getPaymentRequest().getReservation().getReservation_date());
+            LocalTime reservationTime = LocalTime.parse(request.getPaymentRequest().getReservation().getReservation_time());
+            String serviceName = serviceMenu.getServiceName();
+
+            // 미용실에서 사용자에게 보내는 메시지
+            String welcomeMessage = String.format(
+                    "안녕하세요! 예약이 완료되었습니다.\n" +
+                            "예약 일시: %s월 %s일 %s시\n" +
+                            "담당 스타일리스트: %s\n" +
+                            "시술 종류: %s\n" +
+                            "문의 사항이 있으시면 언제든지 채팅으로 연락주세요😊",
+                    reservationDate.getMonthValue(),
+                    reservationDate.getDayOfMonth(),
+                    reservationTime.getHour(),
+                    stylist.getName(),
+                    serviceName
+            );
+
+            ChatMessageDto messageDto = ChatMessageDto.builder()
+                    .chatRoomId(chatRoom.getId())
+                    .senderType("SALON") // 미용실에서 보내는 메시지
+                    .senderId(salonId)
+                    .message(welcomeMessage)
+                    .photos(new ArrayList<>()) // 빈 사진 목록
+                    .build();
+
+            chatService.sendMessage(messageDto);
 
             return request;
         } catch (Exception e) {

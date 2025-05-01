@@ -473,19 +473,15 @@ public class ChatService {
 
     @Transactional
     public void deleteChatRoom(Long chatRoomId) {
-        // 1. 채팅방의 모든 사진 먼저 삭제
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomId(chatRoomId);
         messages.forEach(message -> {
             chatPhotosRepository.deleteByChatMessageId(message.getId());
         });
 
-        // 2. 채팅 메시지 삭제
         chatMessageRepository.deleteByChatRoomId(chatRoomId);
 
-        // 3. 채팅방 삭제
         chatRoomRepository.deleteById(chatRoomId);
 
-        // 4. 스토리지에서도 폴더 삭제
         try {
             String folderPrefix = "chat/" + chatRoomId + "/";
             storageService.deleteFolder(folderPrefix);
