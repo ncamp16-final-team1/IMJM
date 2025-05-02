@@ -24,7 +24,6 @@ class NotificationService {
 
     initialize(userId: string) {
         this.userId = userId;
-        console.log(`알림 서비스 초기화: 사용자 ID ${userId}`);
 
         // 알림 설정 확인
         this.checkNotificationSettings()
@@ -39,8 +38,7 @@ class NotificationService {
     private async checkNotificationSettings() {
         try {
             const response = await axios.get('/api/user/my-profile');
-            this.isNotificationEnabled = response.data.isNotification;
-            console.log(`알림 설정 상태: ${this.isNotificationEnabled}`);
+            this.isNotificationEnabled = response.data.notification;
         } catch (error) {
             console.error('알림 설정 불러오기 실패', error);
             this.isNotificationEnabled = false;
@@ -67,7 +65,6 @@ class NotificationService {
 
         // 연결 성공 핸들러
         this.client.onConnect = (frame) => {
-            console.log('알림 WebSocket 연결됨:', frame);
             this.connected = true;
 
             // 연결 상태 변경 이벤트 발행
@@ -76,15 +73,11 @@ class NotificationService {
             // 사용자별 알림 큐 구독
             this.client?.subscribe(`/user/${this.userId}/queue/notifications`, (message) => {
                 try {
-                    console.log('새 알림 수신:', message.body);
                     const notification = JSON.parse(message.body);
 
-                    // 알림 설정 확인 후 리스너에 전달
                     if (this.isNotificationEnabled) {
-                        // 수정: 일반 리스너 호출
                         this.notifyListeners('notification', notification);
                     } else {
-                        console.log('알림 설정이 비활성화되어 있어 알림을 무시합니다.');
                     }
                 } catch (e) {
                     console.error('알림 파싱 오류:', e);
@@ -92,19 +85,14 @@ class NotificationService {
             });
         };
 
-        // 연결 해제 핸들러 추가
         this.client.onDisconnect = () => {
-            console.log('알림 WebSocket 연결 해제됨');
             this.connected = false;
-            // 연결 상태 변경 이벤트 발행
             this.notifyListeners('connectionChange', { connected: false });
         };
 
-        // 연결 시작
         this.client.activate();
     }
 
-    // 알림 설정 업데이트
     async updateNotificationSettings(enabled: boolean) {
         try {
             await axios.put('/api/user/notification-settings', null, {
@@ -113,7 +101,6 @@ class NotificationService {
 
             this.isNotificationEnabled = enabled;
 
-            // 알림 설정에 따라 WebSocket 연결 관리
             if (enabled) {
                 this.setupWebSocket();
             } else {
@@ -126,7 +113,6 @@ class NotificationService {
 
     disconnect() {
         if (this.client) {
-            console.log('알림 WebSocket 연결 해제');
             this.client.deactivate();
             this.client = null;
             this.connected = false;
@@ -139,7 +125,6 @@ class NotificationService {
             this.listeners[event] = [];
         }
         this.listeners[event].push(listener);
-        console.log(`'${event}' 이벤트 리스너 추가됨 (총 ${this.listeners[event].length}개)`);
     }
 
     // 이벤트 리스너 제거 메서드 (타입 수정)
@@ -149,24 +134,28 @@ class NotificationService {
         const index = this.listeners[event].indexOf(listener);
         if (index !== -1) {
             this.listeners[event].splice(index, 1);
-            console.log(`'${event}' 이벤트 리스너 제거됨 (남은 ${this.listeners[event].length}개)`);
         }
     }
 
-    // 이벤트 발행 메서드 (수정됨)
     private notifyListeners(event: string, data: any) {
-        const listeners = this.listeners[event] || [];
-        if (listeners.length > 0) {
-            console.log(`'${event}' 이벤트 발행: ${listeners.length}개의 리스너에게 알림`);
-            listeners.forEach(listener => {
+        const eventListeners = this.listeners[event] || [];
+
+        eventListeners.forEach(listener => {
+            try {
+                listener(data);
+            } catch (e) {
+                console.error(`이벤트 '${event}' 리스너 실행 중 오류:`, e);
+            }
+        });
+
+        if (Array.isArray(this.listeners)) {
+            this.listeners.forEach(listener => {
                 try {
                     listener(data);
                 } catch (e) {
-                    console.error(`'${event}' 리스너 실행 중 오류:`, e);
+                    console.error('직접 등록된 리스너 실행 중 오류:', e);
                 }
             });
-        } else {
-            console.log(`'${event}' 이벤트 발행: 등록된 리스너 없음`);
         }
     }
 
