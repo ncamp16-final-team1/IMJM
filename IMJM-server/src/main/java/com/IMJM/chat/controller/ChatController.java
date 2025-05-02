@@ -247,5 +247,12 @@ public class ChatController {
         }
     }
 
-
+    @GetMapping("/room/check/{chatRoomId}")
+    public ResponseEntity<?> checkChatRoomExists(@PathVariable Long chatRoomId) {
+        boolean exists = chatRoomRepository.existsById(chatRoomId);
+        if (!exists) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok().build();
+    }
 }

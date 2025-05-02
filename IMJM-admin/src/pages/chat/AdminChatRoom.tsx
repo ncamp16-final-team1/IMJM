@@ -49,6 +49,10 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     const [userLanguage, setUserLanguage] = useState<string>('en');
     const [salonLanguage, setSalonLanguage] = useState<string>('ko');
 
+    // 삭제된 채팅방 처리를 위한 상태 추가
+    const [chatRoomDeletedModalOpen, setChatRoomDeletedModalOpen] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -122,6 +126,12 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
     };
 
+    // 삭제된 채팅방 모달을 닫고 채팅 목록으로 이동하는 함수
+    const handleChatRoomDeletedModalClose = () => {
+        setChatRoomDeletedModalOpen(false);
+        window.location.reload();
+    };
+
     useEffect(() => {
         const fetchSalonAndChatRoom = async () => {
             try {
@@ -134,41 +144,90 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 AdminWebSocketService.initialize(currentSalonId);
 
                 try {
+                    // 채팅방 존재 여부 확인을 위한 API 호출 (백엔드에 해당 API 필요)
+                    await axios.get(`/api/chat/room/check/${roomId}`);
+                } catch (checkError: any) {
+                    console.error('채팅방 존재 확인 실패:', checkError);
+                    // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
+                    if (checkError.response && checkError.response.status === 404) {
+                        setErrorMessage('존재하지 않는 채팅방이거나 이미 삭제된 채팅방입니다.');
+                        setChatRoomDeletedModalOpen(true);
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                try {
                     const roomResponse = await axios.get(`/api/chat/admin/room/${roomId}`);
                     if (roomResponse.data && roomResponse.data.userName) {
                         setUserName(roomResponse.data.userName);
                     }
-                } catch (roomError) {
+                } catch (roomError: any) {
                     console.error('채팅방 정보를 불러오는데 실패했습니다:', roomError);
-                }
-
-                const chatMessages = await AdminChatService.getChatMessages(Number(roomId));
-                setMessages(chatMessages);
-
-                if (!userName && chatMessages.length > 0) {
-                    const userMessage = chatMessages.find(msg => msg.senderType === 'USER');
-
-                    if (userMessage) {
-                        try {
-                            const userResponse = await axios.get(`/api/user/info/${userMessage.senderId}`);
-                            if (userResponse.data) {
-                                setUserName(userResponse.data.nickname ||
-                                    (userResponse.data.firstName + ' ' + userResponse.data.lastName));
-                            } else {
-                                setUserName(userMessage.senderId);
-                            }
-                        } catch (userError) {
-                            console.error('사용자 정보를 불러오는데 실패했습니다:', userError);
-                            setUserName(userMessage.senderId);
-                        }
+                    // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
+                    if (roomError.response && roomError.response.status === 404) {
+                        setErrorMessage('존재하지 않는 채팅방입니다.');
+                        setChatRoomDeletedModalOpen(true);
+                        setLoading(false);
+                        return;
                     }
                 }
 
-                await AdminChatService.markMessagesAsRead(Number(roomId));
+                try {
+                    const chatMessages = await AdminChatService.getChatMessages(Number(roomId));
+                    setMessages(chatMessages);
+
+                    if (!userName && chatMessages.length > 0) {
+                        const userMessage = chatMessages.find(msg => msg.senderType === 'USER');
+
+                        if (userMessage) {
+                            try {
+                                const userResponse = await axios.get(`/api/user/info/${userMessage.senderId}`);
+                                if (userResponse.data) {
+                                    setUserName(userResponse.data.nickname ||
+                                        (userResponse.data.firstName + ' ' + userResponse.data.lastName));
+                                } else {
+                                    setUserName(userMessage.senderId);
+                                }
+                            } catch (userError) {
+                                console.error('사용자 정보를 불러오는데 실패했습니다:', userError);
+                                setUserName(userMessage.senderId);
+                            }
+                        }
+                    }
+
+                    await AdminChatService.markMessagesAsRead(Number(roomId));
+                } catch (messageError: any) {
+                    console.error('채팅 메시지를 불러오는데 실패했습니다:', messageError);
+                    // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
+                    if (messageError.response && messageError.response.status === 404) {
+                        setErrorMessage('존재하지 않는 채팅방이거나 이미 삭제된 채팅방입니다.');
+                        setChatRoomDeletedModalOpen(true);
+                        setLoading(false);
+                        return;
+                    }
+
+                    if (messageError.message && (
+                        messageError.message.includes('존재하지 않') ||
+                        messageError.message.includes('not found') ||
+                        messageError.message.includes('404')
+                    )) {
+                        setErrorMessage('존재하지 않는 채팅방이거나 이미 삭제된 채팅방입니다.');
+                        setChatRoomDeletedModalOpen(true);
+                        setLoading(false);
+                        return;
+                    }
+                }
 
                 setLoading(false);
-            } catch (error) {
-                navigate('/chat');
+            } catch (error: any) {
+                console.error('채팅방 로딩 중 오류 발생:', error);
+                if (error.response && error.response.status === 404) {
+                    setErrorMessage('존재하지 않는 채팅방이거나 이미 삭제된 채팅방입니다.');
+                } else {
+                    setErrorMessage('채팅방을 불러오는 중 오류가 발생했습니다.');
+                }
+                setChatRoomDeletedModalOpen(true);
                 setLoading(false);
             }
         };
@@ -216,7 +275,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
             }
         };
 
-    }, [roomId, userId, userName]);
+    }, [roomId, userId, userName, navigate]);
 
     useEffect(() => {
         scrollToBottom();
@@ -313,9 +372,16 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
             previewUrls.forEach(url => URL.revokeObjectURL(url));
             setPreviewUrls([]);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('메시지 전송 실패:', error);
-            alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+
+            // 채팅방이 존재하지 않는 경우 처리
+            if (error.response && error.response.status === 404) {
+                setErrorMessage('메시지를 전송할 수 없습니다. 채팅방이 이미 삭제되었을 수 있습니다.');
+                setChatRoomDeletedModalOpen(true);
+            } else {
+                alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+            }
         } finally {
             setSending(false);
         }
@@ -370,6 +436,26 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
     return (
         <Paper elevation={3} className={styles.container}>
+            {/* 삭제된 채팅방 알림 모달 */}
+            <Dialog
+                open={chatRoomDeletedModalOpen}
+                onClose={handleChatRoomDeletedModalClose}
+                aria-labelledby="deleted-chatroom-dialog-title"
+                aria-describedby="deleted-chatroom-dialog-description"
+            >
+                <DialogTitle id="deleted-chatroom-dialog-title">알림</DialogTitle>
+                <DialogContent>
+                    <Typography id="deleted-chatroom-dialog-description">
+                        {errorMessage}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleChatRoomDeletedModalClose} color="primary" autoFocus>
+                        확인
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* 헤더 */}
             <Box className={styles.header} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -532,6 +618,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 />
             </Box>
 
+            {/* 채팅방 삭제 확인 모달 */}
             <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
                 <DialogTitle>채팅방 삭제</DialogTitle>
                 <DialogContent>
@@ -545,6 +632,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 </DialogActions>
             </Dialog>
 
+            {/* 채팅방 삭제 완료 모달 */}
             <Dialog open={deletedOpen} onClose={() => {
                 setDeletedOpen(false);
                 navigate('/chat');
