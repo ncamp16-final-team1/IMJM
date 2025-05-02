@@ -157,9 +157,7 @@ function App() {
 
                             {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
                             <Route path="/login" element={
-                                <PublicRoute>
                                     <Login />
-                                </PublicRoute>
                             } />
                             <Route path="/user/language" element={
                                 <UserLanguageSelect />
