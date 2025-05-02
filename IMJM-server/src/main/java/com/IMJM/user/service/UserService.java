@@ -90,7 +90,7 @@ public class UserService {
                 profileUrl,
                 LocalDate.parse(dto.getBirthday()),
                 dto.getRegion(),
-                dto.isIs_notification(),
+                dto.isNotification(),
                 dto.isTermsAgreed());
 
         if(!pointUsageRepository.existsByUserIdAndContent(user.getId(), "Membership Points Earned")){
@@ -218,6 +218,7 @@ public class UserService {
                 .gender(user.getGender())
                 .birthday(String.valueOf(user.getBirthday()))
                 .region(user.getRegion())
+                .isNotification(user.isNotification())
                 .build();
     }
 

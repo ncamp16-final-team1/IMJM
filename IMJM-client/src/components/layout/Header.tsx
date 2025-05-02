@@ -27,7 +27,9 @@ function Header(): React.ReactElement {
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
-                const response = await axios.get('/api/user/check-login');
+                const response = await axios.get('/api/user/check-login', {
+                    withCredentials: true
+                });
                 setIsLoggedIn(true);
 
                 // 로그인됐을 때만 읽지 않은 알림 수 가져오기

@@ -40,7 +40,7 @@ const UserProfile = () => {
         setBirthday(data.birthday);
         setRegion(data.region);
         setProfile(data.profile);
-        setIsNotificationEnabled(data.isNotification);
+        setIsNotificationEnabled(data.notification);
       })
       .catch(err => {
         console.log('유저 정보 호출 실패: ', err);
@@ -108,15 +108,16 @@ const UserProfile = () => {
       });
   };
 
-  // 알림 설정 토글 핸들러 추가
-  const handleNotificationToggle = async () => {
+  const handleNotificationToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.checked;
+    setIsNotificationEnabled(newValue); // 우선 UI에 바로 반영
+
     try {
-      // NotificationService의 updateNotificationSettings 메서드 호출
-      await NotificationService.updateNotificationSettings(!isNotificationEnabled);
-      setIsNotificationEnabled(!isNotificationEnabled);
+      await NotificationService.updateNotificationSettings(newValue); // 서버에 저장
     } catch (error) {
       console.error('알림 설정 변경 실패', error);
       alert('알림 설정 변경에 실패했습니다.');
+      setIsNotificationEnabled(!newValue); // 실패 시 원래 값으로 복구
     }
   };
 
