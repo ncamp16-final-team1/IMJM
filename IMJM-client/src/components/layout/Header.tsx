@@ -56,57 +56,54 @@ function Header(): React.ReactElement {
     // 알림 관련 이벤트 구독
     useEffect(() => {
         if (isLoggedIn) {
+            // 초기 읽지 않은 알림 수 가져오기
+            fetchUnreadCount();
+
             // 새 알림이 왔을 때 카운트 증가
             const handleNewNotification = () => {
                 console.log('새 알림 발생, 카운트 증가');
-                setUnreadCount(prev => prev + 1);
+                fetchUnreadCount(); // 즉시 서버에서 최신 카운트 가져오기
             };
 
-            // 알림을 읽었을 때 카운트 감소 (NotificationList에서 알림을 읽을 때 발생)
+            // 알림을 읽었을 때 카운트 감소
             const handleReadNotification = () => {
                 console.log('알림 읽음 처리됨, unreadCount 업데이트');
-                fetchUnreadCount(); // 가장 정확한 개수를 가져오기 위해 서버에 다시 요청
+                fetchUnreadCount(); // 서버에서 최신 카운트 가져오기
             };
 
-            // 알림창이 닫힐 때 unreadCount 새로고침
-            const handlePopoverClose = () => {
-                if (notificationAnchorEl !== null) {
-                    console.log('알림창 닫힘, unreadCount 업데이트');
+            // 웹소켓 연결 상태 변화에 대응
+            const handleConnectionChange = (connected: boolean) => {
+                if (connected) {
+                    console.log('웹소켓 연결됨, unreadCount 업데이트');
                     fetchUnreadCount();
                 }
             };
 
-            // 주기적으로 업데이트 (선택 사항, 60초마다)
-            const intervalId = setInterval(() => {
-                if (!isNotificationOpen) { // 알림창이 열려있지 않을 때만 업데이트
-                    fetchUnreadCount();
-                }
-            }, 60000);
-
-            // 이벤트 리스너 등록
+            // 모든 이벤트 리스너 등록
             NotificationService.addListener(handleNewNotification);
 
-            // readNotification 이벤트를 지원하는 경우
-            if (typeof NotificationService.addEventListener === 'function') {
-                NotificationService.addEventListener('readNotification', handleReadNotification);
-            }
+            // 읽음 처리 이벤트 리스너 등록 (알림 서비스에 해당 이벤트 지원 필요)
+            NotificationService.addListener('alarmRead', handleReadNotification);
 
-            // 페이지 포커스될 때마다 카운트 업데이트
+            // 연결 상태 변화 감지 (알림 서비스에 해당 이벤트 지원 필요)
+            NotificationService.addListener('connectionChange', handleConnectionChange);
+
+            // 페이지 포커스될 때 업데이트
             window.addEventListener('focus', fetchUnreadCount);
 
+            // 백그라운드에서도 주기적으로 업데이트 (30초마다)
+            const intervalId = setInterval(fetchUnreadCount, 30000);
+
             return () => {
+                // 모든 이벤트 리스너 제거
                 NotificationService.removeListener(handleNewNotification);
-
-                // 이벤트 리스너 제거 (지원하는 경우)
-                if (typeof NotificationService.removeEventListener === 'function') {
-                    NotificationService.removeEventListener('readNotification', handleReadNotification);
-                }
-
+                NotificationService.removeListener('alarmRead', handleReadNotification);
+                NotificationService.removeListener('connectionChange', handleConnectionChange);
                 window.removeEventListener('focus', fetchUnreadCount);
                 clearInterval(intervalId);
             };
         }
-    }, [isLoggedIn, notificationAnchorEl, isNotificationOpen]);
+    }, [isLoggedIn]);
 
     const handleLanguageChange = (event: SelectChangeEvent<Language>): void => {
         setLanguage(event.target.value as Language);
@@ -198,12 +195,15 @@ function Header(): React.ReactElement {
                                 horizontal: 'right',
                             }}
                             sx={{ mt: 1 }}
-                            // onEntered와 onExited 이벤트 활용
-                            onEntered={() => console.log('알림창 열림')}
-                            onExited={handleNotificationClose}
+                            // // onEntered와 onExited 이벤트 활용
+                            // onEntered={() => console.log('알림창 열림')}
+                            // onExited={handleNotificationClose}
                         >
                             <Box sx={{ width: { xs: 320, sm: 360 }, maxHeight: 400 }}>
-                                <NotificationList onNotificationRead={fetchUnreadCount} />
+                                <NotificationList
+                                    onNotificationRead={fetchUnreadCount}
+                                    onClose={handleNotificationClose} // 모달 닫기 함수 전달
+                                />
                             </Box>
                         </Popover>
                     </div>
