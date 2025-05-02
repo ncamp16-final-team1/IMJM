@@ -25,7 +25,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     return <Navigate to="/user/register" replace />;
   }else if (isAuthenticated === "unauthorized") {
     console.log(isAuthenticated)
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // 비인증된 경우 자식 컴포넌트 렌더링
