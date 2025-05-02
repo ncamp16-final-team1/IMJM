@@ -1,5 +1,6 @@
 package com.IMJM.common.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,6 +56,7 @@ public class Users {
     private int point = 0;
 
     @Column(name = "is_notification")
+    @JsonProperty("isNotification")
     private boolean isNotification;
 
     @Column(length = 255)

@@ -29,7 +29,7 @@ export default function MyPage() {
       });
 
       if (response.ok) {
-        navigate("/");
+        window.location.href = "/";
       } else {
         alert("Logout failed. Please try again.");
       }
