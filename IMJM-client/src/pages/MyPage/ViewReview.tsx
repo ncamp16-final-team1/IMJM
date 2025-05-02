@@ -161,21 +161,28 @@ export default function ViewReview() {
     Promise.all([fetchReview, fetchReply]);
   }, [reviewId]);
 
-  // const handleDeleteReview = () => {
-  //   const confirmDelete = window.confirm("정말로 이 리뷰를 삭제하시겠습니까?");
-  //   if (!confirmDelete || !reviewData) return;
-
-  //   axios
-  //     .delete(`/api/mypages/review/${reviewData.reviewId}`)
-  //     .then(() => {
-  //       alert("리뷰가 성공적으로 삭제되었습니다.");
-  //       // navigate('/reviews');
-  //     })
-  //     .catch((error) => {
-  //       console.error("리뷰 삭제 중 오류 발생:", error);
-  //       alert("리뷰 삭제에 실패했습니다.");
-  //     });
-  // };
+  const handleEditReview = () => {
+    if (!reviewData) return;
+    
+    navigate('/my/review/edit', {
+      state: {
+        salonId,
+        reservationId: reviewData.reviewId, 
+        reviewId: reviewData.reviewId,
+        salonName,
+        salonScore,
+        reviewCount,
+        salonAddress,
+        reservationDate,
+        reservationTime,
+        price,
+        serviceName,
+        stylistName,
+        salonPhotoUrl,
+        isEdit: true 
+      }
+    });
+  };
 
   return (
     <Box>
@@ -374,7 +381,7 @@ export default function ViewReview() {
             <Button
               variant="outlined"
               size="small"
-              onClick={() => console.log("리뷰 수정")}
+              onClick={handleEditReview}
               sx={{
                 borderRadius: 2,
                 textTransform: "none",

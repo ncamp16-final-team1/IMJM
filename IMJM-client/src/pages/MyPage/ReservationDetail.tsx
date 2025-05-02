@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import {
   Box,
@@ -16,6 +16,8 @@ import EventIcon from "@mui/icons-material/Event";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PaymentIcon from "@mui/icons-material/Payment";
 import PersonIcon from "@mui/icons-material/Person";
+import ContentCutIcon from '@mui/icons-material/ContentCut'; 
+
 
 interface PaymentInfoDto {
   paymentMethod: string;
@@ -47,19 +49,18 @@ interface ReservationDetailResponseDto {
   price: number;
   requirements: string;
   salonName: string;
+  salonPhotoUrl: string;
   salonAddress: string;
   stylistName: string;
   paymentInfo: PaymentInfoDto | null;
   couponInfo: CouponInfoDto | null;
   pointUsage: PointUsageDto | null;
+
 }
 
 const ReservationDetail = () => {
-  const location = useLocation();
-  const salonPhotoUrl = location.state?.salonPhotoUrl;
   const { reservationId } = useParams();
-  const [reservation, setReservation] =
-    useState<ReservationDetailResponseDto | null>(null);
+  const [reservation, setReservation] = useState<ReservationDetailResponseDto | null>(null);
 
   useEffect(() => {
     const fetchReservation = async () => {
@@ -68,6 +69,7 @@ const ReservationDetail = () => {
           `/api/mypages/reservations/${reservationId}`
         );
         setReservation(response.data);
+        
       } catch (error) {
         console.error("오류 발생:", error);
       }
@@ -93,17 +95,21 @@ const ReservationDetail = () => {
         
         <Divider sx={{ mb: 3, mt:3 }} />
       <Paper elevation={0}>
-        {salonPhotoUrl && (
+        {reservation.salonPhotoUrl && (
           <Avatar
-            variant="rounded"
-            src={salonPhotoUrl}
-            sx={{
-              width: "100%",
-              height: 200,
-              mb: 4,
-              objectFit: "cover",
-            }}
-          />
+          variant="rounded"
+          src={reservation.salonPhotoUrl}
+          alt={reservation.salonName || "Salon"}
+          sx={{
+            width: "100%",
+            height: 200,
+            mb: 4,
+            objectFit: "cover",
+            bgcolor: "#f5f5f5", 
+          }}
+        >
+          <ContentCutIcon sx={{ fontSize: 80, color: "#bdbdbd" }} />
+        </Avatar>
         )}
 
         <Divider sx={{ mb: 3 }} />
@@ -172,7 +178,7 @@ const ReservationDetail = () => {
                 </Typography>
               </Stack>
               
-              <Typography variant="body1" sx={{ ml: 21 }}>
+              <Typography variant="body1" sx={{ ml: 25 }}>
                 결제 일시 : {reservation.paymentInfo?.paymentDate
                   ? formatDate(reservation.paymentInfo.paymentDate)
                   : '없음'} 
@@ -180,23 +186,22 @@ const ReservationDetail = () => {
             </Stack>
 
             <Paper elevation={0} sx={{ px: 3 }}>
-
-              <Grid container spacing={10} sx={{ mb: 3 }}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={6}>
                   <Stack direction="row" sx={{ mb: 2 }}>
-                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ width: '120px', flexShrink: 0 }}>
                       쿠폰 이름 : 
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ flex: 1, textAlign: 'right' }}>
                       {reservation.couponInfo?.couponName || '없음'}
                     </Typography>
                   </Stack>
                   
                   <Stack direction="row" sx={{ mb: 2 }}>
-                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ width: '120px', flexShrink: 0 }}>
                       할인 금액 :
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ flex: 1, textAlign: 'right' }}>
                       {reservation.couponInfo?.discountAmount != null
                         ? `${reservation.couponInfo.discountAmount.toLocaleString()} KRW`
                         : '0 KRW'}
@@ -204,10 +209,10 @@ const ReservationDetail = () => {
                   </Stack>
                   
                   <Stack direction="row" sx={{ mb: 2 }}>
-                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ width: '120px', flexShrink: 0 }}>
                       사용 포인트 :
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ flex: 1, textAlign: 'right' }}>
                       {reservation.pointUsage?.points != null
                         ? `${reservation.pointUsage.points.toLocaleString()}P`
                         : '0P'}
@@ -216,36 +221,38 @@ const ReservationDetail = () => {
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
-                  
                   <Stack direction="row" sx={{ mb: 2 }}>
-                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ width: '120px', flexShrink: 0 }}>
                       결제 방법 :
                     </Typography>
-                    <Chip
-                      label={reservation.paymentInfo?.paymentMethod || "결제 정보 없음"}
-                      color="primary"
-                      size="small"
-                      variant="outlined"
-                    />
+                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Chip
+                        label={reservation.paymentInfo?.paymentMethod || "결제 정보 없음"}
+                        color="primary"
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Box>
                   </Stack>
                   
-
                   <Stack direction="row" sx={{ mb: 2 }}>
-                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ width: '120px', flexShrink: 0 }}>
                       결제 상태 :
                     </Typography>
-                    <Chip
-                      label={reservation.paymentInfo?.paymentStatus ? "승인" : "미확인"}
-                      color={reservation.paymentInfo?.paymentStatus ? "success" : "error"}
-                      size="small"
-                    />
+                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Chip
+                        label={reservation.paymentInfo?.paymentStatus ? "승인" : "미확인"}
+                        color={reservation.paymentInfo?.paymentStatus ? "success" : "error"}
+                        size="small"
+                      />
+                    </Box>
                   </Stack>
 
                   <Stack direction="row" sx={{ mb: 2 }}>
-                    <Typography variant="body1" color="text.secondary" sx={{ minWidth: 120 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ width: '120px', flexShrink: 0 }}>
                       결제 금액 :
                     </Typography>
-                    <Typography variant="body2" fontWeight="bold">
+                    <Typography variant="body2" fontWeight="bold" sx={{ flex: 1, textAlign: 'right' }}>
                       {reservation.paymentInfo?.price?.toLocaleString()} KRW
                     </Typography>
                   </Stack>

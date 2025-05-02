@@ -126,6 +126,7 @@ function PaymentDetails() {
     salonId,
   } = location.state || {};
 
+  const [reservationId, setReservationId] = useState<number | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [userPoint, setUserPoint] = useState<number>(0);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
@@ -386,8 +387,10 @@ function PaymentDetails() {
         reservationData,
         config
       );
-      if (response.status === 200) {
-        setSuccessModalOpen(true);
+      if (response.status === 200 && response.data?.success) {
+        const reservationIdFromServer = response.data.reservationId;
+        setReservationId(reservationIdFromServer);
+        setSuccessModalOpen(true); // 성공 시에만 모달 열기
       } else {
         alert(
           "예약 처리 실패: " + (response.data?.message || "알 수 없는 오류")
@@ -1127,7 +1130,7 @@ function PaymentDetails() {
             <Button
               onClick={() => {
                 setSuccessModalOpen(false);
-                navigate("/my/appointments");
+                navigate(`/my/reservation-detail/${reservationId}`);
               }}
               variant="contained"
               sx={{

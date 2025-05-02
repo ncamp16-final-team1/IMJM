@@ -77,9 +77,9 @@ export default function Appointments() {
 
   const now = new Date();
 
-  // 필터링 및 정렬 로직
+
   const getFilteredAndSortedAppointments = () => {
-    // 먼저 기존 필터링 로직으로 필터링
+
     const filtered = appointments.filter((appointment) => {
       const appointmentDate = new Date(appointment.reservationDate);
       const timeParts = appointment.reservationTime.split(':').map(Number);
@@ -100,7 +100,6 @@ export default function Appointments() {
       }
     });
     
-    // 그 다음 카테고리별 정렬 로직 적용
     return filtered.sort((a, b) => {
       const dateA = new Date(a.reservationDate);
       const dateB = new Date(b.reservationDate);

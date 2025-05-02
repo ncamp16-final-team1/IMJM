@@ -1,5 +1,5 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography,
@@ -14,11 +14,13 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  AlertColor
+  AlertColor,
+  IconButton
 } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarHalfIcon from '@mui/icons-material/StarHalf';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axios from 'axios';
 
 interface LocationState {
@@ -34,6 +36,8 @@ interface LocationState {
   salonPhotoUrl?: string;
   serviceName?: string;
   stylistName?: string;
+  isEdit?: boolean;
+  reviewId?: number;
 }
 
 interface ReviewData {
@@ -42,6 +46,7 @@ interface ReviewData {
   rating: number;
   reviewText: string;
   tags: string[];
+  reviewId?: number;
 }
 
 const MAX_IMAGES = 3;
@@ -132,10 +137,18 @@ const RatingStars = ({ score, onChange }: RatingStarsProps) => {
   );
 };
 
-export default function WriteReview() {
+export default function WriteOrEditReview() {
   const location = useLocation();
   const navigate = useNavigate();
+  const params = useParams();
   
+  // State for edit mode
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [reviewId, setReviewId] = useState<number | undefined>(undefined);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  const [canGoBack, setCanGoBack] = useState<boolean>(false);
 
   const {
     salonId,
@@ -152,6 +165,29 @@ export default function WriteReview() {
     stylistName,
   } = (location.state as LocationState) || {};
   
+  useEffect(() => {
+    if (location.key !== 'default') {
+      setCanGoBack(true);
+    }
+
+    const locState = location.state as LocationState;
+    if (locState?.isEdit && locState?.reviewId) {
+      setIsEditMode(true);
+      setReviewId(locState.reviewId);
+      fetchExistingReview(locState.reviewId);
+    } else if (locState?.reviewId) {
+      setReviewId(locState.reviewId);
+      fetchExistingReview(locState.reviewId);
+      setIsEditMode(true);
+    }
+    
+    if (params.reviewId && !isNaN(Number(params.reviewId))) {
+      setIsEditMode(true);
+      const id = Number(params.reviewId);
+      setReviewId(id);
+      fetchExistingReview(id);
+    }
+  }, [location.state, params.reviewId, location.key]);
 
   const [rating, setRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState<string>('');
@@ -163,12 +199,34 @@ export default function WriteReview() {
   const [alertMessage, setAlertMessage] = useState<string>('');
   const [alertSeverity, setAlertSeverity] = useState<AlertColor>('success');
 
+  const fetchExistingReview = async (id: number) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`/api/mypages/view-review`, {
+        params: { reviewId: id }
+      });
+      
+      const reviewData = response.data;
+      
+      setRating(reviewData.score || 0);
+      setReviewText(reviewData.reviewContent || reviewData.content || '');
+      setSelectedTags(reviewData.reviewTags || []);
+      
+      const imageUrls = reviewData.reviewPhotoUrls || [];
+      setExistingImageUrls(imageUrls);
+      setImagePreviewUrls(imageUrls);
+    } catch (error) {
+      console.error('리뷰 데이터를 불러오는 중 오류가 발생했습니다:', error);
+      showAlert('리뷰 데이터를 불러오는 중 오류가 발생했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatTime = (timeString: string): string => {
     if (!timeString) return '';
     return timeString.substring(0, 5);
   };
-
 
   const showAlert = (message: string, severity: AlertColor = 'success'): void => {
     setAlertMessage(message);
@@ -179,7 +237,6 @@ export default function WriteReview() {
   const handleAlertClose = (): void => {
     setAlertOpen(false);
   };
-
 
   const handleRatingChange = (newRating: number): void => {
     setRating(newRating);
@@ -199,9 +256,11 @@ export default function WriteReview() {
     const fileArray = Array.from(e.target.files);
     let finalFiles: File[];
     
-    if (fileArray.length + uploadedImages.length > MAX_IMAGES) {
+    const totalImagesCount = imagePreviewUrls.length + fileArray.length;
+    
+    if (totalImagesCount > MAX_IMAGES) {
       showAlert(`최대 ${MAX_IMAGES}개의 이미지만 업로드할 수 있습니다.`, 'warning');
-      const remainingSlots = MAX_IMAGES - uploadedImages.length;
+      const remainingSlots = MAX_IMAGES - imagePreviewUrls.length;
       finalFiles = fileArray.slice(0, remainingSlots);
     } else {
       finalFiles = fileArray;
@@ -215,13 +274,23 @@ export default function WriteReview() {
   };
 
   const handleRemoveImage = (index: number): void => {
+
+    const imageUrl = imagePreviewUrls[index];
+    
+    if (existingImageUrls.includes(imageUrl)) {
+      setImagesToDelete(prev => [...prev, imageUrl]);
+    }
+    
+
     const newUrls = [...imagePreviewUrls];
     newUrls.splice(index, 1);
     setImagePreviewUrls(newUrls);
     
-    const newFiles = [...uploadedImages];
-    newFiles.splice(index, 1);
-    setUploadedImages(newFiles);
+    if (index < uploadedImages.length) {
+      const newFiles = [...uploadedImages];
+      newFiles.splice(index, 1);
+      setUploadedImages(newFiles);
+    }
   };
 
   const validateReview = (): boolean => {
@@ -251,24 +320,55 @@ export default function WriteReview() {
       tags: selectedTags,
     };
     
+    if (isEditMode && reviewId) {
+      reviewData.reviewId = reviewId;
+    }
+    
     const formData = new FormData();
     formData.append('reviewData', new Blob([JSON.stringify(reviewData)], {type: 'application/json'}));
+    
+    if (isEditMode && imagesToDelete.length > 0) {
+      formData.append('imagesToDelete', new Blob([JSON.stringify(imagesToDelete)], {type: 'application/json'}));
+    }
     
     uploadedImages.forEach((image) => {
       formData.append('images', image);
     });
     
     try {
-      await axios.post('/api/mypages/review-save', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 10000
-      });
-
-      showAlert('리뷰가 성공적으로 제출되었습니다!');
+      let response;
+      if (isEditMode) {
+        response = await axios.patch(`/api/mypages/review-update/${reviewId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 10000
+        });
+      } else {
+        response = await axios.post('/api/mypages/review-save', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 10000
+        });
+        if (response.data && response.data.reviewId) {
+          setReviewId(response.data.reviewId);
+        }
+      }
+  
+      showAlert(isEditMode 
+        ? '리뷰가 성공적으로 수정되었습니다!' 
+        : '리뷰가 성공적으로 제출되었습니다!');
       
       setTimeout(() => {
-        navigate('/my/appointments'); 
-      }, 1500);
+        if ((isEditMode && reviewId) || response.data?.reviewId) {
+          const newReviewId = isEditMode ? reviewId : response.data.reviewId;
+          navigate(`/my/view-review`, {
+            state: {
+              ...location.state, 
+              reviewId: newReviewId
+            }
+          });
+        } else {
+          navigate('/my/appointments');
+        }
+      }, 1000);
       
     } catch (error: any) { 
       console.error('리뷰 제출 중 오류 발생:', error);
@@ -292,10 +392,44 @@ export default function WriteReview() {
       setIsSubmitting(false);
     }
   };
+  
+  const handleCancel = (): void => {
+    if (isEditMode && reviewId) {
+      navigate(`/my/view-review`, {
+        state: {
+          ...location.state,
+          reviewId: reviewId
+        }
+      });
+    } else {
 
+      navigate('/my/appointments');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress sx={{ color: '#FF9080' }} />
+      </Box>
+    );
+  }
+  
   return (
     <Paper elevation={0} sx={{ maxWidth: '100vw' }}>
-      <Typography variant="h4" fontWeight="bold">Write a Review</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        {canGoBack && (
+          <IconButton 
+            onClick={() => navigate(-1)} 
+            sx={{ mr: 1, color: '#FF9080' }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+        )}
+        <Typography variant="h4" fontWeight="bold">
+          {isEditMode ? '리뷰 수정하기' : '리뷰 작성하기'}
+        </Typography>
+      </Box>
       <Divider sx={{ marginY: 3, borderColor: 'grey.500', borderWidth: 2 }} />
       
       <Box sx={{ display: 'flex', mb: 3 }}>
@@ -394,7 +528,33 @@ export default function WriteReview() {
           ))}
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Button 
+            variant="outlined"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+            sx={{
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              paddingX: 4,
+              paddingY: 1.5,
+              fontSize: '16px',
+              textTransform: 'none',
+              backgroundColor: 'transparent',
+              border: '1px solid #ff9f9f',
+              color: '#ff9f9f',
+              boxShadow: 'none',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 159, 159, 0.1)',
+                borderColor: '#FF9080',
+                color: '#FF9080',
+                boxShadow: 'none' 
+              }
+            }}
+          >
+            취소
+          </Button>
+          
           <Button 
             variant="contained"
             onClick={handleSubmit}
@@ -424,7 +584,7 @@ export default function WriteReview() {
               }
             }}
           >
-            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit Review'}
+            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : isEditMode ? '수정 완료' : '리뷰 제출'}
           </Button>
         </Box>
       </Box>
@@ -479,7 +639,12 @@ const ImagePreviewSection = ({ imagePreviewUrls, onRemoveImage, maxImages }: Ima
         <Avatar
           src={url}
           variant="rounded"
-          sx={{ width: 130, height: 110, objectFit: 'cover' }}
+          sx={{ 
+            width: 130, 
+            height: 110, 
+            objectFit: 'cover',
+            border: url.startsWith('blob:') ? '2px solid #FF9080' : 'none' // Highlight new images
+          }}
         />
         <Button
           size="small"

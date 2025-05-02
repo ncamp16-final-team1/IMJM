@@ -21,7 +21,7 @@ import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
 import Appointments from './pages/MyPage/Appointments';
-import WriteReview from './pages/MyPage/WriteReview';
+import WriteOrEditReview from './pages/MyPage/WriteOrEditReview.tsx';
 import ViewReview from './pages/MyPage/ViewReview';
 import UserProfile from './pages/MyPage/UserProfile';
 import NotificationService from './services/notification/NotificationService';
@@ -79,81 +79,86 @@ function App() {
                             <Route path="/community" element={<div>Community Page (준비 중)</div>} />
                             <Route path="/salon/:id" element={<SalonDetail />} />
 
-                            {/* 로그인된 사용자만 접근 가능한 경로 */}
-                            <Route path="/salon/stylists/:salonId" element={
-                                <ProtectedRoute>
-                                    <Stylists />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/salon/:salonId/reservation/:stylistId" element={
-                                <ProtectedRoute>
-                                    <StylistSchedule />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/salon/:salonId/reservation/:stylistId/payment-details" element={
-                                <ProtectedRoute>
-                                    <>
-                                        <ScrollToTop />
-                                        <PaymentDetails />
-                                    </>
-                                </ProtectedRoute>
-                            }
-                            />
-                            <Route path="/chat/*" element={
-                                <ProtectedRoute>
-                                    <ChatMain />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my" element={
-                                <ProtectedRoute>
-                                    <MyPage />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my/appointments" element={
-                                <ProtectedRoute>
-                                    <Appointments />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my/write-review" element={
-                                <ProtectedRoute>
-                                    <WriteReview />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my/view-review" element={
-                                <ProtectedRoute>
-                                    <ViewReview />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my/profile" element={
-                                <ProtectedRoute>
-                                    <UserProfile />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my/point" element={
-                                <ProtectedRoute>
-                                    <PointHistory />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/my/reservation-detail/:reservationId" element={
-                                <ProtectedRoute>
-                                    <ReservationDetail />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/archive/write" element={
-                                <ProtectedRoute>
-                                    <ArchiveWrite />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/archive/:id" element={
-                                <ProtectedRoute>
-                                    <ArchiveDetail />
-                                </ProtectedRoute>
-                            } />
-                            <Route path="/archive/edit/:id" element={
-                                <ProtectedRoute>
-                                    <ArchiveEdit />
-                                </ProtectedRoute>
-                            } />
+                        {/* 로그인된 사용자만 접근 가능한 경로 */}
+                        <Route path="/salon/stylists/:salonId" element={
+                            <ProtectedRoute>
+                                <Stylists />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/salon/:salonId/reservation/:stylistId" element={
+                            <ProtectedRoute>
+                                <StylistSchedule />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/salon/:salonId/reservation/:stylistId/payment-details" element={
+                            <ProtectedRoute>
+                                <>
+                                    <ScrollToTop />
+                                    <PaymentDetails />
+                                </>
+                            </ProtectedRoute>
+                        }
+                        />
+                        <Route path="/chat/*" element={
+                            <ProtectedRoute>
+                                <ChatMain />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my" element={
+                            <ProtectedRoute>
+                                <MyPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/appointments" element={
+                            <ProtectedRoute>
+                                <Appointments />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/write-review" element={
+                            <ProtectedRoute>
+                                <WriteOrEditReview />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/review/edit" element={
+                            <ProtectedRoute>
+                                <WriteOrEditReview />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/view-review/" element={
+                            <ProtectedRoute>
+                                <ViewReview />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/profile" element={
+                            <ProtectedRoute>
+                                <UserProfile />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/point" element={
+                            <ProtectedRoute>
+                                <PointHistory />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/reservation-detail/:reservationId" element={
+                            <ProtectedRoute>
+                                <ReservationDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/write" element={
+                            <ProtectedRoute>
+                                <ArchiveWrite />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveDetail />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/archive/edit/:id" element={
+                            <ProtectedRoute>
+                                <ArchiveEdit />
+                            </ProtectedRoute>
+                        } />
 
                             {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
                             <Route path="/login" element={
