@@ -24,7 +24,6 @@ import Appointments from './pages/MyPage/Appointments';
 import WriteReview from './pages/MyPage/WriteReview';
 import ViewReview from './pages/MyPage/ViewReview';
 import UserProfile from './pages/MyPage/UserProfile';
-import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
 import PointHistory from './pages/MyPage/PointHistory';
 import ReservationDetail from './pages/MyPage/ReservationDetail';
@@ -178,9 +177,6 @@ function App() {
                     </Routes>
                 </main>
                 <Footer />
-
-                {/* 전역 알림 토스트 */}
-                <NotificationToast />
             </div>
         </BrowserRouter>
     );
