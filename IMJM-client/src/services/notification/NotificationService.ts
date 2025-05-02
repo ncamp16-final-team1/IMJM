@@ -123,26 +123,29 @@ class NotificationService {
         }
     }
 
-    addListener(listener: NotificationListener) {
-        this.listeners.push(listener);
-        console.log(`알림 리스너 추가됨 (총 ${this.listeners.length}개)`);
+    addListener(event: string, listener: Function) {
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
+        }
+        this.listeners[event].push(listener);
     }
 
-    removeListener(listener: NotificationListener) {
-        const index = this.listeners.indexOf(listener);
+    removeListener(event: string, listener: Function) {
+        if (!this.listeners[event]) return;
+
+        const index = this.listeners[event].indexOf(listener);
         if (index !== -1) {
-            this.listeners.splice(index, 1);
-            console.log(`알림 리스너 제거됨 (남은 리스너: ${this.listeners.length}개)`);
+            this.listeners[event].splice(index, 1);
         }
     }
 
-    private notifyListeners(notification: AlarmDto) {
-        console.log(`${this.listeners.length}개의 리스너에게 알림 전달 중`);
-        this.listeners.forEach(listener => {
+    private notifyListeners(event: string, data: any) {
+        const listeners = this.listeners[event] || [];
+        listeners.forEach(listener => {
             try {
-                listener(notification);
+                listener(data);
             } catch (e) {
-                console.error('리스너 실행 중 오류:', e);
+                console.error(`리스너 실행 중 오류:`, e);
             }
         });
     }
@@ -176,13 +179,12 @@ class NotificationService {
 
     async markAsRead(id: number): Promise<void> {
         try {
-            const response = await fetch(`/api/alarms/${id}/read`, {
+            await fetch(`/api/alarms/${id}/read`, {
                 method: 'PUT'
             });
 
-            if (!response.ok) {
-                throw new Error('알림 읽음 처리에 실패했습니다');
-            }
+            // 읽음 처리 이벤트 발행
+            this.notifyListeners('alarmRead', { id });
         } catch (error) {
             console.error('알림 읽음 처리 실패:', error);
             throw error;
@@ -191,19 +193,19 @@ class NotificationService {
 
     async markAllAsRead(): Promise<void> {
         try {
-            const response = await fetch('/api/alarms/read-all', {
+            await fetch('/api/alarms/read-all', {
                 method: 'PUT'
             });
 
-            if (!response.ok) {
-                throw new Error('모든 알림 읽음 처리에 실패했습니다');
-            }
+            // 모든 알림 읽음 처리 이벤트 발행
+            this.notifyListeners('alarmRead', {});
         } catch (error) {
             console.error('모든 알림 읽음 처리 실패:', error);
             throw error;
         }
     }
 
+
     async deleteNotification(id: number): Promise<boolean> {
         try {
             await axios.delete(`/api/alarms/${id}`);
@@ -217,30 +219,6 @@ class NotificationService {
     async deleteNotifications(ids: number[]): Promise<boolean> {
         try {
             await axios.delete('/api/alarms/batch', { data: ids });
-            return true;
-        } catch (error) {
-            console.error('알람 일괄 삭제 실패:', error);
-            return false;
-        }
-    }
-
-    async deleteNotification(id: number): Promise<boolean> {
-        try {
-            await axios.delete(`/api/alarms/${id}`);
-            // 삭제 이벤트 발생
-            this.notifyListeners('alarmDeleted', { id });
-            return true;
-        } catch (error) {
-            console.error('알람 삭제 실패:', error);
-            return false;
-        }
-    }
-
-    async deleteNotifications(ids: number[]): Promise<boolean> {
-        try {
-            await axios.delete('/api/alarms/batch', { data: ids });
-            // 삭제 이벤트 발생
-            this.notifyListeners('alarmDeleted', { ids });
             return true;
         } catch (error) {
             console.error('알람 일괄 삭제 실패:', error);
