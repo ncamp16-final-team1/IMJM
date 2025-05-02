@@ -58,11 +58,19 @@ const ChatRoom: React.FC = () => {
     const [userId, setUserId] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
     useEffect(() => {
         if (!roomId || !userId) return;
 
         const handleNewMessage = (messageData: ChatMessageDto) => {
+            if (isDeleting) {
+                return;
+            }
+
+            if (messageData.error) {
+                return; // 삭제 중인 경우 모든 에러 메시지 무시
+            }
 
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prevMessages => {
@@ -98,6 +106,11 @@ const ChatRoom: React.FC = () => {
         const handleChatRoomError = (error: any) => {
             console.error("채팅방 에러 발생:", error);
 
+            // 삭제 과정 중이면 에러 모달 표시하지 않음
+            if (isDeleting) {
+                return;
+            }
+
             // 삭제된 채팅방 에러 처리
             if (error?.code === 'CHAT_ROOM_DELETED' ||
                 error?.message?.includes('deleted') ||
@@ -118,7 +131,7 @@ const ChatRoom: React.FC = () => {
             WebSocketService.removeListener('message', handleNewMessage);
             WebSocketService.removeListener('error', handleChatRoomError);
         };
-    }, [userId, roomId]);
+    }, [userId, roomId, isDeleting]);
 
     useEffect(() => {
         const fetchUserAndChatRoom = async () => {
@@ -376,11 +389,13 @@ const ChatRoom: React.FC = () => {
 
     const handleConfirmDelete = async () => {
         try {
+            setIsDeleting(true);
             await axios.delete(`/api/chat/room/${roomId}`);
             setConfirmOpen(false);
             setDeletedOpen(true);
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
+            setIsDeleting(false);
             alert('삭제에 실패했습니다.');
         }
     };
