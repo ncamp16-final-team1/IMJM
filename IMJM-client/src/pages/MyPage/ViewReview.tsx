@@ -177,6 +177,31 @@ export default function ViewReview() {
   //     });
   // };
 
+  // 1. handleEditReview 함수 추가 (기존 함수 사이에 추가)
+const handleEditReview = () => {
+  if (!reviewData) return;
+  
+  // Navigate to the WriteOrEditReview component with edit mode
+  navigate('/my/review/edit', {
+    state: {
+      salonId,
+      reservationId: reviewData.reviewId, // Use existing reservationId if available
+      reviewId: reviewData.reviewId,
+      salonName,
+      salonScore,
+      reviewCount,
+      salonAddress,
+      reservationDate,
+      reservationTime,
+      price,
+      serviceName,
+      stylistName,
+      salonPhotoUrl,
+      isEdit: true // Flag to indicate edit mode
+    }
+  });
+};
+
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: "bold" }}>
@@ -372,23 +397,23 @@ export default function ViewReview() {
             }}
           >
             <Button
-              variant="outlined"
-              size="small"
-              onClick={() => console.log("리뷰 수정")}
-              sx={{
-                borderRadius: 2,
-                textTransform: "none",
-                borderColor: "#FF9080",
-                color: "#FF9080",
-                "&:hover": {
-                  borderColor: "#FF9080",
-                  backgroundColor: "#FF9080",
-                  color: "#fff",
-                },
-              }}
-            >
-              수정
-            </Button>
+    variant="outlined"
+    size="small"
+    onClick={handleEditReview}
+    sx={{
+      borderRadius: 2,
+      textTransform: "none",
+      borderColor: "#FF9080",
+      color: "#FF9080",
+      "&:hover": {
+        borderColor: "#FF9080",
+        backgroundColor: "#FF9080",
+        color: "#fff",
+      },
+    }}
+  >
+    수정
+  </Button>
 
             {/* <Button
               variant="outlined"
