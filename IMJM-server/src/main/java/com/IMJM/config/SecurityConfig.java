@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -97,6 +98,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/admin/login", "/api/admin/check-id", "/api/admin/join").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/salon/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/archive/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/user/location").permitAll()
+                        .requestMatchers("/api/salon/**").authenticated()
+                        .requestMatchers("/api/archive/**").authenticated()
                         .requestMatchers("/api/admin/check-login").authenticated()
                         .anyRequest().authenticated()
                 )

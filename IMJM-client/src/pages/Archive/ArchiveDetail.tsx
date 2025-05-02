@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -139,7 +139,7 @@ function ArchiveDetail() {
     };
 
     const handleBack = () => {
-        navigate('/archive');
+        navigate(-1);
     };
 
     const handleNext = () => {
@@ -260,6 +260,14 @@ function ArchiveDetail() {
         }
     };
 
+    // 댓글 엔터키 처리를 위한 핸들러 추가
+    const handleCommentKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // 기본 엔터키 동작 방지
+            handleAddComment();
+        }
+    };
+
     const handleReply = async (commentId: number) => {
         if (!replyContent.trim() || !archive) return;
 
@@ -305,6 +313,14 @@ function ArchiveDetail() {
             setReplyContent('');
         } catch (err) {
             console.error('답글 등록 오류:', err);
+        }
+    };
+
+    // 답글 엔터키 처리를 위한 핸들러 추가
+    const handleReplyKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter' && !event.shiftKey && replyTo) {
+            event.preventDefault(); // 기본 엔터키 동작 방지
+            handleReply(replyTo);
         }
     };
 
@@ -579,24 +595,27 @@ function ArchiveDetail() {
                             ))}
                         </List>
 
-                        {/* 새 댓글 입력 */}
-                        <Box sx={{ p: 2, display: 'flex', borderTop: '1px solid #efefef' }}>
-                            <TextField
-                                fullWidth
-                                placeholder="댓글 작성..."
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                variant="outlined"
-                                size="small"
-                            />
-                            <IconButton
-                                color="primary"
-                                onClick={handleAddComment}
-                                disabled={!newComment.trim()}
-                            >
-                                <SendIcon />
-                            </IconButton>
-                        </Box>
+                        {/* 새 댓글 입력 - replyTo가 null일 때만 표시 */}
+                        {!replyTo && (
+                            <Box sx={{ p: 2, display: 'flex', borderTop: '1px solid #efefef' }}>
+                                <TextField
+                                    fullWidth
+                                    placeholder="댓글 작성..."
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    onKeyDown={handleCommentKeyDown}
+                                    variant="outlined"
+                                    size="small"
+                                />
+                                <IconButton
+                                    color="primary"
+                                    onClick={handleAddComment}
+                                    disabled={!newComment.trim()}
+                                >
+                                    <SendIcon />
+                                </IconButton>
+                            </Box>
+                        )}
                     </Box>
                 )}
 
@@ -608,6 +627,7 @@ function ArchiveDetail() {
                             placeholder="답글 작성..."
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
+                            onKeyDown={handleReplyKeyDown}
                             variant="outlined"
                             size="small"
                         />
@@ -627,7 +647,7 @@ function ArchiveDetail() {
                         variant="outlined"
                         onClick={handleBack}
                     >
-                        목록으로
+                        이전
                     </Button>
                 </Box>
             </Paper>

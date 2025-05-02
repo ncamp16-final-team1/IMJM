@@ -88,6 +88,7 @@ public class ArchiveService {
                             .content(archive.getContent())
                             .regDate(archive.getRegDate())
                             .thumbnailUrl(thumbnailUrl)
+                            .userId(archive.getUser().getId())
                             .build();
                 })
                 .collect(Collectors.toList());
