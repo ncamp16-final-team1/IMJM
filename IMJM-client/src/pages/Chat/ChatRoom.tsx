@@ -9,7 +9,12 @@ import {
     Paper,
     InputAdornment,
     CircularProgress,
-    Button
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
@@ -18,10 +23,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Box from '@mui/material/Box';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import styles from './ChatRoom.module.css';
 import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
 import WebSocketService from '../../services/chat/WebSocketService';
@@ -57,6 +58,8 @@ const ChatRoom: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const [userId, setUserId] = useState<string>('');
+    const [errorModalOpen, setErrorModalOpen] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
 
     useEffect(() => {
         if (!roomId || !userId) return;
@@ -94,10 +97,28 @@ const ChatRoom: React.FC = () => {
             }
         };
 
+        const handleChatRoomError = (error: any) => {
+            console.error("채팅방 에러 발생:", error);
+
+            // 삭제된 채팅방 에러 처리
+            if (error?.code === 'CHAT_ROOM_DELETED' ||
+                error?.message?.includes('deleted') ||
+                error?.response?.data?.message?.includes('deleted')) {
+                setErrorMessage('삭제된 채팅방입니다.');
+                setErrorModalOpen(true);
+            } else {
+                // 기타 에러 처리
+                setErrorMessage('채팅 메시지 전송 중 오류가 발생했습니다.');
+                setErrorModalOpen(true);
+            }
+        };
+
         WebSocketService.addListener('message', handleNewMessage);
+        WebSocketService.addListener('error', handleChatRoomError);
 
         return () => {
             WebSocketService.removeListener('message', handleNewMessage);
+            WebSocketService.removeListener('error', handleChatRoomError);
         };
     }, [userId, roomId]);
 
@@ -314,7 +335,17 @@ const ChatRoom: React.FC = () => {
 
         } catch (error) {
             console.error('메시지 전송 실패:', error);
-            alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+
+            if (error?.response?.status === 404 ||
+                error?.message?.includes('not found') ||
+                error?.message?.includes('deleted')) {
+                setErrorMessage('삭제된 채팅방입니다.');
+                setErrorModalOpen(true);
+            } else {
+                // 기타 에러 처리
+                setErrorMessage('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+                setErrorModalOpen(true);
+            }
         } finally {
             setLoading(false);
         }
@@ -354,6 +385,12 @@ const ChatRoom: React.FC = () => {
             console.error('채팅방 삭제 실패:', error);
             alert('삭제에 실패했습니다.');
         }
+    };
+
+    const handleErrorModalClose = () => {
+        setErrorModalOpen(false);
+        // 채팅방 목록으로 리다이렉트
+        navigate('/chat');
     };
 
     if (loading && messages.length === 0) {
@@ -555,6 +592,25 @@ const ChatRoom: React.FC = () => {
                         }}
                         autoFocus
                     >
+                        확인
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={errorModalOpen}
+                onClose={handleErrorModalClose}
+                aria-labelledby="error-dialog-title"
+                aria-describedby="error-dialog-description"
+            >
+                <DialogTitle id="error-dialog-title">알림</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="error-dialog-description">
+                        {errorMessage}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleErrorModalClose} color="primary" autoFocus>
                         확인
                     </Button>
                 </DialogActions>
