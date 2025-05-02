@@ -19,10 +19,12 @@ public class ReservationDetailResponseDto {
     private String requirements;
     private String salonName;
     private String salonAddress;
+    private String salonPhotoUrl;
     private String stylistName;
     private PaymentInfoDto paymentInfo;
     private CouponInfoDto couponInfo;
     private PointUsageDto pointUsage;
+
 
     @Getter
     @Builder

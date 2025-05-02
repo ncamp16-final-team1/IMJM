@@ -110,11 +110,13 @@ public class ReservationController {
         try {
             String userId = customOAuth2UserDto.getId();
             log.info("예약 완료 요청: {}", request);
-            reservationStylistService.completeReservation(request, userId);
+
+            Long reservationId = reservationStylistService.completeReservation(request, userId);
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
             successResponse.put("message", "예약이 성공적으로 완료되었습니다.");
+            successResponse.put("reservationId", reservationId);
 
             return ResponseEntity.ok(successResponse);
         } catch (Exception e) {

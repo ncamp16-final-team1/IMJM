@@ -30,4 +30,9 @@ public class ReviewPhotos {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
     private Review review;
+
+    public void updatePhotoOrder(int photoOrder) {
+        this.photoOrder = photoOrder;
+    }
+
 }
