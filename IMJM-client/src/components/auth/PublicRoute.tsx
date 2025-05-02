@@ -18,14 +18,13 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   }, []);
 
   if (isAuthenticated === "ok") {
+    console.log(isAuthenticated)
     return <div>Loading...</div>;
-  }
-
-  if (isAuthenticated === "notAgreed") {
+  }else if (isAuthenticated === "notAgreed") {
+    console.log(isAuthenticated)
     return <Navigate to="/user/register" replace />;
-  }
-
-  if (isAuthenticated === "unauthorized") {
+  }else if (isAuthenticated === "unauthorized") {
+    console.log(isAuthenticated)
     return <Navigate to="/" replace />;
   }
 
