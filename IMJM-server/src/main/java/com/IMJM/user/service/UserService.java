@@ -90,7 +90,7 @@ public class UserService {
                 profileUrl,
                 LocalDate.parse(dto.getBirthday()),
                 dto.getRegion(),
-                dto.isIs_notification(),
+                dto.isNotification(),
                 dto.isTermsAgreed());
 
         if(!pointUsageRepository.existsByUserIdAndContent(user.getId(), "Membership Points Earned")){
@@ -139,10 +139,20 @@ public class UserService {
 
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
         String token = jwtUtil.resolveUserToken(request);
+
+        String userId = jwtUtil.getUserName(token);
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("not found userId"));
+
         if (token == null || jwtUtil.isExpired(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("{\"error\": \"Token expired or not provided\"}");
         }
+        else if(!user.isTermsAgreed()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"user is not terms-agreed\"}");
+        }
+
         return ResponseEntity.ok().build();
     }
 
@@ -218,6 +228,7 @@ public class UserService {
                 .gender(user.getGender())
                 .birthday(String.valueOf(user.getBirthday()))
                 .region(user.getRegion())
+                .isNotification(user.isNotification())
                 .build();
     }
 

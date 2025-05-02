@@ -30,7 +30,7 @@ public class UserDto {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    public boolean isIs_notification() {
-        return isNotification();
-    }
+//    public boolean isIs_notification() {
+//        return isNotification();
+//    }
 }

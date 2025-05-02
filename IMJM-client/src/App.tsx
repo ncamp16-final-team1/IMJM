@@ -1,4 +1,4 @@
-// src/App.tsx (기존 App.tsx에 알림 관련 코드 추가)
+// src/App.tsx (수정 버전)
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Header from './components/layout/Header';
@@ -24,7 +24,6 @@ import Appointments from './pages/MyPage/Appointments';
 import WriteOrEditReview from './pages/MyPage/WriteOrEditReview.tsx';
 import ViewReview from './pages/MyPage/ViewReview';
 import UserProfile from './pages/MyPage/UserProfile';
-import NotificationToast from './components/notification/NotificationToast';
 import NotificationService from './services/notification/NotificationService';
 import PointHistory from './pages/MyPage/PointHistory';
 import ReservationDetail from './pages/MyPage/ReservationDetail';
@@ -33,6 +32,7 @@ import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
 import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
 import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
 import Archive from './pages/Archive/Archive.tsx';
+import { NotificationProvider, InAppNotificationReceiver } from './components/notification/InAppNotification';
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -66,17 +66,18 @@ function App() {
     }, []);
 
     return (
-        <BrowserRouter>
-            <div className="app-container">
-                <Header />
-                <main className="content-area">
-                    <Routes>
-                        {/* 기존 라우트들 */}
-                        <Route path="/" element={<Home />} />
-                        <Route path="/salon" element={<HairSalon />} />
-                        <Route path="/archive" element={<Archive />} />
-                        <Route path="/community" element={<div>Community Page (준비 중)</div>} />
-                        <Route path="/salon/:id" element={<SalonDetail />} />
+        <NotificationProvider>
+            <BrowserRouter>
+                <div className="app-container">
+                    <Header />
+                    <main className="content-area">
+                        <Routes>
+                            {/* 기존 라우트들 */}
+                            <Route path="/" element={<Home />} />
+                            <Route path="/salon" element={<HairSalon />} />
+                            <Route path="/archive" element={<Archive />} />
+                            <Route path="/community" element={<div>Community Page (준비 중)</div>} />
+                            <Route path="/salon/:id" element={<SalonDetail />} />
 
                         {/* 로그인된 사용자만 접근 가능한 경로 */}
                         <Route path="/salon/stylists/:salonId" element={
@@ -159,35 +160,32 @@ function App() {
                             </ProtectedRoute>
                         } />
 
-                        {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
-                        <Route path="/login" element={
-                            <PublicRoute>
-                                <Login />
-                            </PublicRoute>
-                        } />
-                        <Route path="/user/language" element={
-                            <UserLanguageSelect />
-                        } />
-                        <Route path="/user/register" element={
-                            <UserTypeSelect />
-                        } />
-                        <Route path="/user/register/step1" element={
-                            <RegisterStep1 />
-                        } />
-                        <Route path="/user/register/step2" element={
-                            <UserDetailRegister />
-                        } />
-                        <Route path="/user/final" element={
-                            <UserFinalSubmit />
-                        } />
-                    </Routes>
-                </main>
-                <Footer />
-
-                {/* 전역 알림 토스트 */}
-                <NotificationToast />
-            </div>
-        </BrowserRouter>
+                            {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
+                            <Route path="/login" element={
+                                    <Login />
+                            } />
+                            <Route path="/user/language" element={
+                                <UserLanguageSelect />
+                            } />
+                            <Route path="/user/register" element={
+                                <UserTypeSelect />
+                            } />
+                            <Route path="/user/register/step1" element={
+                                <RegisterStep1 />
+                            } />
+                            <Route path="/user/register/step2" element={
+                                <UserDetailRegister />
+                            } />
+                            <Route path="/user/final" element={
+                                <UserFinalSubmit />
+                            } />
+                        </Routes>
+                    </main>
+                    <Footer />
+                    <InAppNotificationReceiver />
+                </div>
+            </BrowserRouter>
+        </NotificationProvider>
     );
 }
 

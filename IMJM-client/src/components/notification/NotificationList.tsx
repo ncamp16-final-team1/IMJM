@@ -19,9 +19,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface NotificationListProps {
     onNotificationRead?: () => void;
+    onClose?: () => void; // 모달 닫기 함수 추가
 }
 
-const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead }) => {
+const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead, onClose }) => {
     const [notifications, setNotifications] = useState<AlarmDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
@@ -65,17 +66,24 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead 
 
     const handleNotificationClick = async (notification: AlarmDto) => {
         try {
-            // 읽음 표시하는 대신 알람 삭제
-            const success = await NotificationService.deleteNotification(notification.id);
+            // 읽음 처리
+            await NotificationService.markAsRead(notification.id);
 
-            if (success) {
-                // 상태에서 알람 제거
-                setNotifications(notifications.filter(n => n.id !== notification.id));
+            // UI 상태 즉시 업데이트 - isRead 속성을 true로 변경
+            setNotifications(prevNotifications =>
+                prevNotifications.map(n =>
+                    n.id === notification.id ? { ...n, read: true } : n
+                )
+            );
 
-                // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달
-                if (onNotificationRead) {
-                    onNotificationRead();
-                }
+            // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달 (카운트 업데이트 등을 위해)
+            if (onNotificationRead) {
+                onNotificationRead();
+            }
+
+            // 모달 닫기
+            if (onClose) {
+                onClose();
             }
 
             // 알림 타입에 따라 다른 페이지로 이동
@@ -95,16 +103,19 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead 
         if (notifications.length === 0) return;
 
         try {
-            const allIds = notifications.map(n => n.id);
+            await NotificationService.markAllAsRead();
 
-            const success = await NotificationService.deleteNotifications(allIds);
+            // 모든 알림을 읽음 처리된 것으로 UI 상태 업데이트
+            setNotifications(prevNotifications =>
+                prevNotifications.map(notification => ({ ...notification, isRead: true }))
+            );
 
-            if (success) {
-                setNotifications([]);
+            if (onNotificationRead) {
+                onNotificationRead();
+            }
 
-                if (onNotificationRead) {
-                    onNotificationRead();
-                }
+            if (onClose) {
+                onClose();
             }
         } catch (error) {
             console.error('모든 알림 읽음 처리 실패:', error);
@@ -177,7 +188,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead 
                         startIcon={<MarkChatReadIcon />}
                         onClick={handleMarkAllAsRead}
                     >
-                        모두 삭제
+                        모두 읽음
                     </Button>
                 )}
             </Box>
