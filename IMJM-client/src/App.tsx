@@ -21,7 +21,7 @@ import PaymentDetails from './pages/HairSalon/PaymentDetails';
 import RegisterStep1 from './pages/User/RegisterStep1';
 import ScrollToTop from './components/ScrollToTop';
 import Appointments from './pages/MyPage/Appointments';
-import WriteReview from './pages/MyPage/WriteReview';
+import WriteOrEditReview from './pages/MyPage/WriteOrEditReview.tsx';
 import ViewReview from './pages/MyPage/ViewReview';
 import UserProfile from './pages/MyPage/UserProfile';
 import NotificationToast from './components/notification/NotificationToast';
@@ -113,16 +113,26 @@ function App() {
                                 <Appointments />
                             </ProtectedRoute>
                         } />
-                        <Route path="/my/write-review" element={
-                            <ProtectedRoute>
-                                <WriteReview />
-                            </ProtectedRoute>
-                        } />
-                        <Route path="/my/view-review" element={
-                            <ProtectedRoute>
-                                <ViewReview />
-                            </ProtectedRoute>
-                        } />
+                        {/* 기존 라우트 대체 */}
+        <Route path="/my/write-review" element={
+          <ProtectedRoute>
+            <WriteOrEditReview />
+          </ProtectedRoute>
+        } />
+        
+        {/* 새 라우트 추가 */}
+        <Route path="/my/review/edit" element={
+          <ProtectedRoute>
+            <WriteOrEditReview />
+          </ProtectedRoute>
+        } />
+        
+        {/* 기존 라우트 유지 */}
+        <Route path="/my/view-review/" element={
+          <ProtectedRoute>
+            <ViewReview />
+          </ProtectedRoute>
+        } />
                         <Route path="/my/profile" element={
                             <ProtectedRoute>
                                 <UserProfile />

@@ -100,6 +100,7 @@ export default function AppointmentCard({
                                 salonPhotoUrl,
                                 serviceName,
                                 stylistName,
+                                reviewId,
                             }
                     });
                     }
