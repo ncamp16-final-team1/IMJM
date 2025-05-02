@@ -49,9 +49,7 @@ const ChatRoom: React.FC = () => {
     const [newMessage, setNewMessage] = useState<string>('');
     const [chatRoom, setChatRoom] = useState<ChatRoomInfo | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    // 번역 상태를 관리하는 상태 변수 (messageId를 키로 사용)
     const [translations, setTranslations] = useState<Record<number, TranslationState>>({});
-    // 사진 업로드 관련 상태 추가
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -196,7 +194,7 @@ const ChatRoom: React.FC = () => {
     };
 
     const removeSelectedFile = (index: number) => {
-        URL.revokeObjectURL(previewUrls[index]); // 메모리 누수 방지
+        URL.revokeObjectURL(previewUrls[index]);
         setSelectedFiles(prev => prev.filter((_, i) => i !== index));
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
@@ -275,7 +273,7 @@ const ChatRoom: React.FC = () => {
     const handleSendMessage = async () => {
         if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom || !userId) return;
 
-        setLoading(true); // 메시지 전송 중 로딩 상태 설정
+        setLoading(true);
 
         try {
             let photoAttachments: ChatPhoto[] = [];
@@ -365,7 +363,7 @@ const ChatRoom: React.FC = () => {
     const handleDeleteRoom = async () => {
         try {
             await axios.delete(`/api/chat/room/${roomId}`);
-            navigate('/chat'); // 삭제 후 채팅방 목록으로 이동
+            navigate('/chat');
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
             alert('채팅방 삭제에 실패했습니다.');

@@ -351,6 +351,8 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
             await axios.delete(`/api/chat/room/${roomId}`);
             setConfirmOpen(false);
             setDeletedOpen(true);
+
+            window.location.reload();
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
             alert('삭제에 실패했습니다.');
@@ -555,7 +557,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     <Button
                         onClick={() => {
                             setDeletedOpen(false);
-                            navigate('/chat');
+                            window.location.reload();
                         }}
                         autoFocus
                     >
