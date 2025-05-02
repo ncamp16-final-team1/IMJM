@@ -96,7 +96,13 @@ public class SecurityConfig {
                 // 경로별 인가 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/admin/login", "/api/admin/check-id", "/api/admin/join").permitAll()
+                        .requestMatchers("/api/admin/login"
+                                ,"/api/admin/check-id"
+                                ,"/api/admin/join"
+                                ,"/api/user/location"
+                                ,"/api/salon/**"
+                                ,"/api/archive/**"
+                        ).permitAll()
                         .requestMatchers("/api/admin/check-login").authenticated()
                         .anyRequest().authenticated()
                 )
