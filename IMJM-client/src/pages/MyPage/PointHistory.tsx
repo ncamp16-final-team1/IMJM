@@ -29,7 +29,7 @@ const PointHistory = () => {
         <Typography fontWeight="bold">
           Point
         </Typography>
-        {point} P
+        {(point ?? 0).toLocaleString()} P
       </Box>
       <Box
         display="flex"

@@ -254,8 +254,8 @@ export default function WriteReview() {
     const formData = new FormData();
     formData.append('reviewData', new Blob([JSON.stringify(reviewData)], {type: 'application/json'}));
     
-    uploadedImages.forEach((image, index) => {
-      formData.append(`image${index}`, image);
+    uploadedImages.forEach((image) => {
+      formData.append('images', image);
     });
     
     try {
@@ -409,15 +409,18 @@ export default function WriteReview() {
               backgroundColor: '#ff9f9f',
               border: '1px solid #ff9f9f',
               color: 'white',
+              boxShadow: 'none',
               '&:hover': {
-                backgroundColor: '#FF9080', 
+                backgroundColor: '#FF9080',
                 borderColor: '#FF9080',
-                color: 'white'
+                color: 'white',
+                boxShadow: 'none' 
               },
               '&:active': {
                 backgroundColor: '#ff9f9f',
                 borderColor: '#ff9f9f',
-                color: 'white'
+                color: 'white',
+                boxShadow: 'none' 
               }
             }}
           >
@@ -448,8 +451,8 @@ const ImageUploadButton = () => (
   <label htmlFor="review-upload-photos" style={{ display: "inline-block", cursor: "pointer" }}>
     <Box
       sx={{
-        width: 180,
-        height: 150,
+        width: 130,
+        height: 110,
         bgcolor: "#ddd",
         display: "flex",
         justifyContent: "center",
@@ -458,7 +461,7 @@ const ImageUploadButton = () => (
         "&:hover": { bgcolor: "#ccc" },
       }}
     >
-      <Typography fontSize="2rem">＋</Typography>
+      <Typography fontSize="1.5rem">＋</Typography>
     </Box>
   </label>
 );
@@ -476,7 +479,7 @@ const ImagePreviewSection = ({ imagePreviewUrls, onRemoveImage, maxImages }: Ima
         <Avatar
           src={url}
           variant="rounded"
-          sx={{ width: 100, height: 100 }}
+          sx={{ width: 130, height: 110, objectFit: 'cover' }}
         />
         <Button
           size="small"
@@ -507,8 +510,8 @@ const ImagePreviewSection = ({ imagePreviewUrls, onRemoveImage, maxImages }: Ima
       <label htmlFor="review-upload-photos" style={{ display: "inline-block", cursor: "pointer" }}>
         <Box
           sx={{
-            width: 100,
-            height: 100,
+            width: 130,
+            height: 110,
             bgcolor: "#ddd",
             display: "flex",
             justifyContent: "center",
@@ -577,6 +580,7 @@ interface TagCheckboxProps {
 
 const TagCheckbox = ({ tag, selected, onToggle }: TagCheckboxProps) => (
   <Paper
+    elevation={0}
     sx={{
       display: 'inline-flex',
       borderRadius: '20px',

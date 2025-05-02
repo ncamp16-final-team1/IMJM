@@ -108,6 +108,10 @@ public class MyPageService {
 
     @Transactional
     public Long saveReview(ReviewSaveRequestDto requestDto, List<MultipartFile> images) {
+        if (images == null) {
+            images = new ArrayList<>();
+        }
+
         Users user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
@@ -137,6 +141,20 @@ public class MyPageService {
         if (images != null && !images.isEmpty()) {
             saveReviewImages(savedReview, images);
         }
+
+        int pointsToGive = 10;
+        user.savePoint(pointsToGive);
+        userRepository.save(user);
+
+        PointUsage pointUsage = PointUsage.builder()
+                .user(user)
+                .usageType("SAVE")
+                .price(pointsToGive)
+                .useDate(LocalDateTime.now())
+                .content(salon.getName() + " 리뷰 작성")
+                .build();
+
+        pointUsageRepository.save(pointUsage);
 
         updateSalonScore(salon.getId());
 

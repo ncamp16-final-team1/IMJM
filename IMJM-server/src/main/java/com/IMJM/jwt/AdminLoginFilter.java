@@ -31,9 +31,6 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         String username = request.getParameter("id");
         String password = obtainPassword(request);
 
-        System.out.println(username);
-        System.out.println(password);
-
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
         return authenticationManager.authenticate(authToken);
     }

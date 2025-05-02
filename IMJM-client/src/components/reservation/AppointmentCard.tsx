@@ -191,12 +191,11 @@ export default function AppointmentCard({
                         size="medium" 
                         onClick={async () => {
                             try {
-                                // 예약 ID를 사용하여 채팅방 생성 또는 조회
-                                const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
-                                navigate(`/chat/${chatRoom.id}`);
+                            const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
+                            navigate(`/chat/${chatRoom.id}`);
                             } catch (error) {
-                                console.error('채팅방 이동 중 오류 발생:', error);
-                                alert('채팅방으로 이동할 수 없습니다. 잠시 후 다시 시도해주세요.');
+                            console.error('채팅방 이동 중 오류 발생:', error);
+                            alert('채팅방으로 이동할 수 없습니다. 잠시 후 다시 시도해주세요.');
                             }
                         }}
                         sx={{
@@ -204,14 +203,16 @@ export default function AppointmentCard({
                             textTransform: 'none',
                             backgroundColor: 'transparent', 
                             borderColor: '#FF9080', 
-                            color: '#FF9080', 
+                            color: '#FF9080',
+                            boxShadow: 'none', 
                             '&:hover': {
-                                backgroundColor: 'rgba(255, 144, 128, 0.1)', 
-                                borderColor: '#FF9080',
+                            backgroundColor: 'rgba(255, 144, 128, 0.1)', 
+                            borderColor: '#FF9080',
+                            boxShadow: 'none', 
                             },
                         }} 
                         startIcon={<ChatIcon fontSize="small" />}
-                    >
+                        >
                         1:1 Chat
                     </Button>
 
@@ -223,17 +224,20 @@ export default function AppointmentCard({
                             textTransform: 'none',
                             backgroundColor: buttonConfig.color, 
                             borderColor: buttonConfig.color, 
-                            color: 'white', 
+                            color: 'white',
+                            boxShadow: 'none',
                             '&:hover': {
-                                backgroundColor: buttonConfig.color,
-                                opacity: 0.9,
+                            backgroundColor: buttonConfig.color,
+                            opacity: 0.9,
+                            boxShadow: 'none', 
                             },
                         }}
                         onClick={buttonConfig.action}
                         startIcon={buttonConfig.icon}
-                    >
+                        >
                         {buttonConfig.label}
                     </Button>
+
                 </Stack>
             </Box>
         </Paper>

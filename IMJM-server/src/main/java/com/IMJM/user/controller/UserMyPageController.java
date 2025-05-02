@@ -43,20 +43,12 @@ public class UserMyPageController {
     @PostMapping(value = "/review-save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveUserReview(
             @RequestPart("reviewData") ReviewSaveRequestDto reviewSaveRequestDto,
-            @RequestPart(value = "image0", required = false) MultipartFile image0,
-            @RequestPart(value = "image1", required = false) MultipartFile image1,
-            @RequestPart(value = "image2", required = false) MultipartFile image2,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal CustomOAuth2UserDto oAuth2UserDto) {
 
         try {
             String userId = oAuth2UserDto.getId();
-
             reviewSaveRequestDto.setUserId(userId);
-
-            List<MultipartFile> images = new ArrayList<>();
-            if (image0 != null && !image0.isEmpty()) images.add(image0);
-            if (image1 != null && !image1.isEmpty()) images.add(image1);
-            if (image2 != null && !image2.isEmpty()) images.add(image2);
 
             Long reviewId = myPageService.saveReview(reviewSaveRequestDto, images);
 

@@ -8,6 +8,7 @@ import com.IMJM.jwt.UserSuccessHandler;
 import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,58 +69,57 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         http
-                .cors((cors) -> cors
-                        .configurationSource(new CorsConfigurationSource() {
-
-                            @Override
-                            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-
-                                CorsConfiguration configuration = new CorsConfiguration();
-
-                                configuration.setAllowedOrigins(List.of(clientDomain, adminDomain));
-                                configuration.setAllowedMethods(List.of("*"));
-                                configuration.setAllowedHeaders(List.of("*"));
-                                configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
-                                configuration.setAllowCredentials(true);
-                                configuration.setMaxAge(3600L);
-
-                                return configuration;
-                            }
-                        }));
-
-        http
-                .csrf((auth) -> auth.disable())
-                .formLogin((auth) -> auth.disable())
+                .cors(cors -> cors
+                        .configurationSource(request -> {
+                            CorsConfiguration configuration = new CorsConfiguration();
+                            configuration.setAllowedOrigins(List.of(clientDomain, adminDomain));
+                            configuration.setAllowedMethods(List.of("*"));
+                            configuration.setAllowedHeaders(List.of("*"));
+                            configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
+                            configuration.setAllowCredentials(true);
+                            configuration.setMaxAge(3600L);
+                            return configuration;
+                        })
+                )
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
                 .logout(logout -> logout.disable())
-                .httpBasic((auth) -> auth.disable());
+                .httpBasic(basic -> basic.disable())
 
-        //oauth2
-        http
-                .oauth2Login((oauth2)-> oauth2
-                        .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
-                                .userService(customOAuth2UserService))
+                // OAuth2 로그인 설정
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint.userService(customOAuth2UserService))
                         .successHandler(userSuccessHandler)
-                );
+                )
 
-        //경로별 인가 작업
-        http
-                .authorizeHttpRequests((auth) -> auth
+                // 경로별 인가 설정
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/admin/login", "/api/admin/register").permitAll()
-                        .requestMatchers("/admin/check-login").authenticated()
-                        .anyRequest().authenticated());
+                        .requestMatchers("/api/admin/login", "/api/admin/check-id", "/api/admin/join").permitAll()
+                        .requestMatchers("/api/admin/check-login").authenticated()
+                        .anyRequest().authenticated()
+                )
 
-        http
+                // JWT 인증 필터 추가
                 .addFilterBefore(new AdminJWTFilter(jwtUtil), AdminLoginFilter.class)
                 .addFilterBefore(new UserJWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(new UserJWTFilter(jwtUtil, userRepository), OAuth2LoginAuthenticationFilter.class)
-                .addFilterAt(new AdminLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new AdminLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class)
 
-        http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                // 세션 관리 설정
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // 예외 처리 설정 (Spring Security 6.1 이상에서의 변경된 방식)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"UNAUTHORIZED\"}");
+                        })
+                );
 
         return http.build();
     }
