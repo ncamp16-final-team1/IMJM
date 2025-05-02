@@ -68,7 +68,6 @@ const ReservationDetail = () => {
         const response = await axios.get(
           `/api/mypages/reservations/${reservationId}`
         );
-        console.log("응답 데이터:", response.data);
         setReservation(response.data);
         
       } catch (error) {
@@ -83,7 +82,6 @@ const ReservationDetail = () => {
     return <div>Loading...</div>;
   }
 
-  console.log("salonPhotoUrl:", reservation.salonPhotoUrl);
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: "bold" }}>
