@@ -11,16 +11,15 @@ import com.IMJM.reservation.repository.PointUsageRepository;
 import com.IMJM.reservation.repository.ReservationRepository;
 import com.IMJM.salon.repository.ReviewPhotosRepository;
 import com.IMJM.salon.repository.ReviewRepository;
-import com.IMJM.user.dto.ReservationDetailResponseDto;
-import com.IMJM.user.dto.ReviewSaveRequestDto;
-import com.IMJM.user.dto.UserReservationResponseDto;
-import com.IMJM.user.dto.UserReviewReplyResponseDto;
-import com.IMJM.user.dto.UserReviewResponseDto;
+import com.IMJM.user.dto.*;
 import com.IMJM.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -283,6 +282,7 @@ public class MyPageService {
 
 
     public ReservationDetailResponseDto getReservationDetail(Long reservationId) {
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 찾을 수 없습니다: " + reservationId));
 
@@ -294,14 +294,28 @@ public class MyPageService {
         ReservationCoupon reservationCoupon = reservationCouponRepository.findByReservationId(reservationId)
                 .orElse(null);
 
-        return buildReservationDetailResponseDto(reservation, payment, pointUsages, reservationCoupon);
+        String salonPhotoUrl = getSalonPhotoUrl(reservation.getStylist().getSalon());
+
+        return buildReservationDetailResponseDto(reservation, payment, pointUsages, reservationCoupon, salonPhotoUrl);
+    }
+
+    private String getSalonPhotoUrl(Salon salon) {
+
+        List<SalonPhotos> salonPhotos = salonPhotosRepository.findBySalon(salon);
+
+        if (salonPhotos.isEmpty()) {
+            return null;
+        }
+
+        return salonPhotos.get(0).getPhotoUrl();
     }
 
     private ReservationDetailResponseDto buildReservationDetailResponseDto(
             Reservation reservation,
             Payment payment,
             List<PointUsage> pointUsages,
-            ReservationCoupon reservationCoupon) {
+            ReservationCoupon reservationCoupon,
+            String salonPhotoUrl) {
 
         return ReservationDetailResponseDto.builder()
                 .reservationId(reservation.getId())
@@ -313,6 +327,7 @@ public class MyPageService {
                 .requirements(reservation.getRequirements())
                 .salonName(reservation.getStylist().getSalon().getName())
                 .salonAddress(reservation.getStylist().getSalon().getAddress())
+                .salonPhotoUrl(salonPhotoUrl) // 매장 사진 URL
                 .stylistName(reservation.getStylist().getName())
                 .paymentInfo(payment != null ? mapToPaymentInfoDto(payment) : null)
                 .couponInfo(reservationCoupon != null ? mapToCouponInfoDto(reservationCoupon) : null)
@@ -372,5 +387,79 @@ public class MyPageService {
         return reviewReply.map(UserReviewReplyResponseDto::new)
                 .orElse(null);
     }
+
+
+    @Transactional
+    public Long updateReview(Long reviewId, ReviewUpdateRequestDto requestDto, List<MultipartFile> newImages, List<String> imagesToDelete) {
+        if (newImages == null) {
+            newImages = new ArrayList<>();
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomOAuth2UserDto oAuth2UserDto = (CustomOAuth2UserDto) authentication.getPrincipal();
+        String currentUserId = oAuth2UserDto.getId();
+
+        Review review = reviewRepository.findByReviewId(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
+
+        if (!review.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("본인이 작성한 리뷰만 수정할 수 있습니다.");
+        }
+
+        BigDecimal score = BigDecimal.valueOf(requestDto.getRating());
+        String reviewTag = processReviewTags(requestDto.getTags());
+        review.updateReview(score, requestDto.getReviewText(), reviewTag);
+
+        if (imagesToDelete != null && !imagesToDelete.isEmpty()) {
+            deleteReviewImages(review, imagesToDelete);
+        }
+
+        if (!newImages.isEmpty()) {
+            saveReviewImages(review, newImages);
+        }
+
+        Review updatedReview = reviewRepository.save(review);
+
+        updateSalonScore(review.getSalon().getId());
+
+        return updatedReview.getId();
+    }
+
+    private void deleteReviewImages(Review review, List<String> imageUrls) {
+        for (String imageUrl : imageUrls) {
+
+            Optional<ReviewPhotos> photoOpt = reviewPhotosRepository.findByReviewIdAndPhotoUrl(review.getId(), imageUrl);
+
+            if (photoOpt.isPresent()) {
+                ReviewPhotos photo = photoOpt.get();
+
+                try {
+                    String filePath = extractFilePathFromUrl(imageUrl);
+                    storageService.delete(filePath);
+                } catch (Exception e) {
+                    log.error("이미지 삭제 실패: {}", e.getMessage());
+                }
+
+                reviewPhotosRepository.delete(photo);
+            }
+        }
+
+        List<ReviewPhotos> remainingPhotos = reviewPhotosRepository.findByReview_IdOrderByPhotoOrderAsc(review.getId());
+        for (int i = 0; i < remainingPhotos.size(); i++) {
+            ReviewPhotos photo = remainingPhotos.get(i);
+            photo.updatePhotoOrder(i);
+        }
+
+        reviewPhotosRepository.saveAll(remainingPhotos);
+    }
+
+    private String extractFilePathFromUrl(String imageUrl) {
+        String baseUrl = getBaseStorageUrl();
+        return imageUrl.replace(baseUrl, "");
+    }
+
+    private String getBaseStorageUrl() {
+        return "https://" + bucketName + ".kr.object.ncloudstorage.com/";
+    }
+
 }
 

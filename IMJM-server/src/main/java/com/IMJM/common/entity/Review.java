@@ -44,4 +44,11 @@ public class Review {
 
     @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
     private ReviewReply reviewReply;
+
+
+    public void updateReview(BigDecimal score, String content, String reviewTag) {
+        this.score = score;
+        this.content = content;
+        this.reviewTag = reviewTag;
+    }
 }

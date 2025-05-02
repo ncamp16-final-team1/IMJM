@@ -161,46 +161,28 @@ export default function ViewReview() {
     Promise.all([fetchReview, fetchReply]);
   }, [reviewId]);
 
-  // const handleDeleteReview = () => {
-  //   const confirmDelete = window.confirm("정말로 이 리뷰를 삭제하시겠습니까?");
-  //   if (!confirmDelete || !reviewData) return;
-
-  //   axios
-  //     .delete(`/api/mypages/review/${reviewData.reviewId}`)
-  //     .then(() => {
-  //       alert("리뷰가 성공적으로 삭제되었습니다.");
-  //       // navigate('/reviews');
-  //     })
-  //     .catch((error) => {
-  //       console.error("리뷰 삭제 중 오류 발생:", error);
-  //       alert("리뷰 삭제에 실패했습니다.");
-  //     });
-  // };
-
-  // 1. handleEditReview 함수 추가 (기존 함수 사이에 추가)
-const handleEditReview = () => {
-  if (!reviewData) return;
-  
-  // Navigate to the WriteOrEditReview component with edit mode
-  navigate('/my/review/edit', {
-    state: {
-      salonId,
-      reservationId: reviewData.reviewId, // Use existing reservationId if available
-      reviewId: reviewData.reviewId,
-      salonName,
-      salonScore,
-      reviewCount,
-      salonAddress,
-      reservationDate,
-      reservationTime,
-      price,
-      serviceName,
-      stylistName,
-      salonPhotoUrl,
-      isEdit: true // Flag to indicate edit mode
-    }
-  });
-};
+  const handleEditReview = () => {
+    if (!reviewData) return;
+    
+    navigate('/my/review/edit', {
+      state: {
+        salonId,
+        reservationId: reviewData.reviewId, 
+        reviewId: reviewData.reviewId,
+        salonName,
+        salonScore,
+        reviewCount,
+        salonAddress,
+        reservationDate,
+        reservationTime,
+        price,
+        serviceName,
+        stylistName,
+        salonPhotoUrl,
+        isEdit: true 
+      }
+    });
+  };
 
   return (
     <Box>
@@ -397,23 +379,23 @@ const handleEditReview = () => {
             }}
           >
             <Button
-    variant="outlined"
-    size="small"
-    onClick={handleEditReview}
-    sx={{
-      borderRadius: 2,
-      textTransform: "none",
-      borderColor: "#FF9080",
-      color: "#FF9080",
-      "&:hover": {
-        borderColor: "#FF9080",
-        backgroundColor: "#FF9080",
-        color: "#fff",
-      },
-    }}
-  >
-    수정
-  </Button>
+              variant="outlined"
+              size="small"
+              onClick={handleEditReview}
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                borderColor: "#FF9080",
+                color: "#FF9080",
+                "&:hover": {
+                  borderColor: "#FF9080",
+                  backgroundColor: "#FF9080",
+                  color: "#fff",
+                },
+              }}
+            >
+              수정
+            </Button>
 
             {/* <Button
               variant="outlined"

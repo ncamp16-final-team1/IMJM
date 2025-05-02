@@ -113,26 +113,21 @@ function App() {
                                 <Appointments />
                             </ProtectedRoute>
                         } />
-                        {/* 기존 라우트 대체 */}
-        <Route path="/my/write-review" element={
-          <ProtectedRoute>
-            <WriteOrEditReview />
-          </ProtectedRoute>
-        } />
-        
-        {/* 새 라우트 추가 */}
-        <Route path="/my/review/edit" element={
-          <ProtectedRoute>
-            <WriteOrEditReview />
-          </ProtectedRoute>
-        } />
-        
-        {/* 기존 라우트 유지 */}
-        <Route path="/my/view-review/" element={
-          <ProtectedRoute>
-            <ViewReview />
-          </ProtectedRoute>
-        } />
+                        <Route path="/my/write-review" element={
+                            <ProtectedRoute>
+                                <WriteOrEditReview />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/review/edit" element={
+                            <ProtectedRoute>
+                                <WriteOrEditReview />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/view-review/" element={
+                            <ProtectedRoute>
+                                <ViewReview />
+                            </ProtectedRoute>
+                        } />
                         <Route path="/my/profile" element={
                             <ProtectedRoute>
                                 <UserProfile />

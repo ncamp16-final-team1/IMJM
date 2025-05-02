@@ -166,7 +166,6 @@ export default function WriteOrEditReview() {
   } = (location.state as LocationState) || {};
   
   useEffect(() => {
-    // Check if we came from another page (for back button functionality)
     if (location.key !== 'default') {
       setCanGoBack(true);
     }
@@ -177,14 +176,11 @@ export default function WriteOrEditReview() {
       setReviewId(locState.reviewId);
       fetchExistingReview(locState.reviewId);
     } else if (locState?.reviewId) {
-      // If there's a reviewId but isEdit is not set, check if we should be in edit mode
-      // This handles navigation from the view review page
       setReviewId(locState.reviewId);
       fetchExistingReview(locState.reviewId);
       setIsEditMode(true);
     }
     
-    // Alternative: detect edit mode from URL parameter
     if (params.reviewId && !isNaN(Number(params.reviewId))) {
       setIsEditMode(true);
       const id = Number(params.reviewId);
@@ -206,19 +202,16 @@ export default function WriteOrEditReview() {
   const fetchExistingReview = async (id: number) => {
     setIsLoading(true);
     try {
-      // Similar endpoint to the one in ViewReview component
       const response = await axios.get(`/api/mypages/view-review`, {
         params: { reviewId: id }
       });
       
       const reviewData = response.data;
       
-      // Populate form with existing data
       setRating(reviewData.score || 0);
       setReviewText(reviewData.reviewContent || reviewData.content || '');
       setSelectedTags(reviewData.reviewTags || []);
       
-      // Handle existing images
       const imageUrls = reviewData.reviewPhotoUrls || [];
       setExistingImageUrls(imageUrls);
       setImagePreviewUrls(imageUrls);
@@ -263,7 +256,6 @@ export default function WriteOrEditReview() {
     const fileArray = Array.from(e.target.files);
     let finalFiles: File[];
     
-    // Calculate total images (existing + new)
     const totalImagesCount = imagePreviewUrls.length + fileArray.length;
     
     if (totalImagesCount > MAX_IMAGES) {
@@ -282,20 +274,18 @@ export default function WriteOrEditReview() {
   };
 
   const handleRemoveImage = (index: number): void => {
-    // Handle removal differently for existing vs new images
+
     const imageUrl = imagePreviewUrls[index];
     
-    // Check if this is an existing image (from server)
     if (existingImageUrls.includes(imageUrl)) {
       setImagesToDelete(prev => [...prev, imageUrl]);
     }
     
-    // Remove from preview
+
     const newUrls = [...imagePreviewUrls];
     newUrls.splice(index, 1);
     setImagePreviewUrls(newUrls);
     
-    // If it's a new uploaded file, remove it from uploadedImages
     if (index < uploadedImages.length) {
       const newFiles = [...uploadedImages];
       newFiles.splice(index, 1);
@@ -330,7 +320,6 @@ export default function WriteOrEditReview() {
       tags: selectedTags,
     };
     
-    // Add reviewId if in edit mode
     if (isEditMode && reviewId) {
       reviewData.reviewId = reviewId;
     }
@@ -338,44 +327,48 @@ export default function WriteOrEditReview() {
     const formData = new FormData();
     formData.append('reviewData', new Blob([JSON.stringify(reviewData)], {type: 'application/json'}));
     
-    // Add images to delete if in edit mode
     if (isEditMode && imagesToDelete.length > 0) {
       formData.append('imagesToDelete', new Blob([JSON.stringify(imagesToDelete)], {type: 'application/json'}));
     }
     
-    // Add new images
     uploadedImages.forEach((image) => {
       formData.append('images', image);
     });
     
     try {
-      const endpoint = isEditMode 
-        ? `/api/mypages/review-update/${reviewId}`
-        : '/api/mypages/review-save';
-        
-      await axios.post(endpoint, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 10000
-      });
-
+      let response;
+      if (isEditMode) {
+        response = await axios.patch(`/api/mypages/review-update/${reviewId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 10000
+        });
+      } else {
+        response = await axios.post('/api/mypages/review-save', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 10000
+        });
+        if (response.data && response.data.reviewId) {
+          setReviewId(response.data.reviewId);
+        }
+      }
+  
       showAlert(isEditMode 
         ? '리뷰가 성공적으로 수정되었습니다!' 
         : '리뷰가 성공적으로 제출되었습니다!');
       
       setTimeout(() => {
-        // In edit mode, go back to review details page if possible
-        if (isEditMode && reviewId) {
-          navigate(`/my/review/${reviewId}`, {
+        if ((isEditMode && reviewId) || response.data?.reviewId) {
+          const newReviewId = isEditMode ? reviewId : response.data.reviewId;
+          navigate(`/my/view-review`, {
             state: {
-              ...location.state, // Preserve all state properties
-              reviewId: reviewId
+              ...location.state, 
+              reviewId: newReviewId
             }
           });
         } else {
-          // For new reviews, go to appointments page
           navigate('/my/appointments');
         }
-      }, 1500);
+      }, 1000);
       
     } catch (error: any) { 
       console.error('리뷰 제출 중 오류 발생:', error);
@@ -401,7 +394,6 @@ export default function WriteOrEditReview() {
   };
   
   const handleCancel = (): void => {
-    // If in edit mode, go back to review details page
     if (isEditMode && reviewId) {
       navigate(`/my/view-review`, {
         state: {
@@ -410,7 +402,7 @@ export default function WriteOrEditReview() {
         }
       });
     } else {
-      // For new reviews, go back to appointments page
+
       navigate('/my/appointments');
     }
   };

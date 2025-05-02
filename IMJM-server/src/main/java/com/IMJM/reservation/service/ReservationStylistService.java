@@ -167,7 +167,7 @@ public class ReservationStylistService {
 
 
     @Transactional
-    public ReservationRequestDto completeReservation(ReservationRequestDto request, String userId) {
+    public Long completeReservation(ReservationRequestDto request, String userId) {
         log.info("예약 완료 처리 시작: {}", request);
 
         try {
@@ -229,7 +229,7 @@ public class ReservationStylistService {
 
             chatService.sendMessage(messageDto);
 
-            return request;
+            return savedReservation.getId();
         } catch (Exception e) {
             log.error("예약 처리 중 오류 발생: {}", e.getMessage(), e);
             throw new RuntimeException("예약 처리 중 오류가 발생했습니다: " + e.getMessage());
