@@ -74,9 +74,6 @@ public class UserController {
             @RequestParam BigDecimal latitude,
             @RequestParam BigDecimal longitude) {
 
-        log.info("위치정보를 업데이트합니다.");
-
-        // 로그인한 사용자만 위치 저장 가능
         if (userDetails == null) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)

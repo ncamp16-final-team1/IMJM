@@ -12,7 +12,6 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PersonIcon from '@mui/icons-material/Person';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 import './SalonDetail.css';
@@ -82,7 +81,14 @@ interface Review {
     reservation_id: number;
     photos?: ReviewPhoto[];
     user_nickname?: string;
+}
 
+// 리뷰 답글 인터페이스 추가
+interface ReviewReply {
+    id: number;
+    replyId: number;
+    content: string;
+    createdAt: string;
 }
 
 interface ServiceMenu {
@@ -111,6 +117,8 @@ function SalonDetail() {
     const [hasMoreReviews, setHasMoreReviews] = useState<boolean>(true);
     const [selectedServiceType, setSelectedServiceType] = useState<string>('전체');
     const [serviceTypes, setServiceTypes] = useState<string[]>(['전체']);
+    // 리뷰 답글을 저장할 상태 추가
+    const [reviewReplies, setReviewReplies] = useState<Record<number, ReviewReply>>({});
 
     const isDayOff = (dayIndex: number, holidayMask: number) => {
         const bitValue = 1 << dayIndex;
@@ -162,6 +170,22 @@ function SalonDetail() {
                         console.error(`리뷰 ${review.id}의 사진을 가져오는데 실패했습니다:`, error);
                         review.photos = [];
                     }
+
+                    // 리뷰 답글 가져오기
+                    try {
+                        const replyResponse = await axios.get(`/api/mypages/view-review-reply`, {
+                            params: { reviewId: review.id },
+                        });
+                        if (replyResponse.data) {
+                            setReviewReplies(prev => ({
+                                ...prev,
+                                [review.id]: replyResponse.data
+                            }));
+                        }
+                    } catch (error) {
+                        console.error(`리뷰 ${review.id}의 답글을 가져오는데 실패했습니다:`, error);
+                    }
+
                     return {
                         id: review.id,
                         user_id: review.userId,
@@ -210,6 +234,7 @@ function SalonDetail() {
                 if (salonData) {
                     const salonWithDetails: Salon = {
                         ...salonData,
+                        score: salonData.score ?? 0,
                         photos: [], // 빈 배열로 초기화
                         businessHours: [
                             {
@@ -393,6 +418,7 @@ function SalonDetail() {
 
     // 별점 렌더링 함수
     const renderStars = (score: number) => {
+        const safeScore = score ?? 0;
         const fullStars = Math.floor(score);
         const hasHalfStar = score - fullStars >= 0.5;
         const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
@@ -492,7 +518,7 @@ function SalonDetail() {
                 <h1>{salon.name}</h1>
                 <div className="salon-rating">
                     <StarIcon sx={{color: '#FFD700'}}/>
-                    <span>{salon.score} / 5</span>
+                    <span>{salon.score ?? 0} / 5</span>
                 </div>
             </div>
 
@@ -678,10 +704,26 @@ function SalonDetail() {
                                         </div>
                                     )}
 
+                                    {/* 리뷰 답글 부분 수정 */}
                                     <div className="review-salon-reply">
-                                        <div className="salon-reply-header">
-                                            <strong>{salon.name}</strong>
-                                        </div>
+                                        {reviewReplies[review.id] ? (
+                                            <>
+                                                <div className="salon-reply-header">
+                                                    <strong>{salon.name}</strong>
+                                                    <span className="reply-date">
+                                                        {formatTimeAgo(reviewReplies[review.id].createdAt)}
+                                                    </span>
+                                                </div>
+                                                <div className="salon-reply-content">
+                                                    <p>{reviewReplies[review.id].content}</p>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="salon-reply-header">
+                                                <strong>{salon.name}</strong>
+                                                <span className="no-reply">아직 살롱의 답변이 없습니다.</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

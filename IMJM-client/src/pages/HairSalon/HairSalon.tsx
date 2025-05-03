@@ -101,8 +101,14 @@ function HairSalon() {
             mapRef.current.innerHTML = '';
         }
 
+        // 사용자 위치를 지도 중심으로 설정
+        const centerPoint = new window.naver.maps.LatLng(
+            userLocation.latitude,
+            userLocation.longitude
+        );
+
         const mapOptions = {
-            center: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
+            center: centerPoint,
             zoom: 12,
             zoomControl: true,
             zoomControlOptions: {
@@ -112,9 +118,21 @@ function HairSalon() {
 
         const map = new window.naver.maps.Map(mapRef.current, mapOptions);
 
-        // 사용자 위치 마커 생성 (nearbyList가 비어있어도 생성)
+        // 지도가 로드된 후에 시점 조정
+        window.naver.maps.Event.once(map, 'init_stylemap', () => {
+            // 지도의 중심을 사용자 위치로 설정
+            map.setCenter(centerPoint);
+
+            // 지도가 위치를 아래쪽으로 조정 (마커가 하단 중앙에 오도록)
+            const viewPoint = map.getProjection().fromCoordToOffset(centerPoint);
+            viewPoint.y += Math.floor(mapRef.current.clientHeight / 4); // 지도 높이의 1/4만큼 아래로 이동
+            const newCenter = map.getProjection().fromOffsetToCoord(viewPoint);
+            map.setCenter(newCenter);
+        });
+
+        // 사용자 위치 마커 생성
         const userMarker = new window.naver.maps.Marker({
-            position: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
+            position: centerPoint,
             map: map,
             icon: {
                 content: '<div class="user-marker"><svg viewBox="0 0 24 24" fill="#FF0000" width="32px" height="32px" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></svg></div>',
@@ -645,7 +663,12 @@ function HairSalon() {
                                 </div>
                             )}
                             <div className="salon-info">
-                                <h2>{salon.name}</h2>
+                                <h2>
+                                    {salon.name}
+                                    {salon.distance !== undefined && (
+                                        <span className="salon-distance"> ({salon.distance?.toFixed(1)}km)</span>
+                                    )}
+                                </h2>
                                 <div className="salon-business-hours">
                                     {salon.start_time && salon.end_time ? (
                                         <p>영업시간: {salon.start_time.slice(0, 5)} - {salon.end_time.slice(0, 5)}</p>
