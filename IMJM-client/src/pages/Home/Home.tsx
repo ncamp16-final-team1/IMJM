@@ -1,8 +1,8 @@
-// Home.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // 추가
+import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import { Card, CardContent, CardMedia, Typography, Box, Rating } from '@mui/material';
 
 interface TrendingStyle {
     id: number;
@@ -11,10 +11,21 @@ interface TrendingStyle {
     regDate: string;
 }
 
+interface PopularSalonDto {
+    id: string;
+    name: string;
+    address: string;
+    score: number;
+    reservationCount: number;
+    photoUrl: string;
+}
+
 function Home(): React.ReactElement {
     const [trendingStyles, setTrendingStyles] = useState<TrendingStyle[]>([]);
+    const [popularSalons, setPopularSalons] = useState<PopularSalonDto[]>([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate(); // 추가
+    const navigate = useNavigate();
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchTrendingStyles = async () => {
@@ -31,11 +42,28 @@ function Home(): React.ReactElement {
         };
 
         fetchTrendingStyles();
+
+        const fetchPopularSalons = async () => {
+            try {
+                const response = await axios.get('/api/salon/popular');
+                setPopularSalons(response.data);
+                setLoading(false);
+            } catch (err) {
+                setError('인기 미용실 정보를 불러오는데 실패했습니다.');
+                setLoading(false);
+                console.error('Error fetching popular salons:', err);
+            }
+        };
+
+        fetchPopularSalons();
     }, []);
 
-    // 아카이브 상세 페이지로 이동하는 함수 추가
     const handleCardClick = (id: number) => {
         navigate(`/archive/${id}`);
+    };
+
+    const handleSalonCardClick = (salonId: string) => {
+        navigate(`/salon/${salonId}`);
     };
 
     return (
@@ -70,7 +98,34 @@ function Home(): React.ReactElement {
                 )}
             </section>
 
-            {/* 나머지 섹션들 */}
+            <section className="popular-salons">
+                <h2>Popular Hair Salons</h2>
+
+                {loading && <div className="loading">로딩 중...</div>}
+                {error && <div className="error">{error}</div>}
+
+                {!loading && !error && (
+                    <div className="popular-salons-grid">
+                        {popularSalons.map((salon) => (
+                            <div
+                                key={salon.id}
+                                className="popular-salon-card"
+                                onClick={() => handleSalonCardClick(salon.id)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <img
+                                    src={salon.photoUrl || '/default-salon.jpg'}
+                                    alt={salon.name}
+                                    className="salon-image"
+                                />
+                                <div className="salon-name">
+                                    {salon.name}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
         </div>
     );
 }
