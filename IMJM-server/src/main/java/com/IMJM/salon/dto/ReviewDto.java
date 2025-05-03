@@ -20,6 +20,7 @@ public class ReviewDto {
     private String content;
     private String reviewTag;
     private Long reservationId;
+    private String userNickname;
 
     @Builder
     public ReviewDto (Review review){
@@ -31,5 +32,6 @@ public class ReviewDto {
         this.content = review.getContent();
         this.reviewTag = review.getReviewTag();
         this.reservationId = review.getReservation() != null ? review.getReservation().getId() : null;
+        this.userNickname = review.getUser().getNickname();
     }
 }

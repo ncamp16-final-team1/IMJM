@@ -84,6 +84,7 @@ public class ArchiveService {
                             .content(archive.getContent())
                             .regDate(archive.getRegDate())
                             .thumbnailUrl(thumbnailUrl)
+                            .userId(archive.getUser().getId())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -101,7 +102,6 @@ public class ArchiveService {
                 try {
                     String s3Path = extractS3PathFromUrl(photo.getPhotoUrl());
                     storageService.delete(s3Path);
-                    log.info("Object Storage에서 파일 삭제: {}", s3Path);
                 } catch (Exception e) {
                     log.error("Object Storage 파일 삭제 중 오류 발생: {}", e.getMessage(), e);
                 }
@@ -110,7 +110,6 @@ public class ArchiveService {
             archivePhotosRepository.deleteByArchiveId(archiveId);
 
             archiveRepository.deleteById(archiveId);
-            log.info("아카이브 삭제 성공");
 
         } catch (Exception e) {
             log.error("아카이브 삭제 중 오류 발생", e);

@@ -695,3 +695,39 @@
     padding: 15px 0;
     font-size: 14px;
 }
+.reservation-btn.calendar {
+    text-decoration: none;
+}
+/* 리뷰 답글 스타일 */
+.review-salon-reply {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #fff8f8;
+    border: 1px solid #ffcdd2;
+    border-radius: 8px;
+}
+
+.salon-reply-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.salon-reply-header strong {
+    color: #d32f2f;
+}
+
+.reply-date {
+    color: #757575;
+    font-size: 0.8rem;
+}
+
+.no-reply {
+    color: #757575;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.salon-reply-content {
+    margin-top: 5px;
+}

@@ -39,7 +39,6 @@ public class SalonController {
             @AuthenticationPrincipal CustomOAuth2UserDto loginUser,
             @PageableDefault Pageable pageable) {
 
-        // 무조건 위치 정보가 있음.(/location을 이미 실행하고 넘어온 상태)
         LocationDto location = null;
         if (loginUser == null) {
             location = userService.getUserLocation("anonymous");
