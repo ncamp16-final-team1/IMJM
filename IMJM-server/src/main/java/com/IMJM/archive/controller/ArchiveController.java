@@ -99,4 +99,13 @@ public class ArchiveController {
                     .body(Map.of("message", "아카이브 삭제 중 오류가 발생했습니다."));
         }
     }
+
+    @GetMapping("/trending")
+    public PageResponseDto<ArchiveListDto> getTrendingArchives(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        return archiveService.getTrendingArchives(pageable);
+    }
 }
