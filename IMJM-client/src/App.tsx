@@ -32,6 +32,7 @@ import ArchiveWrite from "./pages/Archive/ArchiveWrite.tsx";
 import ArchiveDetail from "./pages/Archive/ArchiveDetail.tsx";
 import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
 import Archive from './pages/Archive/Archive.tsx';
+import MyArchive from "./pages/Archive/MyArchive.tsx";
 import { NotificationProvider, InAppNotificationReceiver } from './components/notification/InAppNotification';
 
 function App() {
@@ -157,6 +158,11 @@ function App() {
                         <Route path="/archive/edit/:id" element={
                             <ProtectedRoute>
                                 <ArchiveEdit />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my/acahive" element={
+                            <ProtectedRoute>
+                                 <MyArchive />
                             </ProtectedRoute>
                         } />
 
