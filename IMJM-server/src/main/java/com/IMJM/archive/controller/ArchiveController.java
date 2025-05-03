@@ -58,7 +58,7 @@ public class ArchiveController {
                                       @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
 
         if (customOAuth2UserDto == null) {
-            throw new RuntimeException("로그인이 필요합니다.");  // 예외 처리 방식 변경
+            throw new RuntimeException("로그인이 필요합니다.");
         }
 
         return archiveService.updateArchive(id, customOAuth2UserDto.getId(), request);
@@ -71,7 +71,7 @@ public class ArchiveController {
                                            @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
 
         if (customOAuth2UserDto == null) {
-            throw new RuntimeException("로그인이 필요합니다.");  // 예외 처리 방식 변경
+            throw new RuntimeException("로그인이 필요합니다.");
         }
 
         return archiveService.addArchivePhotos(id, customOAuth2UserDto.getId(), photos);

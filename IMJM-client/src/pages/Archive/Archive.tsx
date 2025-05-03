@@ -40,7 +40,6 @@ const Archive: React.FC = () => {
                 }
 
                 const data: PageResponse = await response.json();
-                console.log("API 응답 데이터:", data);
 
                 setHasMore(data.hasNext);
 
@@ -48,7 +47,6 @@ const Archive: React.FC = () => {
                     setHasMore(false);
                 } else {
                     const newArchives = data.contents.filter(item => item.thumbnailUrl);
-                    console.log("필터링 후 새 아카이브:", newArchives);
 
                     setArchives(prevMap => {
                         const newMap = new Map(prevMap);
@@ -79,7 +77,7 @@ const Archive: React.FC = () => {
                 !loading &&
                 hasMore
             ) {
-                setPage(prevPage => prevPage);
+                setPage(prevPage => prevPage + 1);
             }
         };
 
@@ -96,7 +94,6 @@ const Archive: React.FC = () => {
     };
 
     const archiveList = Array.from(archives.values());
-    console.log("렌더링할 아카이브 목록:", archiveList);
 
     return (
         <Container fixed maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -161,7 +158,6 @@ const Archive: React.FC = () => {
                         ))}
                     </Box>
 
-                    {/* 로딩 인디케이터 */}
                     {loading && (
                         <Box display="flex" justifyContent="center" my={4}>
                             <CircularProgress size={30} />
