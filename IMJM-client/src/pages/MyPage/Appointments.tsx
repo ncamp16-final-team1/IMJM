@@ -76,25 +76,63 @@ export default function Appointments() {
   }
 
   const now = new Date();
-  const filteredAppointments = appointments.filter((appointment) => {
-    const appointmentDate = new Date(appointment.reservationDate);
-    const timeParts = appointment.reservationTime.split(':').map(Number);
-    appointmentDate.setHours(timeParts[0], timeParts[1], 0);
-    const isPastAppointment = appointmentDate < now;
+
+
+  const getFilteredAndSortedAppointments = () => {
+
+    const filtered = appointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.reservationDate);
+      const timeParts = appointment.reservationTime.split(':').map(Number);
+      appointmentDate.setHours(timeParts[0], timeParts[1], 0);
+      const isPastAppointment = appointmentDate < now;
+      
+      switch (selectedOption) {
+        case "All":
+          return true; 
+        case "Reservation":
+          return !isPastAppointment; 
+        case "WriteAreview":
+          return isPastAppointment && !appointment.isReviewed; 
+        case "ViewReview":
+          return isPastAppointment && appointment.isReviewed; 
+        default:
+          return true;
+      }
+    });
     
-    switch (selectedOption) {
-      case "All":
-        return true; 
-      case "Reservation":
-        return !isPastAppointment; 
-      case "WriteAreview":
-        return isPastAppointment && !appointment.isReviewed; 
-      case "ViewReview":
-        return isPastAppointment && appointment.isReviewed; 
-      default:
-        return true;
-    }
-  });
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.reservationDate);
+      const dateB = new Date(b.reservationDate);
+      const timePartsA = a.reservationTime.split(':').map(Number);
+      const timePartsB = b.reservationTime.split(':').map(Number);
+      dateA.setHours(timePartsA[0], timePartsA[1], 0);
+      dateB.setHours(timePartsB[0], timePartsB[1], 0);
+      
+      switch (selectedOption) {
+        case "Reservation":
+          // 예약 - 가까운 날짜순 (오름차순)
+          return dateA.getTime() - dateB.getTime();
+        case "WriteAreview":
+        case "ViewReview":
+          // 리뷰 - 최신순 (내림차순)
+          return dateB.getTime() - dateA.getTime();
+        case "All":
+        default:
+          // 기본적으로 모든 항목은 다음과 같이 정렬:
+          // 1. 미래 예약을 가까운 순으로 정렬
+          // 2. 과거 예약을 최신순으로 정렬
+          // 3. 미래 예약이 과거 예약보다 먼저 오도록
+          const isPastA = dateA < now;
+          const isPastB = dateB < now;
+          
+          if (!isPastA && !isPastB) return dateA.getTime() - dateB.getTime();
+          if (isPastA && isPastB) return dateB.getTime() - dateA.getTime();
+          return isPastA ? 1 : -1;
+      }
+    });
+  };
+
+  const filteredAppointments = getFilteredAndSortedAppointments();
 
   return (
     <Box>

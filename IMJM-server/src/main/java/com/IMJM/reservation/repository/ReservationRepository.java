@@ -17,7 +17,6 @@ import java.util.Optional;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    // 스타일리스트 ID와 예약 날짜를 기준으로 예약된 시간들을 가져오는 쿼리
     @Query("SELECT r.reservationTime FROM Reservation r WHERE r.stylist.stylistId = :stylistId AND r.reservationDate = :date")
     List<LocalTime> findBookedTimesByStylistAndDate(Long stylistId, LocalDate date);
 
@@ -44,10 +43,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             """)
     List<Reservation> findPastReservationsBySalonIdOrderByDateTimeDesc(String salonId);
 
-    // 예약상세 조회
     Optional<Reservation> findById(Long id);
 
-    // 사용자 ID로 예약을 날짜 내림차순으로 조회
     List<Reservation> findByUser_IdOrderByReservationDateDesc(String userId);
 
     @Query(value = """

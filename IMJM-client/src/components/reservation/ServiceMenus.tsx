@@ -111,24 +111,29 @@ const ServiceMenus = ({
                 )}
                 
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <Button 
-                    size="small" 
-                    variant="outlined" 
-                    color="primary"
-                    onClick={() => handleMenuSelectInternal(menu)} 
-                    sx={{ 
-                      minWidth: '80px',
-                      borderColor: '#F06292',
-                      color: selectedMenuName === menu.serviceName ? '#ffffff' : '#F06292',
-                      backgroundColor: selectedMenuName === menu.serviceName ? '#E91E63' : 'transparent',
-                      '&:hover': {
-                        backgroundColor: '#FEE5EC',
-                        borderColor: '#E91E63'
-                      }
-                    }}
-                  >
-                    {selectedMenuName === menu.serviceName ? '취소' : '선택'}
-                  </Button>
+                <Button 
+                  size="small" 
+                  variant="outlined" 
+                  color="primary"
+                  onClick={() => handleMenuSelectInternal(menu)} 
+                  sx={{ 
+                    minWidth: '80px',
+                    borderColor: '#F06292',
+                    color: selectedMenuName === menu.serviceName ? '#ffffff' : '#F06292',
+                    backgroundColor: selectedMenuName === menu.serviceName ? '#E91E63' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      backgroundColor: '#FEE5EC',
+                      borderColor: '#E91E63',
+                      boxShadow: 'none', 
+                    },
+                    '&.Mui-disabled': {
+                      boxShadow: 'none', 
+                    },
+                  }}
+                >
+                  {selectedMenuName === menu.serviceName ? '취소' : '선택'}
+                </Button>
                 </Box>
               </Box>
             ))}
@@ -144,7 +149,7 @@ const ServiceMenus = ({
 
       {/* "확인" 버튼 추가 */}
       <Box sx={{ textAlign: 'center', mt: 3 }}>
-      <Button 
+        <Button 
           variant="contained" 
           onClick={handleNextPage} 
           disabled={selectedMenuName === null}
@@ -152,13 +157,16 @@ const ServiceMenus = ({
             width: '100%', 
             maxWidth: '300px',
             backgroundColor: '#FDC7BF', 
-            color: '#fff',              
+            color: '#fff',
+            boxShadow: 'none',              
             '&:hover': {
-              backgroundColor: '#e65c50', 
+              backgroundColor: '#e65c50',
+              boxShadow: 'none',              
             },
             '&.Mui-disabled': {
-              backgroundColor: '#ccc',   
+              backgroundColor: '#ccc',
               color: '#666',
+              boxShadow: 'none',              
             },
           }}
         >

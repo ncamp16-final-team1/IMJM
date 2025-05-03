@@ -9,7 +9,12 @@ import {
     Paper,
     InputAdornment,
     CircularProgress,
-    Button
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
@@ -18,10 +23,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Box from '@mui/material/Box';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import styles from './ChatRoom.module.css';
 import ChatService, { ChatMessageDto, ChatPhoto } from '../../services/chat/ChatService';
 import WebSocketService from '../../services/chat/WebSocketService';
@@ -48,20 +49,28 @@ const ChatRoom: React.FC = () => {
     const [newMessage, setNewMessage] = useState<string>('');
     const [chatRoom, setChatRoom] = useState<ChatRoomInfo | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    // 번역 상태를 관리하는 상태 변수 (messageId를 키로 사용)
     const [translations, setTranslations] = useState<Record<number, TranslationState>>({});
-    // 사진 업로드 관련 상태 추가
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const [userId, setUserId] = useState<string>('');
+    const [errorModalOpen, setErrorModalOpen] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
     useEffect(() => {
         if (!roomId || !userId) return;
 
         const handleNewMessage = (messageData: ChatMessageDto) => {
+            if (isDeleting) {
+                return;
+            }
+
+            if (messageData.error) {
+                return; // 삭제 중인 경우 모든 에러 메시지 무시
+            }
 
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prevMessages => {
@@ -94,12 +103,35 @@ const ChatRoom: React.FC = () => {
             }
         };
 
+        const handleChatRoomError = (error: any) => {
+            console.error("채팅방 에러 발생:", error);
+
+            // 삭제 과정 중이면 에러 모달 표시하지 않음
+            if (isDeleting) {
+                return;
+            }
+
+            // 삭제된 채팅방 에러 처리
+            if (error?.code === 'CHAT_ROOM_DELETED' ||
+                error?.message?.includes('deleted') ||
+                error?.response?.data?.message?.includes('deleted')) {
+                setErrorMessage('삭제된 채팅방입니다.');
+                setErrorModalOpen(true);
+            } else {
+                // 기타 에러 처리
+                setErrorMessage('채팅 메시지 전송 중 오류가 발생했습니다.');
+                setErrorModalOpen(true);
+            }
+        };
+
         WebSocketService.addListener('message', handleNewMessage);
+        WebSocketService.addListener('error', handleChatRoomError);
 
         return () => {
             WebSocketService.removeListener('message', handleNewMessage);
+            WebSocketService.removeListener('error', handleChatRoomError);
         };
-    }, [userId, roomId]);
+    }, [userId, roomId, isDeleting]);
 
     useEffect(() => {
         const fetchUserAndChatRoom = async () => {
@@ -175,7 +207,7 @@ const ChatRoom: React.FC = () => {
     };
 
     const removeSelectedFile = (index: number) => {
-        URL.revokeObjectURL(previewUrls[index]); // 메모리 누수 방지
+        URL.revokeObjectURL(previewUrls[index]);
         setSelectedFiles(prev => prev.filter((_, i) => i !== index));
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
@@ -254,7 +286,7 @@ const ChatRoom: React.FC = () => {
     const handleSendMessage = async () => {
         if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom || !userId) return;
 
-        setLoading(true); // 메시지 전송 중 로딩 상태 설정
+        setLoading(true);
 
         try {
             let photoAttachments: ChatPhoto[] = [];
@@ -314,7 +346,17 @@ const ChatRoom: React.FC = () => {
 
         } catch (error) {
             console.error('메시지 전송 실패:', error);
-            alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+
+            if (error?.response?.status === 404 ||
+                error?.message?.includes('not found') ||
+                error?.message?.includes('deleted')) {
+                setErrorMessage('삭제된 채팅방입니다.');
+                setErrorModalOpen(true);
+            } else {
+                // 기타 에러 처리
+                setErrorMessage('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+                setErrorModalOpen(true);
+            }
         } finally {
             setLoading(false);
         }
@@ -334,7 +376,7 @@ const ChatRoom: React.FC = () => {
     const handleDeleteRoom = async () => {
         try {
             await axios.delete(`/api/chat/room/${roomId}`);
-            navigate('/chat'); // 삭제 후 채팅방 목록으로 이동
+            navigate('/chat');
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
             alert('채팅방 삭제에 실패했습니다.');
@@ -347,13 +389,21 @@ const ChatRoom: React.FC = () => {
 
     const handleConfirmDelete = async () => {
         try {
+            setIsDeleting(true);
             await axios.delete(`/api/chat/room/${roomId}`);
             setConfirmOpen(false);
             setDeletedOpen(true);
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
+            setIsDeleting(false);
             alert('삭제에 실패했습니다.');
         }
+    };
+
+    const handleErrorModalClose = () => {
+        setErrorModalOpen(false);
+        // 채팅방 목록으로 리다이렉트
+        navigate('/chat');
     };
 
     if (loading && messages.length === 0) {
@@ -555,6 +605,25 @@ const ChatRoom: React.FC = () => {
                         }}
                         autoFocus
                     >
+                        확인
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={errorModalOpen}
+                onClose={handleErrorModalClose}
+                aria-labelledby="error-dialog-title"
+                aria-describedby="error-dialog-description"
+            >
+                <DialogTitle id="error-dialog-title">알림</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="error-dialog-description">
+                        {errorMessage}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleErrorModalClose} color="primary" autoFocus>
                         확인
                     </Button>
                 </DialogActions>

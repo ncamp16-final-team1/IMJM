@@ -9,6 +9,5 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByReservation_Stylist_Salon_id(String salonId);
 
-    //예약상세조회
     Optional<Payment> findByReservationId(Long reservationId);
 }

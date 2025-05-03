@@ -20,7 +20,7 @@ const CalendarSection = ({
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
         <CalendarIcon sx={{ fontSize: 20, mr: 1, color: 'gray' }} />
-        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', fontSize: '18px' }}>
+        <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 'bold', fontSize: '18px' }}>
           날짜와 시간을 선택해주세요
         </Typography>
       </Box>
@@ -32,7 +32,7 @@ const CalendarSection = ({
           value={selectedDate}
           onChange={handleDateSelect}
           minDate={dayjs()}
-          maxDate={dayjs().add(1, 'month')}
+          maxDate={dayjs().add(2, 'month')}
           shouldDisableDate={(date) => stylistSchedule && isHoliday(date, stylistSchedule)}
           slotProps={{
             actionBar: { hidden: true },

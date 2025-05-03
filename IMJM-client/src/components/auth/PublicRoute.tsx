@@ -7,7 +7,7 @@ interface PublicRouteProps {
 }
 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<"ok" | "notAgreed" | "unauthorized" | null>(null);
 
   useEffect(() => {
     const verifyLogin = async () => {
@@ -17,14 +17,15 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     verifyLogin();
   }, []);
 
-  if (isAuthenticated === null) {
-    // 로딩 중 표시
+  if (isAuthenticated === "ok") {
+    console.log(isAuthenticated)
     return <div>Loading...</div>;
-  }
-
-  if (isAuthenticated) {
-    // 로그인된 경우 홈 페이지로 리디렉션
-    return <Navigate to="/" replace />;
+  }else if (isAuthenticated === "notAgreed") {
+    console.log(isAuthenticated)
+    return <Navigate to="/user/register" replace />;
+  }else if (isAuthenticated === "unauthorized") {
+    console.log(isAuthenticated)
+    return <Navigate to="/login" replace />;
   }
 
   // 비인증된 경우 자식 컴포넌트 렌더링
