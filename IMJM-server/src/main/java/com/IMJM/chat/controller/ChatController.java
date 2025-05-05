@@ -187,30 +187,6 @@ public class ChatController {
         }
     }
 
-    @GetMapping("/admin/room/{roomId}")
-    public ResponseEntity<Map<String, Object>> getAdminChatRoomDetail(@PathVariable Long roomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
-
-        Map<String, Object> roomInfo = new HashMap<>();
-        roomInfo.put("id", chatRoom.getId());
-        roomInfo.put("userId", chatRoom.getUser().getId());
-        roomInfo.put("salonId", chatRoom.getSalon().getId());
-        roomInfo.put("salonName", chatRoom.getSalon().getName());
-
-        // 사용자 닉네임 또는 이름 추가
-        String userName = chatRoom.getUser().getNickname();
-        if (userName == null || userName.isEmpty()) {
-            userName = chatRoom.getUser().getFirstName() + " " + chatRoom.getUser().getLastName();
-        }
-        roomInfo.put("userName", userName);
-
-        roomInfo.put("createdAt", chatRoom.getCreatedAt());
-        roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
-
-        return ResponseEntity.ok(roomInfo);
-    }
-
     // 예약 ID를 통해 채팅방 생성 또는 조회
     @PostMapping("/room/reservation/{reservationId}")
     public ResponseEntity<ChatRoomDto> createChatRoomByReservation(@PathVariable Long reservationId) {

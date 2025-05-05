@@ -57,6 +57,9 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
+    const [userProfileUrl, setUserProfileUrl] = useState<string | null>(null);
+    const [salonProfileUrl, setSalonProfileUrl] = useState<string | null>(null);
+
     const handleTranslateRequest = async (message: ChatMessage) => {
         const messageId = message.id;
 
@@ -158,10 +161,13 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 }
 
                 try {
-                    const roomResponse = await axios.get(`/api/chat/admin/room/${roomId}`);
+                    const roomResponse = await axios.get(`/api/admin/chat/room/${roomId}`);
                     if (roomResponse.data && roomResponse.data.userName) {
                         setUserName(roomResponse.data.userName);
                     }
+
+                    setUserProfileUrl(roomResponse.data.userProfileUrl);
+                    setSalonProfileUrl(roomResponse.data.salonProfileUrl);
                 } catch (roomError: any) {
                     console.error('채팅방 정보를 불러오는데 실패했습니다:', roomError);
                     // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
@@ -484,7 +490,13 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                             className={messageClassName}
                         >
                             {!isSalonMessage && (
-                                <Avatar className={styles.avatar}>{userName.charAt(0)}</Avatar>
+                                <Avatar
+                                    className={styles.avatar}
+                                    src={userProfileUrl || undefined}
+                                    alt={userName}
+                                >
+                                    {!userProfileUrl && userName ? userName.charAt(0) : 'U'}
+                                </Avatar>
                             )}
 
                             <Box className={`${styles.messageBubble} ${isSalonMessage ? styles.salonMessage : styles.userMessage}`}>
@@ -539,7 +551,13 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                             </Box>
 
                             {isSalonMessage && (
-                                <Avatar className={styles.avatar}>M</Avatar>
+                                <Avatar
+                                    className={styles.avatar}
+                                    src={salonProfileUrl || undefined}
+                                    alt="Salon"
+                                >
+                                    {!salonProfileUrl ? 'S' : ''}
+                                </Avatar>
                             )}
                         </Box>
                     );
