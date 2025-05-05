@@ -1,0 +1,123 @@
+.trending-styles {
+    padding: 20px 0;
+}
+
+.trending-styles h2 {
+    margin-bottom: 16px;
+    padding-left: 16px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.styles-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 16px;
+    gap: 16px;
+}
+
+.styles-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.style-card {
+    flex: 0 0 auto;
+    width: 160px;
+}
+
+.style-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.style-info {
+    margin-top: 8px;
+}
+
+.style-username {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.style-content {
+    font-size: 12px;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.loading {
+    padding: 20px;
+    text-align: center;
+}
+
+.style-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.style-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.popular-salons {
+    padding: 20px 0;
+}
+
+.popular-salons h2 {
+    margin-bottom: 16px;
+    padding-left: 16px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.popular-salons-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 16px;
+    gap: 16px;
+}
+
+.popular-salons-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.popular-salon-card {
+    flex: 0 0 auto;
+    width: 160px;
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.popular-salon-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.popular-salon-card .salon-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.salon-name {
+    text-align: center;
+}
+
+.salon-name {
+    font-weight: bold;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.error {
+    padding: 20px;
+    text-align: center;
+    color: red;
+}

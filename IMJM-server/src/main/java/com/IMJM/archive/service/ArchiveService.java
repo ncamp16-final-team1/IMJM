@@ -26,11 +26,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -292,5 +288,31 @@ public class ArchiveService {
             }
             return "";
         }
+    }
+
+    // ArchiveService.java
+    @Transactional(readOnly = true)
+    public PageResponseDto<ArchiveListDto> getTrendingArchives(Pageable pageable) {
+        Page<Archive> archivePage = archiveRepository.findTopByLikesCount(pageable);
+
+        List<ArchiveListDto> archiveList = archivePage.getContent().stream()
+                .map(archive -> {
+                    String thumbnailUrl = null;
+                    ArchivePhotos firstPhoto = archivePhotosRepository.findFirstPhotoByArchiveId(archive.getId());
+
+                    if (firstPhoto != null) {
+                        thumbnailUrl = firstPhoto.getPhotoUrl();
+                    }
+
+                    return ArchiveListDto.builder()
+                            .id(archive.getId())
+                            .content(archive.getContent())
+                            .regDate(archive.getRegDate())
+                            .thumbnailUrl(thumbnailUrl)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new PageResponseDto<>(archiveList, archivePage);
     }
 }

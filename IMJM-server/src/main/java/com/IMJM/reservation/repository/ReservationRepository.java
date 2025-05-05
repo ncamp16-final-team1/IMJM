@@ -2,7 +2,8 @@ package com.IMJM.reservation.repository;
 
 import com.IMJM.admin.dto.DayCountDto;
 import com.IMJM.common.entity.Reservation;
-import com.IMJM.user.dto.UserReservationResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -63,6 +63,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("salonId") String salonId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @Query("""
+    SELECT s, COUNT(r) as reservationCount
+    FROM Reservation r 
+    JOIN r.stylist st 
+    JOIN st.salon s 
+    GROUP BY s.id 
+    ORDER BY reservationCount DESC
+    """)
+    Page<Object[]> findPopularSalonsByReservationCount(Pageable pageable);
 }
 
 
