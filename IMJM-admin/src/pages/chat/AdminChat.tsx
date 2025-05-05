@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
 import AdminChatList from './AdminChatList';
 import AdminChatRoom from './AdminChatRoom';
+import { useLocation } from 'react-router-dom';
 
 function AdminChat() {
+    const location = useLocation();
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+    // location.state에서 초기 채팅방 ID와 사용자 ID를 가져옴
+    useEffect(() => {
+        if (location.state) {
+            const { initialRoomId, initialUserId } = location.state as any;
+            if (initialRoomId && initialUserId) {
+                setSelectedRoomId(initialRoomId);
+                setSelectedUserId(initialUserId);
+            }
+        }
+    }, [location.state]);
 
     return (
         <Box sx={{ display: 'flex', width: '100%', height: 'calc(100vh - 100px)', p: 2, gap: 2 }}>

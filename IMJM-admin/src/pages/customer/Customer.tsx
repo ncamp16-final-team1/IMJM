@@ -12,12 +12,15 @@ import {
     InputAdornment
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import ChatIcon from "@mui/icons-material/Chat";
 import axios from "axios";
 import BlacklistModal from "./BlacklistModal";
+import { useNavigate } from "react-router-dom";
 
 interface ReservationCustomerDto {
     userId: string;
     userName: string;
+    nickName?: string; // nickName 추가
     serviceName: string;
     reservationDate: string;
     visitCount: number;
@@ -27,6 +30,7 @@ interface ReservationCustomerDto {
 interface BlacklistDto {
     userId: string;
     userName: string;
+    nickName?: string; // nickName 추가
     reason: string;
     blockedDate: string;
 }
@@ -37,6 +41,7 @@ const Customer = () => {
     const [blacklist, setBlacklist] = useState<BlacklistDto[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [blacklistModalOpen, setBlacklistModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     const isBlacklisted = selectedCustomer && blacklist.some(b => b.userId === selectedCustomer.userId);
 
@@ -83,11 +88,43 @@ const Customer = () => {
                 {
                     userId: selectedCustomer.userId,
                     userName: selectedCustomer.userName,
-                    reason
+                    nickName: selectedCustomer.nickName,
+                    reason,
+                    blockedDate: new Date().toISOString()
                 }
             ]);
         } catch (error) {
             console.error("블랙리스트 등록 실패:", error);
+        }
+    };
+
+    const handleChatClick = async () => {
+        if (!selectedCustomer) return;
+
+        try {
+            // 채팅방 목록 가져오기
+            const response = await axios.get('/api/admin/chat/rooms');
+
+            // 선택한 고객의 ID와 일치하는 채팅방 찾기
+            const existingChatRoom = response.data.find(room => room.userId === selectedCustomer.userId);
+
+            if (existingChatRoom) {
+                // 채팅 페이지로 이동하면서 선택할 채팅방 ID와 고객 ID 전달
+                navigate('/chat', {
+                    state: {
+                        initialRoomId: existingChatRoom.id,
+                        initialUserId: selectedCustomer.userId
+                    }
+                });
+            } else {
+                // 채팅방이 없는 경우 alert
+                alert("해당 고객과의 채팅 내역이 없습니다. 채팅 페이지에서 새 채팅을 시작해주세요.");
+                // 채팅 페이지로 이동
+                navigate('/chat');
+            }
+        } catch (error) {
+            console.error("채팅방 조회 실패:", error);
+            alert("채팅방 정보를 불러오는데 실패했습니다.");
         }
     };
 
@@ -170,9 +207,23 @@ const Customer = () => {
                         </Table>
                     </Box>
                     {selectedCustomer && (
-                        <Button variant="outlined" color="error" onClick={handleBlacklistToggle} sx={{ mt: 2 }}>
-                            블랙 리스트 {isBlacklisted ? "제거" : "추가"}
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={handleBlacklistToggle}
+                            >
+                                블랙 리스트 {isBlacklisted ? "제거" : "추가"}
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={handleChatClick}
+                                startIcon={<ChatIcon />}
+                            >
+                                1:1 채팅
+                            </Button>
+                        </Box>
                     )}
                 </Box>
 
