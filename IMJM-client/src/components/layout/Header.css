@@ -92,3 +92,13 @@
     display: flex;
     align-items: center;
 }
+
+:root {
+    --primary-color: #FDC7BF;
+    --secondary-color: #FDF6F3;
+    --bg-color: #f2f2f2;
+    --border-color: #e0e0e0;
+    --text-color: #333333;
+    --nav-height: 60px;
+    --header-height: 60px;
+}
