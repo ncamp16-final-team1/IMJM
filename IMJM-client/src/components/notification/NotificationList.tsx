@@ -7,19 +7,23 @@ import {
     Box,
     Divider,
     CircularProgress,
-    Button
+    Button,
+    Paper,
+    IconButton
 } from '@mui/material';
 import MarkChatReadIcon from '@mui/icons-material/MarkChatRead';
 import ChatIcon from '@mui/icons-material/Chat';
 import EventIcon from '@mui/icons-material/Event';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import InfoIcon from '@mui/icons-material/Info';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import NotificationService, { AlarmDto } from '../../services/notification/NotificationService';
 import { useNavigate } from 'react-router-dom';
 
 interface NotificationListProps {
     onNotificationRead?: () => void;
-    onClose?: () => void; // 모달 닫기 함수 추가
+    onClose?: () => void;
 }
 
 const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead, onClose }) => {
@@ -32,7 +36,6 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead,
             try {
                 setLoading(true);
                 const data = await NotificationService.getNotifications();
-                console.log('서버에서 받은 알림 데이터:', data); // 로그 추가
                 setNotifications(data);
             } catch (error) {
                 console.error('알림 목록 로드 실패:', error);
@@ -72,11 +75,11 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead,
             // UI 상태 즉시 업데이트 - isRead 속성을 true로 변경
             setNotifications(prevNotifications =>
                 prevNotifications.map(n =>
-                    n.id === notification.id ? { ...n, read: true } : n
+                    n.id === notification.id ? { ...n, isRead: true } : n
                 )
             );
 
-            // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달 (카운트 업데이트 등을 위해)
+            // 상위 컴포넌트에 알림 읽음 처리 이벤트 전달
             if (onNotificationRead) {
                 onNotificationRead();
             }
@@ -90,12 +93,25 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead,
             if (notification.notificationType === 'CHAT' && notification.referenceId) {
                 navigate(`/chat/${notification.referenceId}`);
             } else if (notification.notificationType === 'RESERVATION') {
-                navigate('/myPage/appointments');
+                navigate('/my/appointments');
             } else if (notification.notificationType === 'REVIEW') {
-                navigate('/myPage'); // 또는 리뷰 관련 페이지
+                navigate('/my');
             }
         } catch (error) {
             console.error('알림 처리 실패:', error);
+        }
+    };
+
+    const handleDeleteNotification = async (event: React.MouseEvent, notificationId: number) => {
+        event.stopPropagation();
+        try {
+            await NotificationService.deleteNotification(notificationId);
+            setNotifications(prev => prev.filter(n => n.id !== notificationId));
+            if (onNotificationRead) {
+                onNotificationRead();
+            }
+        } catch (error) {
+            console.error('알림 삭제 실패:', error);
         }
     };
 
@@ -113,10 +129,6 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead,
             if (onNotificationRead) {
                 onNotificationRead();
             }
-
-            if (onClose) {
-                onClose();
-            }
         } catch (error) {
             console.error('모든 알림 읽음 처리 실패:', error);
         }
@@ -126,13 +138,13 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead,
     const getNotificationIcon = (type: string) => {
         switch (type) {
             case 'CHAT':
-                return <ChatIcon color="primary" />;
+                return <ChatIcon sx={{ color: '#FF9080' }} />;
             case 'RESERVATION':
-                return <EventIcon color="secondary" />;
+                return <EventIcon sx={{ color: '#FF9080' }} />;
             case 'REVIEW':
-                return <RateReviewIcon color="success" />;
+                return <RateReviewIcon sx={{ color: '#FF9080' }} />;
             default:
-                return <InfoIcon color="info" />;
+                return <InfoIcon sx={{ color: '#FF9080' }} />;
         }
     };
 
@@ -161,90 +173,162 @@ const NotificationList: React.FC<NotificationListProps> = ({ onNotificationRead,
 
     if (loading) {
         return (
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                p={3}
-                minHeight={200}
+            <Paper
+                elevation={3}
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    p: 3,
+                    minHeight: 200,
+                    borderRadius: 2,
+                    backgroundColor: '#FFF',
+                }}
             >
-                <CircularProgress size={30} />
+                <CircularProgress size={30} sx={{ color: '#FF9080' }} />
                 <Typography variant="body2" sx={{ ml: 2 }}>
                     알림을 불러오는 중...
                 </Typography>
-            </Box>
+            </Paper>
         );
     }
 
     return (
-        <Box sx={{ width: '100%', maxHeight: 400, overflow: 'auto' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" p={1}>
-                <Typography variant="subtitle1" fontWeight="bold">
+        <Paper
+            elevation={3}
+            sx={{
+                width: '100%',
+                maxHeight: 400,
+                overflow: 'hidden',
+                borderRadius: 2,
+                backgroundColor: '#FFF',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            }}
+        >
+            <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                p={2}
+                sx={{
+                    borderBottom: '1px solid #f0f0f0',
+                    backgroundColor: '#FDF6F3',
+                }}
+            >
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
                     알림
                 </Typography>
-                {notifications.length > 0 && (
-                    <Button
+                <Box>
+                    {notifications.length > 0 && (
+                        <Button
+                            size="small"
+                            startIcon={<MarkChatReadIcon />}
+                            onClick={handleMarkAllAsRead}
+                            sx={{
+                                color: '#FF9080',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255, 144, 128, 0.1)',
+                                }
+                            }}
+                        >
+                            모두 읽음
+                        </Button>
+                    )}
+                    <IconButton
+                        onClick={onClose}
                         size="small"
-                        startIcon={<MarkChatReadIcon />}
-                        onClick={handleMarkAllAsRead}
+                        sx={{ ml: 1, color: '#666' }}
                     >
-                        모두 읽음
-                    </Button>
-                )}
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </Box>
             </Box>
 
-            <Divider />
-
-            {notifications.length === 0 ? (
-                <Box p={3} textAlign="center">
-                    <Typography color="text.secondary">
-                        알림이 없습니다
-                    </Typography>
-                </Box>
-            ) : (
-                <List sx={{ width: '100%', padding: 0 }}>
-                    {notifications.map((notification) => (
-                        <React.Fragment key={notification.id}>
-                            <ListItem
-                                alignItems="flex-start"
-                                onClick={() => handleNotificationClick(notification)}
-                                sx={{
-                                    cursor: 'pointer',
-                                    bgcolor: notification.read ? 'transparent' : 'rgba(25, 118, 210, 0.08)',
-                                    transition: 'background-color 0.3s',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(0, 0, 0, 0.04)'
-                                    },
-                                    padding: 2
-                                }}
-                            >
-                                <Box sx={{ mr: 2, display: 'flex', alignItems: 'flex-start' }}>
-                                    {getNotificationIcon(notification.notificationType)}
-                                </Box>
-                                <ListItemText
-                                    primary={
-                                        <Typography component="span" variant="subtitle2" color="text.primary">
-                                            {notification.title}
-                                        </Typography>
-                                    }
-                                    secondary={
-                                        <>
-                                            <Typography component="span" variant="body2" color="text.primary" sx={{ display: 'block' }}>
-                                                {notification.content}
+            <Box sx={{ overflow: 'auto', maxHeight: 320 }}>
+                {notifications.length === 0 ? (
+                    <Box p={4} textAlign="center">
+                        <Typography color="text.secondary">
+                            알림이 없습니다
+                        </Typography>
+                    </Box>
+                ) : (
+                    <List sx={{ width: '100%', padding: 0 }}>
+                        {notifications.map((notification) => (
+                            <React.Fragment key={notification.id}>
+                                <ListItem
+                                    alignItems="flex-start"
+                                    onClick={() => handleNotificationClick(notification)}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        bgcolor: notification.read ? 'transparent' : 'rgba(255, 144, 128, 0.08)',
+                                        transition: 'background-color 0.3s',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(255, 144, 128, 0.12)'
+                                        },
+                                        padding: 2,
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <Box sx={{ mr: 2, display: 'flex', alignItems: 'flex-start' }}>
+                                        {getNotificationIcon(notification.notificationType)}
+                                    </Box>
+                                    <ListItemText
+                                        primary={
+                                            <Typography component="span" variant="subtitle2" fontWeight="bold" color="#333">
+                                                {notification.title}
                                             </Typography>
-                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                                                {formatDate(notification.createdAt)}
-                                            </Typography>
-                                        </>
-                                    }
-                                />
-                            </ListItem>
-                            <Divider component="li" />
-                        </React.Fragment>
-                    ))}
-                </List>
-            )}
-        </Box>
+                                        }
+                                        secondary={
+                                            <>
+                                                <Typography
+                                                    component="span"
+                                                    variant="body2"
+                                                    color="text.primary"
+                                                    sx={{
+                                                        display: 'block',
+                                                        wordBreak: 'break-word'
+                                                    }}
+                                                >
+                                                    {notification.content}
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    sx={{
+                                                        display: 'block',
+                                                        mt: 1,
+                                                        fontStyle: 'italic'
+                                                    }}
+                                                >
+                                                    {formatDate(notification.createdAt)}
+                                                </Typography>
+                                            </>
+                                        }
+                                    />
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => handleDeleteNotification(e, notification.id)}
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 8,
+                                            right: 8,
+                                            color: '#999',
+                                            '&:hover': {
+                                                color: '#FF9080',
+                                                backgroundColor: 'rgba(255, 144, 128, 0.1)',
+                                            }
+                                        }}
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </ListItem>
+                                <Divider component="li" />
+                            </React.Fragment>
+                        ))}
+                    </List>
+                )}
+            </Box>
+        </Paper>
     );
 };
 

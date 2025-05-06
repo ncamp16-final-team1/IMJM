@@ -35,6 +35,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setOpen(false);
     };
 
+    // 색상 매핑 함수 - 앱의 디자인 시스템에 맞게 색상 설정
+    const getAlertColor = (type: 'success' | 'info' | 'warning' | 'error') => {
+        switch (type) {
+            case 'success':
+                return '#4CAF50';
+            case 'warning':
+                return '#FFC107';
+            case 'error':
+                return '#F44336';
+            case 'info':
+            default:
+                return '#FF9080'; // 앱의 주요 색상
+        }
+    };
+
     return (
         <NotificationContext.Provider value={{ showNotification }}>
             {children}
@@ -49,7 +64,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 sx={{
                     width: isMobile ? '100%' : 'auto',
                     maxWidth: { xs: '100%', sm: 400 },
-                    bottom: isMobile ? '56px' : 'auto',
+                    bottom: isMobile ? '60px' : 'auto', // Footer 높이를 고려한 위치 조정
                 }}
             >
                 <Alert
@@ -59,8 +74,23 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sx={{
                         width: '100%',
                         padding: isMobile ? '12px 16px' : '8px 16px',
-                        fontSize: { xs: '14px', sm: '16px' }
+                        fontSize: { xs: '14px', sm: '16px' },
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                        backgroundColor: '#ffffff', // 흰색 배경
+                        color: '#333333', // 어두운 텍스트 색상
+                        border: '1px solid #f1f1f1',
+                        '& .MuiAlert-icon': {
+                            color: getAlertColor(severity), // 종류에 따른 아이콘 색상
+                        },
+                        '& .MuiAlert-message': {
+                            color: '#333333', // 메시지 텍스트 색상
+                        },
+                        '& .MuiAlert-action': {
+                            color: '#666666', // 닫기 버튼 색상
+                        },
                     }}
+                    icon={false} // 기본 아이콘 비활성화
                 >
                     {message}
                 </Alert>
@@ -101,7 +131,6 @@ export const InAppNotificationReceiver: React.FC = () => {
         };
 
         NotificationService.addListener(handleNewNotification);
-
         NotificationService.addListener('notification', handleNewNotification);
 
         return () => {
