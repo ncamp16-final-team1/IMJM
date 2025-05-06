@@ -60,6 +60,8 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     const [userProfileUrl, setUserProfileUrl] = useState<string | null>(null);
     const [salonProfileUrl, setSalonProfileUrl] = useState<string | null>(null);
 
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
     const handleTranslateRequest = async (message: ChatMessage) => {
         const messageId = message.id;
 
@@ -420,13 +422,13 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
     const handleConfirmDelete = async () => {
         try {
+            setIsDeleting(true);
             await axios.delete(`/api/chat/room/${roomId}`);
             setConfirmOpen(false);
             setDeletedOpen(true);
-
-            window.location.reload();
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
+            setIsDeleting(false);
             alert('삭제에 실패했습니다.');
         }
     };
@@ -653,7 +655,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
             {/* 채팅방 삭제 완료 모달 */}
             <Dialog open={deletedOpen} onClose={() => {
                 setDeletedOpen(false);
-                navigate('/chat');
+                window.location.href = "/chat"; // navigate 대신 직접 URL 변경
             }}>
                 <DialogTitle>삭제 완료</DialogTitle>
                 <DialogContent>
@@ -663,7 +665,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     <Button
                         onClick={() => {
                             setDeletedOpen(false);
-                            window.location.reload();
+                            window.location.href = "/chat"; // navigate 대신 window.location.href 사용
                         }}
                         autoFocus
                     >
