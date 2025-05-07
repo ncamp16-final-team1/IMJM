@@ -173,7 +173,7 @@ function SalonDetail() {
 
                     // 리뷰 답글 가져오기
                     try {
-                        const replyResponse = await axios.get(`/api/mypages/view-review-reply`, {
+                        const replyResponse = await axios.get(`/api/review-reply`, {
                             params: { reviewId: review.id },
                         });
                         if (replyResponse.data) {
