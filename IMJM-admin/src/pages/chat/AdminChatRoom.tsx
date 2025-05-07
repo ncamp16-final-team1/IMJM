@@ -135,6 +135,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     };
 
     // 실제 번역 함수
+    // 실제 번역 함수
     const requestTranslation = async (message: ChatMessage) => {
         const messageId = message.id;
         console.log(`메시지 ${messageId} 번역 시작:`, message.message);
@@ -180,46 +181,29 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
 
         try {
-            // API 호출 시도 (인증 문제로 실패할 수 있음)
-            try {
-                console.log("번역 API 시도:", message.message);
-                const translatedText = await TranslationService.translate(
-                    message.message,
-                    sourceLang,
-                    targetLang
-                );
+            // 번역 시도
+            const translatedText = await TranslationService.translate(
+                message.message,
+                sourceLang,
+                targetLang
+            );
 
-                console.log("번역 결과:", translatedText);
+            console.log("번역 결과:", translatedText);
 
-                if (translatedText) {
-                    setTranslations(prev => ({
-                        ...prev,
-                        [messageId]: {
-                            isLoading: false,
-                            text: translatedText,
-                            error: null
-                        }
-                    }));
-                    return;
-                }
-            } catch (apiError) {
-                console.error("API 번역 실패:", apiError);
-                // API 실패 시 기본 메시지로 대체
+            // 번역 결과가 있으면 저장
+            if (translatedText) {
+                setTranslations(prev => ({
+                    ...prev,
+                    [messageId]: {
+                        isLoading: false,
+                        text: translatedText,
+                        error: null
+                    }
+                }));
+            } else {
+                // 번역 결과가 없으면 에러 처리
+                throw new Error("번역 결과가 없습니다");
             }
-
-            // API 실패 시 기본 번역 메시지 사용
-            const defaultMessage = `[${sourceLang}에서 ${targetLang}로 번역]`;
-            console.log("기본 번역 메시지 사용:", defaultMessage);
-
-            setTranslations(prev => ({
-                ...prev,
-                [messageId]: {
-                    isLoading: false,
-                    text: defaultMessage,
-                    error: null,
-                    isLocalTranslation: true
-                }
-            }));
         } catch (error) {
             console.error('번역 처리 실패:', error);
             setTranslations(prev => ({
@@ -227,7 +211,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 [messageId]: {
                     isLoading: false,
                     text: null,
-                    error: '번역 처리에 실패했습니다.'
+                    error: '번역에 실패했습니다. 나중에 다시 시도해주세요.'
                 }
             }));
         }
