@@ -245,25 +245,34 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         const handleNewMessage = (messageData: ChatMessage) => {
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prev => {
-                    // 중복 메시지 확인
-                    const messageExists = prev.some(msg =>
-                        msg.id === messageData.id ||
-                        (msg.message === messageData.message &&
-                            msg.senderType === messageData.senderType &&
-                            Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000)
-                    );
-
-                    if (messageExists) {
-                        return prev.map(msg =>
-                            (msg.id === messageData.id ||
-                                (msg.message === messageData.message &&
-                                    msg.senderType === messageData.senderType &&
-                                    Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000))
-                                ? messageData : msg
-                        );
-                    } else {
-                        return [...prev, messageData];
+                    // 1. 정확히 같은 ID를 가진 메시지 체크
+                    const exactIdMatch = prev.some(msg => msg.id === messageData.id);
+                    if (exactIdMatch) {
+                        console.log("정확히 같은 ID의 메시지가 이미 존재함:", messageData.id);
+                        return prev;
                     }
+
+                    // 2. 내가 보낸 메시지이면서 내용과 시간이 유사한 메시지 체크
+                    if (messageData.senderType === 'SALON' && messageData.senderId === salonId) {
+                        const similarMessage = prev.find(msg =>
+                            msg.senderType === 'SALON' &&
+                            msg.senderId === salonId &&
+                            msg.message === messageData.message &&
+                            // 임시 ID를 가진 메시지 (클라이언트에서 생성한 것)
+                            msg.id > 1000000000
+                        );
+
+                        if (similarMessage) {
+                            console.log("임시 ID를 가진 유사 메시지 발견, 업데이트:", similarMessage.id);
+                            // 임시 메시지를 서버 메시지로 교체
+                            return prev.map(msg =>
+                                msg === similarMessage ? messageData : msg
+                            );
+                        }
+                    }
+
+                    // 중복이 아닌 경우 새 메시지 추가
+                    return [...prev, messageData];
                 });
 
                 if (messageData.senderType !== 'SALON') {
@@ -353,6 +362,9 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 }
             }
 
+            // 임시 ID 생성 (클라이언트에서 생성한 ID는 큰 숫자로 설정)
+            const tempId = Date.now();
+
             const tempMessage: ChatMessage = {
                 id: Date.now(), // 임시 ID
                 chatRoomId: Number(roomId),
@@ -367,6 +379,12 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
             };
 
             setMessages(prev => [...prev, tempMessage]);
+
+            // 입력 초기화
+            setNewMessage('');
+            setSelectedFiles([]);
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            setPreviewUrls([]);
 
             AdminWebSocketService.sendMessageWithPhotos(
                 Number(roomId),
