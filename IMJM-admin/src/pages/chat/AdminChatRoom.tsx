@@ -129,6 +129,20 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
         console.log("번역 요청 언어:", { sourceLang, targetLang });
 
+        if (message.translatedMessage) {
+            console.log("서버 번역 사용:", message.translatedMessage);
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: {
+                    isLoading: false,
+                    text: message.translatedMessage,
+                    error: null,
+                    isServerTranslation: true
+                }
+            }));
+            return;
+        }
+
         try {
             const translatedText = await TranslationService.translate(
                 message.message,
@@ -264,6 +278,13 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         fetchSalonAndChatRoom();
 
         const handleNewMessage = (messageData: ChatMessage) => {
+            console.log("새 메시지 수신:", messageData);
+
+            // 서버에서 받은 메시지에 번역된 내용이 있는지 확인
+            if (messageData.translatedMessage) {
+                console.log("서버에서 번역된 메시지:", messageData.translatedMessage);
+            }
+
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prev => {
                     // 1. 정확히 같은 ID를 가진 메시지 체크
@@ -526,6 +547,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     const translationState = translations[message.id];
 
                     return (
+                        // AdminChatRoom.tsx 파일의 메시지 렌더링 부분 수정
                         <Box
                             key={message.id}
                             className={messageClassName}
@@ -560,28 +582,66 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                     </Box>
                                 )}
 
-                                <Button
-                                    size="small"
-                                    onClick={() => handleTranslateRequest(message)}
-                                    className={styles.translateButton}
-                                    disabled={translationState?.isLoading}
-                                >
-                                    {!translationState ? '번역 보기' :
-                                        translationState.isLoading ? '번역 중...' :
-                                            translationState.error ? '다시 시도' : '번역 숨기기'}
-                                </Button>
+                                {/* 서버에서 이미 번역된 메시지가 있는 경우 */}
+                                {message.translatedMessage && (
+                                    <Button
+                                        size="small"
+                                        onClick={() => {
+                                            // 이미 번역된 메시지를 토글하기 위한 상태 업데이트
+                                            setTranslations(prev => {
+                                                // 현재 번역이 표시되고 있지 않으면 표시
+                                                if (!prev[message.id]) {
+                                                    return {
+                                                        ...prev,
+                                                        [message.id]: {
+                                                            isLoading: false,
+                                                            text: message.translatedMessage,
+                                                            error: null,
+                                                            isServerTranslation: true // 서버 번역임을 표시
+                                                        }
+                                                    };
+                                                }
+                                                // 이미 표시 중이면 숨김
+                                                else {
+                                                    const newTranslations = { ...prev };
+                                                    delete newTranslations[message.id];
+                                                    return newTranslations;
+                                                }
+                                            });
+                                        }}
+                                        className={styles.translateButton}
+                                    >
+                                        {!translations[message.id] ? '번역 보기' : '번역 숨기기'}
+                                    </Button>
+                                )}
 
-                                {translationState && !translationState.isLoading && !translationState.error && (
+                                {/* 서버에서 번역된 메시지가 없는 경우에만 실시간 번역 버튼 표시 */}
+                                {!message.translatedMessage && (
+                                    <Button
+                                        size="small"
+                                        onClick={() => handleTranslateRequest(message)}
+                                        className={styles.translateButton}
+                                        disabled={translations[message.id]?.isLoading}
+                                    >
+                                        {translations[message.id] === undefined ? '번역 보기' :
+                                            translations[message.id]?.isLoading ? '번역 중...' :
+                                                translations[message.id]?.error ? '다시 시도' : '번역 숨기기'}
+                                    </Button>
+                                )}
+
+                                {/* 번역 표시 */}
+                                {translations[message.id] && !translations[message.id].isLoading && !translations[message.id].error && (
                                     <Typography className={styles.translatedMessage}>
-                                        {translationState.text}
+                                        {translations[message.id].text}
                                     </Typography>
                                 )}
 
-                                {translationState?.error && (
+                                {translations[message.id]?.error && (
                                     <Typography className={styles.translationError}>
-                                        {translationState.error}
+                                        {translations[message.id].error}
                                     </Typography>
                                 )}
+
                                 <Typography className={styles.messageTime}>
                                     {new Date(message.sentAt).toLocaleTimeString([], {
                                         hour: '2-digit',
