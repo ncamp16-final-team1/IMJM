@@ -26,3 +26,4 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JASYPT_ENCRYPTOR_PASSWORD=${JASYPT_ENCRYPTOR_PASSWORD}
+      - TZ=Asia/Seoul
