@@ -18,11 +18,11 @@ spring:
 
 app:
   client:
-    domain: http://www.imjm-hair.com
+    domain: https://www.imjm-hair.com
   admin:
-    domain: http://www.imjm-hair-partner.com
+    domain: https://www.imjm-hair-partner.com
   server:
-    domain: http://api.imjm-hair.com
+    domain: https://api.imjm-hair.com
   
 
 logging:
