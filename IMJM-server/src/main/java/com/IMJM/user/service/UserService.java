@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -129,12 +130,16 @@ public class UserService {
     }
 
     public void logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("Authorization", null);
-        cookie.setMaxAge(0); // 즉시 만료
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
+        ResponseCookie cookie = ResponseCookie.from("Authorization", null)
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/")
+            .domain("imjm-hair.com")
+            .maxAge(0) // 즉시 만료
+            .build();
 
-        response.addCookie(cookie);
+        response.setHeader("Set-Cookie", cookie.toString());
     }
 
     public ResponseEntity<?> checkLogin(HttpServletRequest request) {
