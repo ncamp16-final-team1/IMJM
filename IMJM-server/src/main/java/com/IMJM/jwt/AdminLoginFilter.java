@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,7 +50,17 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String token = jwtUtil.createJwt(username, role, 60 * 60 * 24 * 1000L);
 
-        response.addCookie(createCookie("AdminToken", token));
+        ResponseCookie cookie = ResponseCookie.from("AdminToken", token)
+                .httpOnly(true) // XSS 방어
+                .secure(true) // HTTPS 환경
+                .sameSite("None") // 크로스 도메인 대응
+                .path("/")
+                .maxAge(60 * 60 * 24)
+                .build();
+
+        response.setHeader("Set-Cookie", cookie.toString());
+
+        //response.addCookie(createCookie("AdminToken", token));
         response.setStatus(HttpServletResponse.SC_OK);
     }
 
