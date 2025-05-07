@@ -102,6 +102,10 @@ public class SecurityConfig {
                                 ,"/api/user/location"
                                 ,"/api/salon/**"
                                 ,"/api/archive/**"
+                                ,"/api/review/**"
+                                ,"/api/review-reply/**"
+                                ,"/api/review-reply/**"
+                                ,"/api/user/**"
                         ).permitAll()
                         .requestMatchers("/api/admin/check-login").authenticated()
                         .anyRequest().authenticated()

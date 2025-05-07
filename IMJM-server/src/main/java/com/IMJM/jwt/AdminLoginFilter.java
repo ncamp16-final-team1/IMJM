@@ -63,7 +63,7 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         Cookie cookie = new Cookie(key, token);
         cookie.setMaxAge(60*60*24);
         cookie.setHttpOnly(true);
-        //cookie.setSecure(true);  // https 만 허용 할 경우
+        cookie.setSecure(true);  // https 만 허용 할 경우
         cookie.setPath("/");
 
         return cookie;
