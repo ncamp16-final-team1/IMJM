@@ -8,11 +8,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://www.api.imjm-hair.com/',
+        target: 'http://www.api.imjm-hair.com',
         changeOrigin: true
       },
       '/ws': { // WebSocket에 대한 프록시 설정 추가
-        target: 'http://www.api.imjm-hair.com/',
+        target: 'http://www.api.imjm-hair.com',
         changeOrigin: true,
         ws: true, // WebSocket 프록시 활성화
       }
