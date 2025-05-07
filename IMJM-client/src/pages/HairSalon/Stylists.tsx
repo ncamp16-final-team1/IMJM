@@ -29,7 +29,6 @@ const Stylists = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSalonBlacklisted, setIsSalonBlacklisted] = useState(false);
 
-  // 로그인 상태 확인
   const checkLoginStatus = async (): Promise<boolean> => {
     try {
       const response = await axios.get('/api/user/check-login');
@@ -40,7 +39,6 @@ const Stylists = () => {
     }
   };
 
-  // 예약 클릭 핸들러
   const handleReservationClick = async (stylistId: number) => {
     if (isSalonBlacklisted) {
       setOpenBlacklistedDialog(true);
@@ -84,7 +82,6 @@ const Stylists = () => {
     setOpenLoginDialog(false);
   };
 
-  // 페이지 로드 시 매장의 블랙리스트 상태 확인 및 스타일리스트 로드
   useEffect(() => {
     if (!salonId) {
       return;
@@ -92,7 +89,6 @@ const Stylists = () => {
     
     setIsLoading(true);
     
-    // 매장 데이터와 스타일리스트 데이터 로드
     getStylistsBySalonId(salonId)
       .then((data) => {
         setStylists(data);
@@ -100,8 +96,6 @@ const Stylists = () => {
         if (data.length > 0) {
           setSalonName(data[0].salonName);
           
-          // 데이터에서 blacklisted 속성 확인
-          // 모든 스타일리스트의 blacklisted 속성이 동일하다고 가정
           if (data.some(stylist => stylist.blacklisted)) {
             setIsSalonBlacklisted(true);
             setOpenBlacklistedDialog(true);
