@@ -33,7 +33,7 @@ const Archive: React.FC = () => {
 
             setLoading(true);
             try {
-                const response = await fetch(`/api/archive/?page=${page}&size=12`);
+                const response = await fetch(`/api/archive?page=${page}&size=12`);
 
                 if (!response.ok) {
                     throw new Error('아카이브 데이터를 불러오는데 실패했습니다.');
