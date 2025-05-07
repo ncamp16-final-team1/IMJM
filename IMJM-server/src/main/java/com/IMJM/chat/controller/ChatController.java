@@ -1,12 +1,14 @@
 package com.IMJM.chat.controller;
 
 import com.IMJM.admin.repository.BlacklistRepository;
+import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatRoomDto;
 import com.IMJM.chat.exception.ChatRoomNotFountException;
 import com.IMJM.chat.repository.ChatRoomRepository;
 import com.IMJM.chat.service.ChatService;
 import com.IMJM.common.entity.ChatRoom;
+import com.IMJM.common.entity.SalonPhotos;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ public class ChatController {
     private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final BlacklistRepository blacklistRepository;
+    private final SalonPhotosRepository salonPhotosRepository;
 
     // 메시지 전송 REST 엔드포인트
     @PostMapping("/message")
@@ -167,40 +170,21 @@ public class ChatController {
             roomInfo.put("salonName", chatRoom.getSalon().getName());
             roomInfo.put("userName", chatRoom.getUser().getNickname());
             roomInfo.put("userLanguage", chatRoom.getUser().getLanguage() != null ? chatRoom.getUser().getLanguage() : "en");
-            roomInfo.put("salonLanguage", "ko"); // 미용실 언어는 한국어로 고정
-            roomInfo.put("createdAt", chatRoom.getCreatedAt());
-            roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
+            roomInfo.put("salonLanguage", "ko");
+
+            // 프로필 이미지 URL 추가
+            roomInfo.put("userProfileUrl", chatRoom.getUser().getProfile());
+
+            // 미용실 프로필 이미지 가져오기
+            List<SalonPhotos> salonPhotos = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(chatRoom.getSalon().getId());
+            String salonProfileUrl = !salonPhotos.isEmpty() ? salonPhotos.get(0).getPhotoUrl() : null;
+            roomInfo.put("salonProfileUrl", salonProfileUrl);
 
             return ResponseEntity.ok(roomInfo);
-
         } catch (ChatRoomNotFountException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", true, "message", e.getMessage()));
         }
-    }
-
-    @GetMapping("/admin/room/{roomId}")
-    public ResponseEntity<Map<String, Object>> getAdminChatRoomDetail(@PathVariable Long roomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
-
-        Map<String, Object> roomInfo = new HashMap<>();
-        roomInfo.put("id", chatRoom.getId());
-        roomInfo.put("userId", chatRoom.getUser().getId());
-        roomInfo.put("salonId", chatRoom.getSalon().getId());
-        roomInfo.put("salonName", chatRoom.getSalon().getName());
-
-        // 사용자 닉네임 또는 이름 추가
-        String userName = chatRoom.getUser().getNickname();
-        if (userName == null || userName.isEmpty()) {
-            userName = chatRoom.getUser().getFirstName() + " " + chatRoom.getUser().getLastName();
-        }
-        roomInfo.put("userName", userName);
-
-        roomInfo.put("createdAt", chatRoom.getCreatedAt());
-        roomInfo.put("lastMessageTime", chatRoom.getLastMessageTime());
-
-        return ResponseEntity.ok(roomInfo);
     }
 
     // 예약 ID를 통해 채팅방 생성 또는 조회

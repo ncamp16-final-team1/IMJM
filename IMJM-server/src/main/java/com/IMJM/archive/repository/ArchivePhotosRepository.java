@@ -15,4 +15,5 @@ public interface ArchivePhotosRepository extends JpaRepository<ArchivePhotos, Lo
     List<ArchivePhotos> findByArchiveIdOrderByPhotoOrderAsc(Long archiveId);
 
     void deleteByArchiveId(Long archiveId);
+
 }

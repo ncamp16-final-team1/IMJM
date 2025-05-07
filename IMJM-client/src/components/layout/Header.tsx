@@ -2,28 +2,128 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import logo from '../../assets/images/IMJM-logo-Regi.png';
-import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import {
+    Select,
+    SelectChangeEvent,
+    MenuItem,
+    Badge,
+    Popover,
+    Box,
+    IconButton,
+    styled,
+    alpha,
+    Fade
+} from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import axios from 'axios';
-import { Popover, Box, Badge } from '@mui/material';
+import LanguageIcon from '@mui/icons-material/Language';
+import LoginIcon from '@mui/icons-material/Login';
 import NotificationList from '../notification/NotificationList';
 import NotificationService from '../../services/notification/NotificationService';
+import axios from 'axios';
 
-// 언어 타입 정의
 type Language = 'ko' | 'en';
+
+// 스타일링된 컴포넌트들
+const StyledHeader = styled('header')(({ theme }) => ({
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 'var(--header-height)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0 1rem',
+    backgroundColor: '#FFF',
+    borderBottom: '1px solid #f0f0f0',
+    zIndex: 500,
+    maxWidth: '600px',
+    margin: '0 auto',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+}));
+
+const Logo = styled('img')({
+    height: '38px',
+    width: '115px',
+    marginLeft: '5px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease',
+    '&:hover': {
+        transform: 'scale(1.03)',
+    },
+});
+
+const HeaderActions = styled(Box)({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.8rem',
+});
+
+const StyledSelect = styled(Select)(({ theme }) => ({
+    height: '36px',
+    borderRadius: '18px',
+    fontSize: '0.85rem',
+    color: '#555',
+    '& .MuiOutlinedInput-notchedOutline': {
+        border: '1px solid #eaeaea',
+    },
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#FDC7BF',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#FF9080',
+        borderWidth: '1px',
+    },
+    '& .MuiSelect-select': {
+        paddingLeft: '12px',
+        paddingRight: '12px',
+        display: 'flex',
+        alignItems: 'center',
+    },
+}));
+
+const LoginButton = styled('button')(({ theme }) => ({
+    backgroundColor: '#FF9080',
+    color: 'white',
+    border: 'none',
+    borderRadius: '18px',
+    padding: '7px 16px',
+    fontSize: '14px',
+    cursor: 'pointer',
+    height: '36px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 6px rgba(255,144,128,0.2)',
+    '&:hover': {
+        backgroundColor: '#ff8070',
+        boxShadow: '0 3px 8px rgba(255,144,128,0.3)',
+        transform: 'translateY(-1px)',
+    },
+    '& svg': {
+        marginRight: '6px',
+        fontSize: '18px',
+    },
+}));
+
+const StyledNotificationIcon = styled(NotificationsIcon)(({ theme }) => ({
+    color: '#777',
+    transition: 'color 0.2s ease',
+    '&:hover': {
+        color: '#FF9080',
+    },
+}));
 
 function Header(): React.ReactElement {
     const [language, setLanguage] = useState<Language>('ko');
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // 로그인 상태 추적
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
-    const [unreadCount, setUnreadCount] = useState<number>(0); // 읽지 않은 알림 수
+    const [unreadCount, setUnreadCount] = useState<number>(0);
     const navigate = useNavigate();
 
-    // 알림 팝오버 상태
     const isNotificationOpen = Boolean(notificationAnchorEl);
 
-    // 로그인 상태 확인 및 초기 unreadCount 설정
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
@@ -31,8 +131,6 @@ function Header(): React.ReactElement {
                     withCredentials: true
                 });
                 setIsLoggedIn(true);
-
-                // 로그인됐을 때만 읽지 않은 알림 수 가져오기
                 fetchUnreadCount();
             } catch (error) {
                 setIsLoggedIn(false);
@@ -42,60 +140,41 @@ function Header(): React.ReactElement {
         checkLoginStatus();
     }, []);
 
-    // 읽지 않은 알림 수 가져오기
     const fetchUnreadCount = async () => {
         try {
             const count = await NotificationService.getUnreadCount();
-            console.log('읽지 않은 알림 수 가져옴:', count);
             setUnreadCount(count);
         } catch (error) {
             console.error('읽지 않은 알림 수 조회 실패:', error);
         }
     };
 
-    // 알림 관련 이벤트 구독
     useEffect(() => {
         if (isLoggedIn) {
-            // 초기 읽지 않은 알림 수 가져오기
             fetchUnreadCount();
 
-            // 새 알림이 왔을 때 카운트 증가
             const handleNewNotification = () => {
-                console.log('새 알림 발생, 카운트 증가');
-                fetchUnreadCount(); // 즉시 서버에서 최신 카운트 가져오기
+                fetchUnreadCount();
             };
 
-            // 알림을 읽었을 때 카운트 감소
             const handleReadNotification = () => {
-                console.log('알림 읽음 처리됨, unreadCount 업데이트');
-                fetchUnreadCount(); // 서버에서 최신 카운트 가져오기
+                fetchUnreadCount();
             };
 
-            // 웹소켓 연결 상태 변화에 대응
             const handleConnectionChange = (connected: boolean) => {
                 if (connected) {
-                    console.log('웹소켓 연결됨, unreadCount 업데이트');
                     fetchUnreadCount();
                 }
             };
 
-            // 모든 이벤트 리스너 등록
             NotificationService.addListener(handleNewNotification);
-
-            // 읽음 처리 이벤트 리스너 등록 (알림 서비스에 해당 이벤트 지원 필요)
             NotificationService.addListener('alarmRead', handleReadNotification);
-
-            // 연결 상태 변화 감지 (알림 서비스에 해당 이벤트 지원 필요)
             NotificationService.addListener('connectionChange', handleConnectionChange);
-
-            // 페이지 포커스될 때 업데이트
             window.addEventListener('focus', fetchUnreadCount);
 
-            // 백그라운드에서도 주기적으로 업데이트 (30초마다)
             const intervalId = setInterval(fetchUnreadCount, 30000);
 
             return () => {
-                // 모든 이벤트 리스너 제거
                 NotificationService.removeListener(handleNewNotification);
                 NotificationService.removeListener('alarmRead', handleReadNotification);
                 NotificationService.removeListener('connectionChange', handleConnectionChange);
@@ -109,114 +188,146 @@ function Header(): React.ReactElement {
         setLanguage(event.target.value as Language);
     };
 
-    // 로그인 페이지로 이동
     const navigateToLogin = (): void => {
         navigate('/login');
     };
 
-    // 알림 클릭 핸들러
     const handleNotificationClick = (event: React.MouseEvent<HTMLElement>) => {
         setNotificationAnchorEl(event.currentTarget);
     };
 
-    // 알림 닫기 핸들러
     const handleNotificationClose = () => {
-        fetchUnreadCount(); // 닫을 때 카운트 업데이트
+        fetchUnreadCount();
         setNotificationAnchorEl(null);
     };
 
     return (
-        <header className="header">
-            <div className="logoimage">
-                <img
-                    src={logo}
-                    className="logo"
-                    alt="로고"
-                    onClick={() => navigate('/')}
-                />
-            </div>
-            <div className="header-actions">
-                <Select
+        <StyledHeader>
+            <Logo
+                src={logo}
+                className="logo"
+                alt="IMJM 로고"
+                onClick={() => navigate('/')}
+            />
+
+            <HeaderActions>
+                <StyledSelect
                     value={language}
                     onChange={handleLanguageChange}
-                    className="language-select"
                     variant="outlined"
-                    sx={{
-                        height: '30px',
-                        borderRadius: '20px',
-                        border: '1px solid #f39c91',
-                        color: '#f39c91',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                            border: 'none'
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                            border: 'none'
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            border: 'none'
-                        }
-                    }}
+                    size="small"
+                    sx={{ minWidth: '120px' }}
+                    IconComponent={() => null} // 기본 아이콘 숨기기
+                    startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
                 >
-                    <MenuItem value={'ko'}>한국어</MenuItem>
-                    <MenuItem value={'en'}>English</MenuItem>
-                </Select>
+                    <MenuItem value="ko" sx={{
+                        '&.Mui-selected': {
+                            backgroundColor: alpha('#FDC7BF', 0.1),
+                            '&:hover': {
+                                backgroundColor: alpha('#FDC7BF', 0.2)
+                            }
+                        },
+                        '&:hover': {
+                            backgroundColor: alpha('#FDC7BF', 0.1)
+                        }
+                    }}>
+                        한국어
+                    </MenuItem>
+                    <MenuItem value="en" sx={{
+                        '&.Mui-selected': {
+                            backgroundColor: alpha('#FDC7BF', 0.1),
+                            '&:hover': {
+                                backgroundColor: alpha('#FDC7BF', 0.2)
+                            }
+                        },
+                        '&:hover': {
+                            backgroundColor: alpha('#FDC7BF', 0.1)
+                        }
+                    }}>
+                        English
+                    </MenuItem>
+                </StyledSelect>
 
                 {isLoggedIn ? (
-                    // 로그인되어 있을 때 알림 버튼 표시
-                    <div className="header-icons">
-                        <button className="icon-button" onClick={handleNotificationClick}>
-                            <Badge
-                                badgeContent={unreadCount}
-                                color="error"
-                                sx={{
-                                    '& .MuiBadge-badge': {
-                                        fontSize: '0.7rem',
-                                        height: '20px',
-                                        minWidth: '20px',
-                                        padding: '0 6px',
-                                    }
-                                }}
-                            >
-                                <NotificationsIcon />
-                            </Badge>
-                        </button>
-
-                        {/* 알림 팝오버 */}
-                        <Popover
-                            open={isNotificationOpen}
-                            anchorEl={notificationAnchorEl}
-                            onClose={handleNotificationClose}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'right',
-                            }}
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            sx={{ mt: 1 }}
-                            // // onEntered와 onExited 이벤트 활용
-                            // onEntered={() => console.log('알림창 열림')}
-                            // onExited={handleNotificationClose}
-                        >
-                            <Box sx={{ width: { xs: 320, sm: 360 }, maxHeight: 400 }}>
-                                <NotificationList
-                                    onNotificationRead={fetchUnreadCount}
-                                    onClose={handleNotificationClose} // 모달 닫기 함수 전달
-                                />
-                            </Box>
-                        </Popover>
-                    </div>
-                ) : (
-                    <button
-                        className="login-button"
-                        onClick={navigateToLogin}
+                    <IconButton
+                        color="inherit"
+                        onClick={handleNotificationClick}
+                        sx={{
+                            position: 'relative',
+                            backgroundColor: isNotificationOpen ? alpha('#FDC7BF', 0.1) : 'transparent',
+                            transition: 'background-color 0.2s ease',
+                            '&:hover': {
+                                backgroundColor: alpha('#FDC7BF', 0.1)
+                            }
+                        }}
                     >
+                        <Badge
+                            badgeContent={unreadCount}
+                            color="error"
+                            sx={{
+                                '& .MuiBadge-badge': {
+                                    backgroundColor: '#FF9080',
+                                    fontSize: '0.7rem',
+                                    height: '20px',
+                                    minWidth: '20px',
+                                    padding: '0 6px',
+                                }
+                            }}
+                        >
+                            <StyledNotificationIcon />
+                        </Badge>
+                    </IconButton>
+                ) : (
+                    <LoginButton onClick={navigateToLogin}>
+                        <LoginIcon />
                         {language === 'ko' ? '로그인' : 'Login'}
-                    </button>
+                    </LoginButton>
                 )}
-            </div>
-        </header>
+
+                <Popover
+                    open={isNotificationOpen}
+                    anchorEl={notificationAnchorEl}
+                    onClose={handleNotificationClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    sx={{
+                        mt: 1.5,
+                        '& .MuiPopover-paper': {
+                            overflow: 'visible',
+                            boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+                            '&::before': {
+                                content: '""',
+                                display: 'block',
+                                position: 'absolute',
+                                top: -6,
+                                right: 14,
+                                width: 12,
+                                height: 12,
+                                backgroundColor: 'white',
+                                transform: 'rotate(45deg)',
+                                boxShadow: '-3px -3px 5px rgba(0,0,0,0.04)',
+                                zIndex: 0
+                            }
+                        }
+                    }}
+                    TransitionComponent={Fade}
+                    transitionDuration={150}
+                >
+                    <Box sx={{ width: { xs: 320, sm: 360 }, maxHeight: 400 }}>
+                        <NotificationList
+                            onNotificationRead={fetchUnreadCount}
+                            onClose={handleNotificationClose}
+                        />
+                    </Box>
+                </Popover>
+            </HeaderActions>
+        </StyledHeader>
     );
 }
 

@@ -1,4 +1,3 @@
-// src/App.tsx (수정 버전)
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Header from './components/layout/Header';
@@ -34,9 +33,15 @@ import ArchiveEdit from "./pages/Archive/ArchiveEdit.tsx";
 import Archive from './pages/Archive/Archive.tsx';
 import MyArchive from "./pages/Archive/MyArchive.tsx";
 import { NotificationProvider, InAppNotificationReceiver } from './components/notification/InAppNotification';
+import './styles/global.css';
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
+    const [isMobileView, setIsMobileView] = useState(false);
+
+    const toggleMobileView = () => {
+        setIsMobileView(!isMobileView);
+    };
 
     useEffect(() => {
         // 로그인 상태 확인 및 알림 서비스 초기화
