@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'http://www.api.imjm-hair.com';
+export const API_BASE_URL = 'http://api.imjm-hair.com';
