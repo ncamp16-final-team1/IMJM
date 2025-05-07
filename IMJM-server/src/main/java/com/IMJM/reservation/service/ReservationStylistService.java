@@ -53,7 +53,7 @@ public class ReservationStylistService {
 
     @Transactional(readOnly = true)
     public List<ReservationStylistDto> getStylistsBySalon(String salonId, String userId) {
-        boolean isBlacklisted = blacklistRepository.existsByUser_Id(userId);
+        boolean isBlacklisted = blacklistRepository.existsByUser_IdAndSalon_Id(userId, salonId);
 
         return adminStylistRepository.findBySalonId(salonId).stream()
                 .map(stylist -> new ReservationStylistDto(stylist, isBlacklisted))
