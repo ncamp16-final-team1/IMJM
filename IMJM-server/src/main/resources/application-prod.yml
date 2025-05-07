@@ -22,7 +22,8 @@ app:
   admin:
     domain: http://www.imjm-hair-partner.com
   server:
-    domain: http://www.api.imjm-hair.com
+    domain: http://api.imjm-hair.com
+  
 
 logging:
   level:
