@@ -9,7 +9,8 @@ import {
     TableCell,
     TableHead,
     TableRow,
-    InputAdornment
+    InputAdornment,
+    TableContainer
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ChatIcon from "@mui/icons-material/Chat";
@@ -152,6 +153,7 @@ const Customer = () => {
                             )
                         }}
                     />
+                    <Box sx={{ maxHeight: 640, overflowY: 'auto' }}>
                     <Table size="small">
                         <TableHead>
                             <TableRow>
@@ -168,6 +170,7 @@ const Customer = () => {
                             ))}
                         </TableBody>
                     </Table>
+                    </Box>
                 </Box>
             </Box>
             <Box flex="0 0 480px" display="flex" flexDirection="column" gap={4}>
@@ -230,28 +233,30 @@ const Customer = () => {
                 {/* 블랙리스트 */}
                 <Box>
                     <Typography variant="h6" fontWeight="bold">블랙 리스트</Typography>
-                    <Box mt={2} border="2px solid #ffa394" borderRadius={2} height="326px" >
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell><b>이름</b></TableCell>
-                                    <TableCell><b>사유</b></TableCell>
-                                    <TableCell><b>Date</b></TableCell>
+                    <Box mt={2} border="2px solid #ffa394" borderRadius={2} height="326px" overflow="hidden">
+                    <TableContainer sx={{ maxHeight: '326px' }}>
+                        <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                            <TableCell><b>이름</b></TableCell>
+                            <TableCell><b>사유</b></TableCell>
+                            <TableCell><b>Date</b></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {blacklist.map(item => {
+                            const lastDate = customers.find(c => c.userId === item.userId)?.reservationDate ?? "-";
+                            return (
+                                <TableRow key={`black-${item.userId}`}>
+                                <TableCell>{item.userName} ({item.nickName})</TableCell>
+                                <TableCell>{item.reason}</TableCell>
+                                <TableCell>{lastDate}</TableCell>
                                 </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {blacklist.map(item => {
-                                    const lastDate = customers.find(c => c.userId === item.userId)?.reservationDate ?? "-";
-                                    return (
-                                        <TableRow key={`black-${item.userId}`}>
-                                            <TableCell>{item.userName} ({item.nickName})</TableCell>
-                                            <TableCell>{item.reason}</TableCell>
-                                            <TableCell>{lastDate}</TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
+                            );
+                            })}
+                        </TableBody>
                         </Table>
+                    </TableContainer>
                     </Box>
                 </Box>
             </Box>
