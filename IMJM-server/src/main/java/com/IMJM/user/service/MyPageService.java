@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -327,11 +328,11 @@ public class MyPageService {
                 .requirements(reservation.getRequirements())
                 .salonName(reservation.getStylist().getSalon().getName())
                 .salonAddress(reservation.getStylist().getSalon().getAddress())
-                .salonPhotoUrl(salonPhotoUrl) // 매장 사진 URL
+                .salonPhotoUrl(salonPhotoUrl)
                 .stylistName(reservation.getStylist().getName())
                 .paymentInfo(payment != null ? mapToPaymentInfoDto(payment) : null)
                 .couponInfo(reservationCoupon != null ? mapToCouponInfoDto(reservationCoupon) : null)
-                .pointUsage(findRelevantPointUsage(pointUsages, reservation))
+                .pointUsage(findRelevantPointUsage(pointUsages, reservation, payment))
                 .build();
     }
 
@@ -350,12 +351,24 @@ public class MyPageService {
                 .build();
     }
 
-    private ReservationDetailResponseDto.PointUsageDto findRelevantPointUsage(List<PointUsage> pointUsages, Reservation reservation) {
-        if (pointUsages == null || pointUsages.isEmpty()) {
+    private ReservationDetailResponseDto.PointUsageDto findRelevantPointUsage(List<PointUsage> pointUsages, Reservation reservation, Payment payment) {
+        if (pointUsages == null || pointUsages.isEmpty() || payment == null) {
             return null;
         }
 
+        // 결제 시간
+        LocalDateTime paymentDateTime = payment.getPaymentDate();
+
         return pointUsages.stream()
+                .filter(pointUsage -> {
+                    boolean isUseType = "USE".equals(pointUsage.getUsageType());
+
+                    long secondsDiff = Math.abs(ChronoUnit.SECONDS.between(
+                            pointUsage.getUseDate(), paymentDateTime));
+                    boolean isTimeClose = secondsDiff <= 10;
+
+                    return isUseType && isTimeClose;
+                })
                 .findFirst()
                 .map(pointUsage -> ReservationDetailResponseDto.PointUsageDto.builder()
                         .points(pointUsage.getPrice())
