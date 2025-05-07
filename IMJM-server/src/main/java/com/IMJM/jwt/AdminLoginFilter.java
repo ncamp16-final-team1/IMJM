@@ -54,7 +54,7 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
                 .httpOnly(true) // XSS 방어
                 .secure(true) // HTTPS 환경
                 .sameSite("None") // 크로스 도메인 대응
-                .path("/"))
+                .path("/")
                 .domain("imjm-hair-partner.com")
                 .maxAge(60 * 60 * 24)
                 .build();
