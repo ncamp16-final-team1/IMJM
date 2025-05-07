@@ -43,7 +43,7 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
         String token = jwtUtil.createJwt(userId, role, 60 * 60 * 24 * 1000L);
 
-        ResponseCookie cookie = ResponseCookie.from("AdminToken", token)
+        ResponseCookie cookie = ResponseCookie.from("Authorization", token)
                 .httpOnly(true) // XSS 방어
                 .secure(true) // HTTPS 환경
                 .sameSite("None") // 크로스 도메인 대응
