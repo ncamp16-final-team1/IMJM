@@ -6,7 +6,7 @@ class TranslationService {
             console.log("번역 API 요청:", { text, source, target });
 
             // API 호출
-            const response = await axios.get('/api/test/translate', {
+            const response = await axios.get('/api/admin/translate', {
                 params: { text, source, target }
             });
 
