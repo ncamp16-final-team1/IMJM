@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    Container,
+    Box,
     Paper,
     Typography,
-    Box,
     CircularProgress,
     Button,
     Dialog,
@@ -28,6 +27,7 @@ import SendIcon from '@mui/icons-material/Send';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface ArchiveDetailData {
     id: number;
@@ -68,16 +68,15 @@ function ArchiveDetail() {
     const [openDialog, setOpenDialog] = useState<boolean>(false);
     const [currentImage, setCurrentImage] = useState<string>('');
     const [commentOpen, setCommentOpen] = useState<boolean>(false);
-    const [newComment, setNewComment] = useState<string>('');
+    const [commentInput, setCommentInput] = useState<string>('');
     const [replyTo, setReplyTo] = useState<number | null>(null);
-    const [replyContent, setReplyContent] = useState<string>('');
     const [activeStep, setActiveStep] = useState<number>(0);
     const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const menuOpen = Boolean(menuAnchorEl);
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [, setLikeCount] = useState<number>(0);
-
+    const newCommentRef = useRef<HTMLDivElement>(null);
 
     // 현재 사용자 정보 가져오기
     const fetchCurrentUser = async () => {
@@ -108,7 +107,15 @@ function ArchiveDetail() {
             }
 
             const data = await response.json();
-            console.log(data)
+            console.log(data);
+
+            // 댓글을 최신순으로 정렬
+            if (data.comments) {
+                data.comments = data.comments.sort((a, b) =>
+                    new Date(b.regDate).getTime() - new Date(a.regDate).getTime()
+                );
+            }
+
             setArchive(data);
             setIsLiked(data.liked);
             setLikeCount(data.likeCount);
@@ -150,7 +157,7 @@ function ArchiveDetail() {
         setActiveStep((prevActiveStep) => prevActiveStep - 1);
     };
 
-    const handleMenuOpen = (event: any) => {
+    const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
         setMenuAnchorEl(event.currentTarget);
     };
 
@@ -222,54 +229,25 @@ function ArchiveDetail() {
         }
     };
 
-
     const handleCommentToggle = () => {
         setCommentOpen(!commentOpen);
-        // 댓글을 토글할 때 답글 입력 상태 초기화
         setReplyTo(null);
+        setCommentInput('');
     };
 
-    const handleAddComment = async () => {
-        if (!newComment.trim() || !archive) return;
-
-        try {
-            const response = await fetch(`/api/archive/${id}/comments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    content: newComment,
-                    parentCommentId: null
-                }),
-                credentials: 'include' // 쿠키 포함 (인증 정보)
-            });
-
-            if (!response.ok) {
-                throw new Error('댓글 등록에 실패했습니다.');
-            }
-
-            const commentData = await response.json();
-            setArchive(prev => prev ? {
-                ...prev,
-                comments: [...prev.comments, commentData]
-            } : null);
-            setNewComment('');
-        } catch (err) {
-            console.error('댓글 등록 오류:', err);
-        }
+    const handleCommentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCommentInput(e.target.value);
     };
 
-    // 댓글 엔터키 처리를 위한 핸들러 추가
     const handleCommentKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // 기본 엔터키 동작 방지
-            handleAddComment();
+            handleCommentSubmit();
         }
     };
 
-    const handleReply = async (commentId: number) => {
-        if (!replyContent.trim() || !archive) return;
+    const handleCommentSubmit = async () => {
+        if (!commentInput.trim() || !archive) return;
 
         try {
             const response = await fetch(`/api/archive/${id}/comments`, {
@@ -278,50 +256,89 @@ function ArchiveDetail() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    content: replyContent,
-                    parentCommentId: commentId
+                    content: commentInput,
+                    parentCommentId: replyTo
                 }),
-                credentials: 'include' // 쿠키 포함 (인증 정보)
+                credentials: 'include'
             });
 
             if (!response.ok) {
-                throw new Error('답글 등록에 실패했습니다.');
+                throw new Error(replyTo ? '답글 등록에 실패했습니다.' : '댓글 등록에 실패했습니다.');
             }
 
-            const replyData = await response.json();
+            const commentData = await response.json();
 
-            setArchive(prev => {
-                if (!prev) return null;
+            if (replyTo) {
+                // 답글인 경우
+                setArchive(prev => {
+                    if (!prev) return null;
 
-                const updatedComments = prev.comments.map(comment => {
-                    if (comment.id === commentId) {
-                        return {
-                            ...comment,
-                            childComments: [...(comment.childComments || []), replyData]
-                        };
-                    }
-                    return comment;
+                    const updatedComments = prev.comments.map(comment => {
+                        if (comment.id === replyTo) {
+                            return {
+                                ...comment,
+                                childComments: [commentData, ...(comment.childComments || [])]
+                            };
+                        }
+                        return comment;
+                    });
+
+                    return {
+                        ...prev,
+                        comments: updatedComments
+                    };
                 });
 
-                return {
+                // 답글 작성 후 스크롤 처리
+                setTimeout(() => {
+                    const replyElement = document.querySelector(`[data-comment-id="${replyTo}"]`);
+                    if (replyElement) {
+                        replyElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                }, 100);
+            } else {
+                // 일반 댓글인 경우
+                setArchive(prev => prev ? {
                     ...prev,
-                    comments: updatedComments
-                };
-            });
+                    comments: [commentData, ...prev.comments]
+                } : null);
 
+                // 댓글 추가 후 스크롤 처리
+                setTimeout(() => {
+                    if (newCommentRef.current) {
+                        newCommentRef.current.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }, 100);
+            }
+
+            setCommentInput('');
             setReplyTo(null);
-            setReplyContent('');
         } catch (err) {
-            console.error('답글 등록 오류:', err);
+            console.error(replyTo ? '답글 등록 오류:' : '댓글 등록 오류:', err);
         }
     };
 
-    // 답글 엔터키 처리를 위한 핸들러 추가
-    const handleReplyKeyDown = (event: React.KeyboardEvent) => {
-        if (event.key === 'Enter' && !event.shiftKey && replyTo) {
-            event.preventDefault(); // 기본 엔터키 동작 방지
-            handleReply(replyTo);
-        }
+    const handleReplyClick = (commentId: number, username: string) => {
+        setReplyTo(commentId);
+        setCommentInput(''); // 입력창 초기화
+
+        // 입력창에 포커스
+        setTimeout(() => {
+            const inputElement = document.getElementById('comment-input');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }, 100);
+    };
+
+    const handleCancelReply = () => {
+        setReplyTo(null);
     };
 
     const handleDeleteComment = async (commentId: number) => {
@@ -363,15 +380,6 @@ function ArchiveDetail() {
         }
     };
 
-    const handleReplyClick = (commentId: number) => {
-        // 이미 같은 댓글에 대한 답글 입력중이라면 취소
-        if (replyTo === commentId) {
-            setReplyTo(null);
-        } else {
-            setReplyTo(commentId);
-        }
-    };
-
     const formatRelativeTime = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -397,51 +405,59 @@ function ArchiveDetail() {
 
     if (loading) {
         return (
-            <Container fixed maxWidth="md" sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+            <Box sx={{ maxWidth: '600px', margin: '0 auto', mt: 4, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', px: 2 }}>
                 <CircularProgress />
-            </Container>
+            </Box>
         );
     }
 
     if (error) {
         return (
-            <Container fixed maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+            <Box sx={{ maxWidth: '600px', margin: '0 auto', mt: 4, mb: 4, px: 2 }}>
                 <Paper elevation={0} sx={{ p: 4, backgroundColor: '#FDF6F3', border: '1px solid #dbdbdb' }}>
                     <Box bgcolor="#ffebee" p={3} borderRadius={1} mb={4}>
                         <Typography color="error">{error}</Typography>
                     </Box>
                     <Button onClick={handleBack} variant="outlined">돌아가기</Button>
                 </Paper>
-            </Container>
+            </Box>
         );
     }
 
     if (!archive) {
         return (
-            <Container fixed maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+            <Box sx={{ maxWidth: '600px', margin: '0 auto', mt: 4, mb: 4, px: 2 }}>
                 <Paper elevation={0} sx={{ p: 4, backgroundColor: '#FDF6F3', border: '1px solid #dbdbdb' }}>
                     <Typography variant="h6" align="center">아카이브를 찾을 수 없습니다.</Typography>
                     <Box mt={3} display="flex" justifyContent="center">
                         <Button onClick={handleBack} variant="outlined">돌아가기</Button>
                     </Box>
                 </Paper>
-            </Container>
+            </Box>
         );
     }
 
     return (
-        <Container fixed maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Box
+            sx={{
+                maxWidth: '600px',
+                margin: '0 auto',
+                mt: 4,
+                mb: commentOpen ? 16 : 10, // 여백 조정
+                px: 2
+            }}
+        >
             <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid #dbdbdb' }}>
                 {/* 작성자 정보 헤더 */}
                 <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #efefef' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Avatar sx={{ mr: 2 }}>
                             {archive.profileUrl ?
-                                <img src={archive.profileUrl} alt={archive.username} style={{ width: '100%', height: '100%' }} /> :
-                                archive.username?.charAt(0)}
+                                <img src={archive.profileUrl} alt={archive.username || "탈퇴한 사용자"} style={{ width: '100%', height: '100%' }} /> :
+                                (archive.username ? archive.username.charAt(0) : "탈")}
                         </Avatar>
                         <Typography component="span" fontWeight="bold">
-                            {archive.username}
+                            {archive.username ? archive.username : "탈퇴한 사용자입니다"}
                         </Typography>
                     </Box>
 
@@ -565,7 +581,7 @@ function ArchiveDetail() {
                 {/* 콘텐츠 */}
                 <Box sx={{ px: 2, pb: 2 }}>
                     <Typography component="span" fontWeight="bold" mr={1}>
-                        {archive.username}
+                        {archive.username ? archive.username : "탈퇴한 사용자입니다"}
                     </Typography>
                     <Typography component="span" sx={{ wordBreak: 'break-word' }}>
                         {archive.content}
@@ -584,60 +600,17 @@ function ArchiveDetail() {
                     <Box sx={{ borderTop: '1px solid #efefef' }}>
                         {/* 댓글 목록 */}
                         <List>
-                            {archive.comments.map(comment => (
-                                <CommentItem
-                                    key={comment.id}
-                                    comment={comment}
-                                    currentUserId={currentUserId}
-                                    onReplyClick={handleReplyClick}
-                                    onDeleteComment={handleDeleteComment}
-                                />
+                            {archive.comments.map((comment, index) => (
+                                <div key={comment.id} ref={index === 0 ? newCommentRef : null}>
+                                    <CommentItem
+                                        comment={comment}
+                                        currentUserId={currentUserId}
+                                        onReplyClick={handleReplyClick}
+                                        onDeleteComment={handleDeleteComment}
+                                    />
+                                </div>
                             ))}
                         </List>
-
-                        {/* 새 댓글 입력 - replyTo가 null일 때만 표시 */}
-                        {!replyTo && (
-                            <Box sx={{ p: 2, display: 'flex', borderTop: '1px solid #efefef' }}>
-                                <TextField
-                                    fullWidth
-                                    placeholder="댓글 작성..."
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    onKeyDown={handleCommentKeyDown}
-                                    variant="outlined"
-                                    size="small"
-                                />
-                                <IconButton
-                                    color="primary"
-                                    onClick={handleAddComment}
-                                    disabled={!newComment.trim()}
-                                >
-                                    <SendIcon />
-                                </IconButton>
-                            </Box>
-                        )}
-                    </Box>
-                )}
-
-                {/* 답글 입력 다이얼로그 */}
-                {replyTo && (
-                    <Box sx={{ p: 2, display: 'flex', borderTop: '1px solid #efefef' }}>
-                        <TextField
-                            fullWidth
-                            placeholder="답글 작성..."
-                            value={replyContent}
-                            onChange={(e) => setReplyContent(e.target.value)}
-                            onKeyDown={handleReplyKeyDown}
-                            variant="outlined"
-                            size="small"
-                        />
-                        <IconButton
-                            color="primary"
-                            onClick={() => handleReply(replyTo)}
-                            disabled={!replyContent.trim()}
-                        >
-                            <SendIcon />
-                        </IconButton>
                     </Box>
                 )}
 
@@ -651,6 +624,75 @@ function ArchiveDetail() {
                     </Button>
                 </Box>
             </Paper>
+
+            {/* 고정 댓글/답글 입력창 */}
+            {commentOpen && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        bottom: '60px', // 하단에서 60px 올림
+                        left: 0,
+                        right: 0,
+                        zIndex: 1000,
+                        p: 0,
+                        backgroundColor: 'transparent',
+                        display: 'flex',
+                        justifyContent: 'center'
+                    }}
+                >
+                    <Paper
+                        elevation={0} // 그림자 제거
+                        sx={{
+                            maxWidth: '600px',
+                            width: '100%',
+                            p: 1,
+                            borderTop: '1px solid #efefef',
+                            backgroundColor: '#fff',
+                            border: '1px solid #efefef' // 테두리 추가
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {replyTo !== null && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                                    <Typography variant="body2" color="primary">
+                                        @{archive.comments.find(c => c.id === replyTo)?.username || "탈퇴한 사용자"}님에게 답글
+                                    </Typography>
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleCancelReply}
+                                        sx={{ ml: 0.5 }}
+                                    >
+                                        <CloseIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            )}
+                            <TextField
+                                id="comment-input"
+                                fullWidth
+                                placeholder={replyTo !== null ? "답글 작성..." : "댓글 작성..."}
+                                value={commentInput}
+                                onChange={handleCommentInputChange}
+                                onKeyDown={handleCommentKeyDown}
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '20px'
+                                    }
+                                }}
+                            />
+                            <IconButton
+                                color="primary"
+                                onClick={handleCommentSubmit}
+                                disabled={!commentInput.trim()}
+                                sx={{ ml: 1 }}
+                            >
+                                <SendIcon />
+                            </IconButton>
+                        </Box>
+                    </Paper>
+                </Box>
+            )}
 
             {/* 이미지 확대 다이얼로그 */}
             <Dialog
@@ -703,7 +745,7 @@ function ArchiveDetail() {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Container>
+        </Box>
     );
 }
 
@@ -716,7 +758,7 @@ const CommentItem = ({
                      }: {
     comment: CommentData,
     currentUserId: string | null,
-    onReplyClick: (id: number) => void,
+    onReplyClick: (id: number, username: string) => void,
     onDeleteComment: (id: number) => void
 }) => {
     const formatRelativeTime = (dateString: string) => {
@@ -743,20 +785,24 @@ const CommentItem = ({
     };
 
     return (
-        <ListItem alignItems="flex-start" sx={{ py: 1 }}>
+        <ListItem
+            alignItems="flex-start"
+            sx={{ py: 1 }}
+            data-comment-id={comment.id}
+        >
             <ListItemAvatar>
                 <Avatar
                     src={comment.profileUrl}
-                    alt={comment.username}
+                    alt={comment.username || "탈퇴한 사용자"}
                 >
-                    {!comment.profileUrl && comment.username?.charAt(0)}
+                    {!comment.profileUrl && (comment.username ? comment.username.charAt(0) : "탈")}
                 </Avatar>
             </ListItemAvatar>
 
             <Box sx={{ width: '100%' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                     <Box component="span" sx={{ fontWeight: 'bold', mr: 1 }}>
-                        {comment.username}
+                        {comment.username ? comment.username : "탈퇴한 사용자입니다"}
                     </Box>
                     <Box component="span" sx={{ typography: 'caption', color: 'text.secondary' }}>
                         {formatRelativeTime(comment.regDate)}
@@ -768,13 +814,16 @@ const CommentItem = ({
                 </Box>
 
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Button
-                        size="small"
-                        onClick={() => onReplyClick(comment.id)}
-                        sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
-                    >
-                        답글 달기
-                    </Button>
+                    {/* 사용자 이름이 있는 경우에만 답글 달기 버튼 표시 */}
+                    {comment.username && (
+                        <Button
+                            size="small"
+                            onClick={() => onReplyClick(comment.id, comment.username)}
+                            sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                        >
+                            답글 달기
+                        </Button>
+                    )}
 
                     {comment.userId === currentUserId && (
                         <Button
@@ -796,14 +845,14 @@ const CommentItem = ({
                                 <Avatar
                                     sx={{ width: 24, height: 24, mr: 1 }}
                                     src={reply.profileUrl}
-                                    alt={reply.username}
+                                    alt={reply.username || "탈퇴한 사용자"}
                                 >
-                                    {!reply.profileUrl && reply.username?.charAt(0)}
+                                    {!reply.profileUrl && (reply.username ? reply.username.charAt(0) : "탈")}
                                 </Avatar>
                                 <Box sx={{ width: '100%' }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                                        <Box component="span" sx={{ fontWeight: 'bold', mr: 1, typography: 'body2' }}>
-                                            {reply.username}
+                                        <Box component="span" sx={{ fontWeight: 'bold', mr: 1 }}>
+                                            {reply.username ? reply.username : "탈퇴한 사용자입니다"}
                                         </Box>
                                         <Box component="span" sx={{ typography: 'caption', color: 'text.secondary' }}>
                                             {formatRelativeTime(reply.regDate)}
@@ -814,16 +863,29 @@ const CommentItem = ({
                                         {reply.content}
                                     </Box>
 
-                                    {reply.userId === currentUserId && (
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            onClick={() => onDeleteComment(reply.id)}
-                                            sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
-                                        >
-                                            삭제
-                                        </Button>
-                                    )}
+                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                        {/* 사용자 이름이 있는 경우에만 답글 달기 버튼 표시 */}
+                                        {reply.username && (
+                                            <Button
+                                                size="small"
+                                                onClick={() => onReplyClick(comment.id, comment.username)}
+                                                sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                                            >
+                                                답글 달기
+                                            </Button>
+                                        )}
+
+                                        {reply.userId === currentUserId && (
+                                            <Button
+                                                size="small"
+                                                color="error"
+                                                onClick={() => onDeleteComment(reply.id)}
+                                                sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                                            >
+                                                삭제
+                                            </Button>
+                                        )}
+                                    </Box>
                                 </Box>
                             </Box>
                         ))}

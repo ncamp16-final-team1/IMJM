@@ -673,12 +673,12 @@ function SalonDetail() {
                                             {renderStars(review.score)}
                                         </div>
                                         <div className="review-user">
-                                            {review.user_nickname} | {formatTimeAgo(review.reg_date)}
+                                            {review.user_nickname ? review.user_nickname : "탈퇴한 회원입니다"} | {formatTimeAgo(review.reg_date)}
                                         </div>
                                     </div>
 
                                     <div className="review-content">
-                                        <p>{review.content}</p>
+                                    <p>{review.content}</p>
                                     </div>
 
                                     {review.photos && review.photos.length > 0 && (
