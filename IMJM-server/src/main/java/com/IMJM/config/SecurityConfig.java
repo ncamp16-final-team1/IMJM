@@ -104,6 +104,8 @@ public class SecurityConfig {
                                 ,"/api/archive/**"
                                 ,"/api/review/**"
                                 ,"/api/review-reply/**"
+                                ,"/api/review-reply/**"
+                                ,"/api/user/check-nickname**"
                         ).permitAll()
                         .requestMatchers("/api/admin/check-login").authenticated()
                         .anyRequest().authenticated()
