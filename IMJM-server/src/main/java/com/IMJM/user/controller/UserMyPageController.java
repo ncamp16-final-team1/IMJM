@@ -31,7 +31,6 @@ public class UserMyPageController {
 
     private final MyPageService myPageService;
 
-    // 예약리스트 조회
     @GetMapping("/reservations")
     public ResponseEntity<List<UserReservationResponseDto>> getUserReservations(
             @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
@@ -41,7 +40,6 @@ public class UserMyPageController {
         return ResponseEntity.ok(reservations);
     }
 
-    // 리뷰 작성
     @PostMapping(value = "/review-save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveUserReview(
             @RequestPart("reviewData") ReviewSaveRequestDto reviewSaveRequestDto,
@@ -93,10 +91,8 @@ public class UserMyPageController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            // 예외 로깅
             log.error("리뷰 수정 중 오류 발생: {}", e.getMessage(), e);
 
-            // 에러 타입에 따른 응답 생성
             HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
             String message = "리뷰 수정 중 오류가 발생했습니다";
 
@@ -155,8 +151,7 @@ public class UserMyPageController {
         }
     }
 
-
-    // 예약 상세조회
+    
     @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<ReservationDetailResponseDto> getReservationDetail(@PathVariable Long reservationId) {
 
