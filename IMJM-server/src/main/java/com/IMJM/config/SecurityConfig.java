@@ -102,6 +102,7 @@ public class SecurityConfig {
                                 ,"/api/user/location"
                                 ,"/api/salon/**"
                                 ,"/api/archive/**"
+                                ,"/api/archive"
                                 ,"/api/review/**"
                                 ,"/api/review-reply/**"
                                 ,"/api/review-reply/**"

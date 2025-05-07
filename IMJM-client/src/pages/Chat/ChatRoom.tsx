@@ -66,42 +66,54 @@ const ChatRoom: React.FC = () => {
         if (!roomId || !userId) return;
 
         const handleNewMessage = (messageData: ChatMessageDto) => {
+            console.log("=== 새 메시지 수신 ===", messageData);
+
             if (isDeleting) {
                 return;
             }
 
             if (messageData.error) {
-                return; // 삭제 중인 경우 모든 에러 메시지 무시
+                return;
             }
 
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prevMessages => {
-                    const isDuplicate = prevMessages.some(msg =>
-                        msg.id === messageData.id ||
-                        (msg.message === messageData.message &&
-                            msg.senderType === messageData.senderType &&
-                            Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000)
-                    );
-
-                    if (isDuplicate) {
-                        return prevMessages.map(msg =>
-                            (msg.id === messageData.id ||
-                                (msg.message === messageData.message &&
-                                    msg.senderType === messageData.senderType &&
-                                    Math.abs(new Date(msg.sentAt).getTime() - new Date(messageData.sentAt).getTime()) < 5000))
-                                ? messageData : msg
-                        );
-                    } else {
-                        const newMessages = [...prevMessages, messageData];
-                        return newMessages;
+                    // 중복 체크 로직 개선
+                    // 1. 정확히 같은 ID를 가진 메시지 체크
+                    const exactIdMatch = prevMessages.some(msg => msg.id === messageData.id);
+                    if (exactIdMatch) {
+                        console.log("정확히 같은 ID의 메시지가 이미 존재함:", messageData.id);
+                        return prevMessages;
                     }
+
+                    // 2. 내가 보낸 메시지이면서 내용과 시간이 유사한 메시지 체크 (더 엄격한 조건)
+                    if (messageData.senderType === 'USER' && messageData.senderId === userId) {
+                        const similarMessage = prevMessages.find(msg =>
+                            msg.senderType === 'USER' &&
+                            msg.senderId === userId &&
+                            msg.message === messageData.message &&
+                            // 임시 ID를 가진 메시지 (클라이언트에서 생성한 것)
+                            msg.id > 1000000000
+                        );
+
+                        if (similarMessage) {
+                            console.log("임시 ID를 가진 유사 메시지 발견, 업데이트:", similarMessage.id);
+                            // 임시 메시지를 서버 메시지로 교체
+                            return prevMessages.map(msg =>
+                                msg === similarMessage ? messageData : msg
+                            );
+                        }
+                    }
+
+                    // 중복이 아닌 경우 새 메시지 추가
+                    console.log("새 메시지 추가");
+                    return [...prevMessages, messageData];
                 });
 
                 if (messageData.senderType !== 'USER') {
                     ChatService.markMessagesAsRead(Number(roomId), 'USER')
                         .catch(err => console.error("메시지 읽음 처리 실패:", err));
                 }
-            } else {
             }
         };
 
@@ -289,6 +301,7 @@ const ChatRoom: React.FC = () => {
     };
 
     const handleSendMessage = async () => {
+        console.log("=== 메시지 전송 시작 ===");
         if ((!newMessage.trim() && selectedFiles.length === 0) || !chatRoom || !userId) return;
 
         setLoading(true);
@@ -313,7 +326,7 @@ const ChatRoom: React.FC = () => {
             }
 
             const tempMessage: ChatMessageDto = {
-                id: Date.now(), // 임시 ID
+                id: Date.now(),
                 chatRoomId: chatRoom.id,
                 senderType: 'USER',
                 senderId: userId,
@@ -325,7 +338,12 @@ const ChatRoom: React.FC = () => {
                 photos: photoAttachments
             };
 
-            setMessages(prev => [...prev, tempMessage]);
+            console.log("생성된 로컬 메시지:", tempMessage);
+
+            setMessages(prev => {
+                console.log("메시지 추가 전 메시지 수:", prev.length);
+                return [...prev, tempMessage];
+            });
 
             setNewMessage('');
             setSelectedFiles([]);
@@ -341,13 +359,13 @@ const ChatRoom: React.FC = () => {
 
             console.log("메시지 전송 응답:", response);
 
-            if (response && response.id && response.id !== tempMessage.id) {
-                setMessages(prev =>
-                    prev.map(msg =>
-                        msg.id === tempMessage.id ? response : msg
-                    )
-                );
-            }
+            // if (response && response.id && response.id !== tempMessage.id) {
+            //     setMessages(prev =>
+            //         prev.map(msg =>
+            //             msg.id === tempMessage.id ? response : msg
+            //         )
+            //     );
+            // }
 
         } catch (error) {
             console.error('메시지 전송 실패:', error);

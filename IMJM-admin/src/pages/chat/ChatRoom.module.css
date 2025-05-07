@@ -160,3 +160,36 @@
     white-space: pre-line;
     border-top: 1px dashed #666;
 }
+
+/* 번역 버튼 스타일 추가 */
+.translateButton {
+    margin-top: 4px !important;
+    margin-bottom: 2px !important;
+    padding: 0 !important;
+    font-size: 0.75rem !important;
+    text-transform: none !important;
+    color: #1976d2 !important;
+    min-width: 0 !important;
+    justify-content: flex-start !important;
+}
+
+.translateButton:hover {
+    background-color: transparent !important;
+    text-decoration: underline !important;
+}
+
+.translateButton:disabled {
+    color: #999 !important;
+    text-decoration: none !important;
+}
+
+.userMessage .translateButton {
+    color: #1976d2 !important;
+    justify-content: flex-end !important;
+}
+
+.translationError {
+    font-size: 13px;
+    color: #e57373;
+    margin-top: 4px;
+}

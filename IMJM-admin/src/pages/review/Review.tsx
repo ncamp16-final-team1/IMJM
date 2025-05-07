@@ -275,26 +275,29 @@ function Review() {
                       </Box>
 
                       {/* 태그들 */}
-                      <Box>
-                        {selectedReview.reviewTag.split(',').map((tag, idx) => (
-                          <Box
-                            key={idx}
-                            sx={{
-                              backgroundColor: "#f5f5f5",
-                              color: "#666",
-                              borderRadius: "20px",
-                              px: 0.8,
-                              py: 0.4,
-                              display: "inline-block",
-                              marginRight: 1,
-                              marginBottom: 1,
-                              fontSize: "12px",
-                            }}
-                          >
-                            #{tag.trim()} {/* trim()을 사용하여 앞뒤 공백 제거 */}
-                          </Box>
-                        ))}
-                      </Box>
+                      {selectedReview.reviewTag &&
+                      selectedReview.reviewTag.trim() !== "" && (
+                        <Box>
+                          {selectedReview.reviewTag.split(",").map((tag, idx) => (
+                            <Box
+                              key={idx}
+                              sx={{
+                                backgroundColor: "#f5f5f5",
+                                color: "#666",
+                                borderRadius: "20px",
+                                px: 0.8,
+                                py: 0.4,
+                                display: "inline-block",
+                                marginRight: 1,
+                                marginBottom: 1,
+                                fontSize: "12px",
+                              }}
+                            >
+                              #{tag.trim()}
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
                     </>
                   ) : (
                     <Typography align="center">리뷰를 선택하세요.</Typography>
