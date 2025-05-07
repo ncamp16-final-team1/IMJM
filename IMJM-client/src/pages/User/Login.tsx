@@ -3,6 +3,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import logoImage from '../../assets/images/logo.png';
 import { API_BASE_URL } from '../../config';
+import { useEffect } from 'react';
 
 const Login = () => {
 
@@ -22,6 +23,15 @@ const Login = () => {
         window.location.href = `${API_BASE_URL}/oauth2/authorization/apple`;
     };
 
+    useEffect(() => {
+        fetch("/oauth2/redirect")
+            .then((res) => res.json())
+            .then((data) => {
+                document.cookie = `Authorization=${data.token}; path=/; secure; samesite=None`;
+                window.location.replace(data.redirectUrl); // 프론트에서 URL로 리디렉션
+            });
+    }, []);
+    
     return (
         <Container maxWidth="xs" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
             {/* 중앙 로그인 콘텐츠 */}
