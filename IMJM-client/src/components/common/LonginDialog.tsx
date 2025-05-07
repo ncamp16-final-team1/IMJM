@@ -20,6 +20,7 @@ interface LoginDialogProps {
     message?: string;
     cancelText?: string;
     loginText?: string;
+    onAfterLogin?: () => void; // 추가된 prop
 }
 
 const LoginDialog = ({

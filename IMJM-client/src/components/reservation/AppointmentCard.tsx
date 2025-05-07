@@ -163,10 +163,22 @@ export default function AppointmentCard({
                 </Box>
 
                 <Avatar
-                    variant="rounded"
-                    src={salonPhotoUrl}
-                    sx={{ width: '300px', height: '150px', ml: 2 }}
-                />
+    variant="rounded"
+    src={salonPhotoUrl}
+    sx={{
+        width: {
+            xs: '150px', 
+            sm: '200px',
+            md: '300px', 
+        },
+        height: {
+            xs: '75px', 
+            sm: '100px', 
+            md: '150px', 
+        },
+        ml: 2, 
+    }}
+/>
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

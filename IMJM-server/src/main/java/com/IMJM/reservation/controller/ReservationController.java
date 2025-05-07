@@ -27,8 +27,13 @@ public class ReservationController {
     private final ReservationStylistService reservationStylistService;
 
     @GetMapping("/stylists/{salonId}")
-    public ResponseEntity<?> getStylistsBySalon(@PathVariable String salonId) {
-        List<ReservationStylistDto> stylists = reservationStylistService.getStylistsBySalon(salonId);
+    public ResponseEntity<?> getStylistsBySalon(@PathVariable String salonId,
+                                                @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto
+    ) {
+
+        String userId = customOAuth2UserDto.getId();
+
+        List<ReservationStylistDto> stylists = reservationStylistService.getStylistsBySalon(salonId, userId);
         return stylists.isEmpty()
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.ok(stylists);
