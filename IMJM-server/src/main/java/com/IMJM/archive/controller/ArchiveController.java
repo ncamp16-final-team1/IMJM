@@ -29,17 +29,17 @@ public class ArchiveController {
 
     private final ArchiveService archiveService;
 
-    @GetMapping("/")
-    public PageResponseDto<ArchiveListDto> getArchiveList(  // ResponseEntity 제거
+    @GetMapping
+    public PageResponseDto<ArchiveListDto> getArchiveList(
                                                             @RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "12") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("regDate").descending());
-        return archiveService.getArchiveList(pageable);  // 직접 DTO 반환
+        return archiveService.getArchiveList(pageable);
     }
 
-    @PostMapping("/")
-    public Long createArchive(  // ResponseEntity 제거
+    @PostMapping
+    public Long createArchive(
                                 @RequestPart("content") String content,
                                 @RequestPart(value = "photos", required = false) List<MultipartFile> photos,
                                 @AuthenticationPrincipal CustomOAuth2UserDto customOAuth2UserDto) {
