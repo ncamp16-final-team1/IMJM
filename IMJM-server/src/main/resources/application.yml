@@ -38,6 +38,7 @@ spring:
     virtual-host: /
 
 server:
+  timezone: Asia/Seoul
   port: 8080
   servlet:
     encoding:
