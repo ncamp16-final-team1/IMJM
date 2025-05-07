@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -53,13 +54,16 @@ public class AdminJoinController {
 
     @PostMapping("/logout")
     public void logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("AdminToken", null);
-        cookie.setMaxAge(0); // 즉시 만료
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
+        ResponseCookie cookie = ResponseCookie.from("AdminToken", null)
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/")
+            .domain("imjm-hair-partner.com")
+            .maxAge(0) // 즉시 만료
+            .build();
 
-        response.addCookie(cookie);
-        System.out.println("logout success");
+        response.setHeader("Set-Cookie", cookie.toString());
     }
 
     @GetMapping("/salon-photos")
