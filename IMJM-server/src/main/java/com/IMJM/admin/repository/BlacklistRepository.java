@@ -13,4 +13,6 @@ public interface BlacklistRepository extends JpaRepository<Blacklist, BlacklistI
     List<Blacklist> findBySalonId(String salonId);
 
     Optional<Blacklist> findByUserAndSalon(Users user, Salon salon);
+
+    boolean existsByUser_Id(String userId);
 }

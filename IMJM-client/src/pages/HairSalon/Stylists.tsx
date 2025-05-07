@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Box, Typography, Avatar } from '@mui/material';
 import { getStylistsBySalonId } from '../../services/reservation/getStylistsBySalonId';
 import LoginDialog from '../../components/common/LonginDialog';
+import BlacklistedDialog from '../../components/common/BlacklistedDialog';
 
 export interface Stylist {
   salonId: string;
@@ -13,6 +14,7 @@ export interface Stylist {
   introduction: string;
   profile: string;
   salonName: string;
+  blacklisted: boolean;
 }
 
 const Stylists = () => {
@@ -23,8 +25,10 @@ const Stylists = () => {
   const [openLoginDialog, setOpenLoginDialog] = useState(false);
   const [selectedStylistId, setSelectedStylistId] = useState<number | null>(null);
   const [salonName, setSalonName] = useState('');
+  const [openBlacklistedDialog, setOpenBlacklistedDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSalonBlacklisted, setIsSalonBlacklisted] = useState(false);
 
-  // 로그인 상태 확인
   const checkLoginStatus = async (): Promise<boolean> => {
     try {
       const response = await axios.get('/api/user/check-login');
@@ -35,8 +39,12 @@ const Stylists = () => {
     }
   };
 
-  // 예약 클릭 핸들러
   const handleReservationClick = async (stylistId: number) => {
+    if (isSalonBlacklisted) {
+      setOpenBlacklistedDialog(true);
+      return;
+    }
+
     const isLoggedIn = await checkLoginStatus();
     const selectedStylist = stylists.find((s) => s.stylistId === stylistId);
 
@@ -76,20 +84,39 @@ const Stylists = () => {
 
   useEffect(() => {
     if (!salonId) {
-
       return;
     }
-
+    
+    setIsLoading(true);
+    
     getStylistsBySalonId(salonId)
-    .then((data) => {
-      setStylists(data);
-      // 첫 번째 스타일리스트 데이터에서 살롱 이름 가져오기
-      if (data.length > 0 && data[0].salonName) {
-        setSalonName(data[0].salonName);
-      }
-    })
-    .catch((error) => console.error('스타일리스트 조회 실패:', error));
-}, [salonId]);
+      .then((data) => {
+        setStylists(data);
+
+        if (data.length > 0) {
+          setSalonName(data[0].salonName);
+          
+          if (data.some(stylist => stylist.blacklisted)) {
+            setIsSalonBlacklisted(true);
+            setOpenBlacklistedDialog(true);
+          }
+        }
+        
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('스타일리스트 조회 실패:', error);
+        setIsLoading(false);
+      });
+  }, [salonId]);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ px: 4, py: 2, textAlign: 'center' }}>
+        <Typography>로딩 중...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ px: 4, py: 2 }}>
@@ -156,6 +183,12 @@ const Stylists = () => {
         onClose={handleCloseLoginDialog}
         onLogin={handleGoToLogin}
         message="예약을 하기 위해서는 로그인이 필요합니다."
+      />
+      <BlacklistedDialog
+        open={openBlacklistedDialog}
+        onClose={() => setOpenBlacklistedDialog(false)}
+        redirectUrl="/salon"
+        redirectLabel="다른 살롱 보기"
       />
     </Box>
   );

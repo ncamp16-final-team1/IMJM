@@ -1,5 +1,6 @@
 package com.IMJM.reservation.service;
 
+import com.IMJM.admin.repository.BlacklistRepository;
 import com.IMJM.admin.repository.CouponRepository;
 import com.IMJM.admin.repository.ReservationCouponRepository;
 import com.IMJM.admin.repository.ServiceMenuRepository;
@@ -48,10 +49,14 @@ public class ReservationStylistService {
 
     private final ChatService chatService;
 
+    private final BlacklistRepository blacklistRepository;
+
     @Transactional(readOnly = true)
-    public List<ReservationStylistDto> getStylistsBySalon(String salonId) {
+    public List<ReservationStylistDto> getStylistsBySalon(String salonId, String userId) {
+        boolean isBlacklisted = blacklistRepository.existsByUser_Id(userId);
+
         return adminStylistRepository.findBySalonId(salonId).stream()
-                .map(ReservationStylistDto::new)
+                .map(stylist -> new ReservationStylistDto(stylist, isBlacklisted))
                 .collect(Collectors.toList());
     }
 

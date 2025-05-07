@@ -18,9 +18,10 @@ public class ReservationStylistDto {
     private String introduction;
     private String profile;
     private String salonName;
+    private boolean isBlacklisted;
 
     @Builder
-    public ReservationStylistDto(AdminStylist adminStylist) {
+    public ReservationStylistDto(AdminStylist adminStylist, boolean isBlacklisted) {
         this.salonId = adminStylist.getSalon().getId();
         this.stylistId = adminStylist.getStylistId();
         this.name = adminStylist.getName();
@@ -28,6 +29,7 @@ public class ReservationStylistDto {
         this.introduction = adminStylist.getIntroduction();
         this.profile = adminStylist.getProfile();
         this.salonName = adminStylist.getSalon().getName();
+        this.isBlacklisted = isBlacklisted;
     }
 
 }
