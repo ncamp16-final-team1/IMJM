@@ -65,31 +65,46 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     const handleTranslateRequest = async (message: ChatMessage) => {
         const messageId = message.id;
 
-        if (translations[messageId] && !translations[messageId].isLoading) {
-            if (!translations[messageId].error && translations[messageId].text) {
-                setTranslations(prev => {
-                    const newTranslations = { ...prev };
-                    delete newTranslations[messageId];
-                    return newTranslations;
-                });
+        // 이미 번역 상태가 있는 경우
+        if (translations[messageId]) {
+            // 번역 로딩 중이 아니고
+            if (!translations[messageId].isLoading) {
+                // 에러가 없고 번역 텍스트가 있으면 (번역이 완료된 상태)
+                if (!translations[messageId].error && translations[messageId].text) {
+                    // 번역을 숨김 (번역 상태 제거)
+                    setTranslations(prev => {
+                        const newTranslations = { ...prev };
+                        delete newTranslations[messageId];
+                        return newTranslations;
+                    });
+                    return;
+                }
+
+                // 에러가 있으면 다시 번역 시도
+                if (translations[messageId].error) {
+                    setTranslations(prev => ({
+                        ...prev,
+                        [messageId]: { isLoading: true, text: null, error: null }
+                    }));
+
+                    try {
+                        await requestTranslation(message);
+                    } catch (error) {
+                        console.error('번역 요청 실패:', error);
+                        setTranslations(prev => ({
+                            ...prev,
+                            [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+                        }));
+                    }
+                }
                 return;
             }
-
-            if (translations[messageId].error) {
-                setTranslations(prev => ({
-                    ...prev,
-                    [messageId]: { isLoading: true, text: null, error: null }
-                }));
-
-                try {
-                    await requestTranslation(message);
-                } catch (error) {
-                    console.error('번역 요청 실패:', error);
-                }
-            }
+            // 로딩 중이면 아무것도 하지 않음
             return;
         }
 
+        // 번역 상태가 없는 경우 (첫 번역 요청)
+        console.log("번역 요청:", message.id, message.message);
         setTranslations(prev => ({
             ...prev,
             [messageId]: { isLoading: true, text: null, error: null }
@@ -108,8 +123,11 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
     const requestTranslation = async (message: ChatMessage) => {
         const messageId = message.id;
+        // 언어 코드 확인
         const sourceLang = message.senderType === 'USER' ? userLanguage : salonLanguage;
         const targetLang = message.senderType === 'USER' ? salonLanguage : userLanguage;
+
+        console.log("번역 요청 언어:", { sourceLang, targetLang });
 
         try {
             const translatedText = await TranslationService.translate(
@@ -118,6 +136,9 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 targetLang
             );
 
+            console.log("번역 결과:", translatedText);
+
+            // 번역 결과 저장
             setTranslations(prev => ({
                 ...prev,
                 [messageId]: { isLoading: false, text: translatedText, error: null }
@@ -561,7 +582,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                         {translationState.error}
                                     </Typography>
                                 )}
-
                                 <Typography className={styles.messageTime}>
                                     {new Date(message.sentAt).toLocaleTimeString([], {
                                         hour: '2-digit',
