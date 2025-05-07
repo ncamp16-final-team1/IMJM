@@ -124,10 +124,10 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     const requestTranslation = async (message: ChatMessage) => {
         const messageId = message.id;
 
-        // 메시지 및 번역 데이터 로깅 추가
-        console.log("번역 요청 메시지:", message);
+        // 디버깅을 위한 로그 추가
+        console.log("번역 요청 메시지 전체:", message);
 
-        // 서버에서 이미 번역된 메시지가 있는 경우
+        // 서버에서 이미 번역된 메시지가 있는지 먼저 확인
         if (message.translatedMessage && message.translationStatus === "completed") {
             console.log("서버 번역 사용:", message.translatedMessage);
             setTranslations(prev => ({
@@ -148,30 +148,51 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
         console.log("번역 요청 언어:", { sourceLang, targetLang });
 
+        // 빈 메시지 체크
+        if (!message.message || message.message.trim() === '') {
+            setTranslations(prev => ({
+                ...prev,
+                [messageId]: { isLoading: false, text: "", error: null }
+            }));
+            return;
+        }
+
         try {
             // 번역 서비스 호출
             const translatedText = await TranslationService.translate(
-                message.message,
+                message.translatedMessage,
                 sourceLang,
                 targetLang
             );
 
             console.log("번역 결과:", translatedText);
 
-            if (!translatedText) {
-                throw new Error("번역 결과가 비어있습니다.");
+            // 번역 결과가 있으면 저장
+            if (translatedText) {
+                setTranslations(prev => ({
+                    ...prev,
+                    [messageId]: { isLoading: false, text: translatedText, error: null }
+                }));
+            } else {
+                // 번역 결과가 없으면 오류 처리
+                setTranslations(prev => ({
+                    ...prev,
+                    [messageId]: {
+                        isLoading: false,
+                        text: null,
+                        error: '번역 결과를 가져올 수 없습니다'
+                    }
+                }));
             }
-
-            // 번역 결과 저장
-            setTranslations(prev => ({
-                ...prev,
-                [messageId]: { isLoading: false, text: translatedText, error: null }
-            }));
         } catch (error) {
             console.error('번역 요청 실패:', error);
             setTranslations(prev => ({
                 ...prev,
-                [messageId]: { isLoading: false, text: null, error: '번역 요청에 실패했습니다.' }
+                [messageId]: {
+                    isLoading: false,
+                    text: null,
+                    error: '번역 요청에 실패했습니다'
+                }
             }));
         }
     };
