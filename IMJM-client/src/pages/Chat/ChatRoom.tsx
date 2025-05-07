@@ -35,6 +35,8 @@ interface ChatRoomInfo {
     salonName: string;
     userLanguage: string;
     salonLanguage: string;
+    userProfileUrl: string;
+    salonProfileUrl: string;
 }
 
 interface TranslationState {
@@ -150,7 +152,9 @@ const ChatRoom: React.FC = () => {
                     salonId: roomResponse.data.salonId,
                     salonName: roomResponse.data.salonName,
                     userLanguage: roomResponse.data.userLanguage,
-                    salonLanguage: roomResponse.data.salonLanguage
+                    salonLanguage: roomResponse.data.salonLanguage,
+                    userProfileUrl: roomResponse.data.userProfileUrl,
+                    salonProfileUrl: roomResponse.data.salonProfileUrl
                 });
 
                 const chatMessages = await ChatService.getChatMessages(Number(roomId));
@@ -160,6 +164,7 @@ const ChatRoom: React.FC = () => {
 
                 setLoading(false);
             } catch (err) {
+                console.error('채팅방 정보 로딩 오류:', err); // 추가된 로그
                 navigate('/chat');
                 setLoading(false);
             }
@@ -445,7 +450,11 @@ const ChatRoom: React.FC = () => {
                     return (
                         <div key={message.id} className={messageClassName}>
                             {!isUserMessage && (
-                                <Avatar className={styles.messageAvatar} alt={chatRoom?.salonName} />
+                                <Avatar
+                                    className={styles.messageAvatar}
+                                    alt={chatRoom?.salonName}
+                                    src={chatRoom?.salonProfileUrl} // 미용실 프로필 이미지 URL 추가
+                                />
                             )}
 
                             <Paper elevation={0} className={styles.messageContent}>

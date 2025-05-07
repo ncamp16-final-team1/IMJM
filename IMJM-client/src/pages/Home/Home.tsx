@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
-import { Card, CardContent, CardMedia, Typography, Box, Rating } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
+import StarIcon from '@mui/icons-material/Star';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import PlaceIcon from '@mui/icons-material/Place';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import promoBanner from '../../assets/images/promo-banner-wide.png';
 
 interface TrendingStyle {
     id: number;
@@ -30,9 +35,7 @@ function Home(): React.ReactElement {
     useEffect(() => {
         const fetchTrendingStyles = async () => {
             try {
-                // 좋아요 순으로 정렬된 아카이브 가져오기
                 const response = await axios.get('/api/archive/trending');
-                // 응답 데이터의 contents 필드 사용
                 setTrendingStyles(response.data.contents || []);
             } catch (error) {
                 console.error('Failed to fetch trending styles:', error);
@@ -68,59 +71,97 @@ function Home(): React.ReactElement {
 
     return (
         <div className="home-page">
+            {/* 프로모션 배너 */}
+            <section className="promo-banner" style={{ backgroundImage: `url(${promoBanner})` }}>
+                <Button
+                    variant="contained"
+                    className="promo-button"
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={() => navigate('/salon')}
+                >
+                    Find hair salon
+                </Button>
+            </section>
 
             {/* Trending Styles */}
-            <section className="trending-styles">
-                <h2>Trending Styles</h2>
+            <section className="section">
+                <div className="section-title">
+                    <TrendingUpIcon className="section-icon" />
+                    <Typography variant="h5">Trending Styles</Typography>
+                </div>
+
                 {loading ? (
-                    <div className="loading">로딩 중...</div>
+                    <div className="loading-container">
+                        <div className="loading-spinner"></div>
+                        <p>로딩 중...</p>
+                    </div>
                 ) : trendingStyles.length === 0 ? (
-                    <div className="no-data">표시할 스타일이 없습니다.</div>
+                    <div className="empty-state">표시할 스타일이 없습니다.</div>
                 ) : (
-                    <div className="styles-grid">
+                    <div className="card-grid">
                         {trendingStyles.map((style) => (
                             <div
                                 key={style.id}
                                 className="style-card"
                                 onClick={() => handleCardClick(style.id)}
-                                style={{ cursor: 'pointer' }} // 마우스 커서 스타일 추가
                             >
-                                {style.thumbnailUrl && (
-                                    <img
-                                        src={style.thumbnailUrl}
-                                        alt={`Style ${style.id}`}
-                                        className="style-image"
-                                    />
-                                )}
+                                <div className="card-image-container">
+                                    {style.thumbnailUrl && (
+                                        <img
+                                            src={style.thumbnailUrl}
+                                            alt={`Style ${style.id}`}
+                                            className="card-image"
+                                        />
+                                    )}
+                                    <div className="card-badge">Hot</div>
+                                </div>
+                                <div className="card-hover-effect"></div>
                             </div>
                         ))}
                     </div>
                 )}
             </section>
 
-            <section className="popular-salons">
-                <h2>Popular Hair Salons</h2>
+            {/* Popular Salons */}
+            <section className="section">
+                <div className="section-title">
+                    <PlaceIcon className="section-icon" />
+                    <Typography variant="h5">Best Salons</Typography>
+                </div>
 
-                {loading && <div className="loading">로딩 중...</div>}
-                {error && <div className="error">{error}</div>}
-
-                {!loading && !error && (
-                    <div className="popular-salons-grid">
+                {loading ? (
+                    <div className="loading-container">
+                        <div className="loading-spinner"></div>
+                        <p>로딩 중...</p>
+                    </div>
+                ) : error ? (
+                    <div className="error-state">{error}</div>
+                ) : (
+                    <div className="card-grid">
                         {popularSalons.map((salon) => (
                             <div
                                 key={salon.id}
-                                className="popular-salon-card"
+                                className="salon-card"
                                 onClick={() => handleSalonCardClick(salon.id)}
-                                style={{ cursor: 'pointer' }}
                             >
-                                <img
-                                    src={salon.photoUrl || '/default-salon.jpg'}
-                                    alt={salon.name}
-                                    className="salon-image"
-                                />
-                                <div className="salon-name">
-                                    {salon.name}
+                                <div className="card-image-container">
+                                    <img
+                                        src={salon.photoUrl || '/default-salon.jpg'}
+                                        alt={salon.name}
+                                        className="card-image"
+                                    />
+                                    {salon.score > 0 && (
+                                        <div className="card-rating">
+                                            <StarIcon className="rating-icon" />
+                                            <span>{salon.score.toFixed(1)}</span>
+                                        </div>
+                                    )}
                                 </div>
+                                <div className="card-content">
+                                    <h3 className="card-title">{salon.name}</h3>
+                                    <p className="card-subtitle">{salon.address}</p>
+                                </div>
+                                <div className="card-hover-effect"></div>
                             </div>
                         ))}
                     </div>

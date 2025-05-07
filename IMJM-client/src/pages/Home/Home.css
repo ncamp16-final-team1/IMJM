@@ -1,123 +1,245 @@
-.trending-styles {
-    padding: 20px 0;
+body, .home-page {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
 }
 
-.trending-styles h2 {
-    margin-bottom: 16px;
-    padding-left: 16px;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.styles-grid {
-    display: flex;
-    overflow-x: auto;
-    padding: 0 16px;
-    gap: 16px;
-}
-
-.styles-grid::-webkit-scrollbar {
-    display: none;
-}
-
-.style-card {
-    flex: 0 0 auto;
-    width: 160px;
-}
-
-.style-image {
+.promo-banner {
+    position: relative;
     width: 100%;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.style-info {
-    margin-top: 8px;
-}
-
-.style-username {
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.style-content {
-    font-size: 12px;
-    color: #666;
+    padding-top: 50%; /* 가로형 배너 비율 */
+    background-size: cover;
+    background-position: center;
+    border-radius: 20px;
+    margin-bottom: 30px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    box-shadow: 0 6px 20px rgba(253, 199, 191, 0.3);
 }
 
-.loading {
+.promo-content {
+    transform: translateY(-50%);
+    text-align: left;
+    color: white;
+    z-index: 1;
     padding: 20px;
-    text-align: center;
+    border-radius: 12px;
 }
 
-.style-card {
-    transition: transform 0.2s ease-in-out;
+.promo-button {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    background-color: white !important;
+    color: #F4B58E !important;
+    border-radius: 25px !important;
+    padding: 10px 24px !important;
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
 }
 
-.style-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.promo-button:hover {
+    box-shadow: 0 6px 10px rgba(94, 93, 93, 0.5) !important;
 }
 
-.popular-salons {
-    padding: 20px 0;
+.section {
+    padding: 20px;
+    margin-bottom: 30px;
 }
 
-.popular-salons h2 {
-    margin-bottom: 16px;
-    padding-left: 16px;
-    font-size: 20px;
+.section-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.section-title::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #FDC7BF;
+    border-radius: 3px;
+}
+
+.section-icon {
+    color: #FF9080;
+    margin-right: 10px;
+    font-size: 24px !important;
+}
+
+.section-title h5 {
+    margin: 0;
+    font-size: 24px;
     font-weight: bold;
+    color: #333;
+    font-family: 'Pretendard', sans-serif;
+
 }
 
-.popular-salons-grid {
+/* 카드 그리드 */
+.card-grid {
     display: flex;
     overflow-x: auto;
-    padding: 0 16px;
     gap: 16px;
+    padding: 4px;
+    padding-bottom: 16px;
+    margin: 0 -20px;
+    padding-left: 20px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-.popular-salons-grid::-webkit-scrollbar {
+.card-grid::-webkit-scrollbar {
     display: none;
 }
 
-.popular-salon-card {
+/* 스타일 카드 */
+.style-card, .salon-card {
     flex: 0 0 auto;
-    width: 160px;
-    transition: transform 0.2s ease-in-out;
+    width: 180px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    scroll-snap-align: start;
     cursor: pointer;
 }
 
-.popular-salon-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.style-card:hover, .salon-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 20px rgba(253, 199, 191, 0.4);
 }
 
-.popular-salon-card .salon-image {
+.card-image-container {
+    position: relative;
     width: 100%;
-    height: 160px;
+    height: 180px;
+    overflow: hidden;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 8px;
+    transition: transform 0.5s ease;
 }
 
-.salon-name {
-    text-align: center;
+.style-card:hover .card-image, .salon-card:hover .card-image {
+    transform: scale(1.08);
 }
 
-.salon-name {
+.card-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #FF9080;
+    color: white;
+    padding: 3px 8px;
+    font-size: 12px;
+    border-radius: 12px;
     font-weight: bold;
-    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(255, 144, 128, 0.3);
+}
+
+.card-rating {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #FF9080;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.rating-icon {
+    font-size: 14px !important;
+    margin-right: 3px;
+}
+
+.card-content {
+    padding: 12px;
+}
+
+.card-title {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: bold;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    color: #333;
 }
 
-.error {
-    padding: 20px;
+.card-subtitle {
+    margin: 0;
+    font-size: 12px;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-hover-effect {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: #FDC7BF;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.style-card:hover .card-hover-effect, .salon-card:hover .card-hover-effect {
+    transform: scaleX(1);
+}
+
+/* 로딩 상태 */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: #777;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid rgba(253, 199, 191, 0.3);
+    border-top-color: #FDC7BF;
+    animation: spin 1s infinite linear;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 빈 상태 & 에러 상태 */
+.empty-state, .error-state {
+    padding: 30px;
     text-align: center;
-    color: red;
+    color: #888;
+    background-color: #fafafa;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+.error-state {
+    color: #d32f2f;
+    background-color: #fff5f5;
 }
