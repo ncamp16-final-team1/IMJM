@@ -3,7 +3,7 @@ package com.IMJM.salon.dto;
 import com.IMJM.common.entity.ReviewPhotos;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -15,7 +15,7 @@ public class ReviewPhotosDto {
     private Long photoId;
     private String photoUrl;
     private int photoOrder;
-    private LocalDateTime uploadDate;
+    private OffsetDateTime uploadDate;
 
     public static ReviewPhotosDto getReviewPhotos(ReviewPhotos photo) {
         return ReviewPhotosDto.builder()

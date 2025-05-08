@@ -2,7 +2,7 @@ package com.IMJM.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -30,7 +30,7 @@ public class ChatMessage {
     private Boolean isRead = false;
 
     @Column(name = "sent_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime sentAt;
+    private OffsetDateTime sentAt;
 
     @Column(name = "translated_message", columnDefinition = "TEXT")
     private String translatedMessage;

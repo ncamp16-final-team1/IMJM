@@ -1,10 +1,9 @@
 package com.IMJM.common.entity;
 
-import com.IMJM.admin.dto.ReviewReplyDto;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -26,7 +25,7 @@ public class ReviewReply {
     private String content;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public void updateReviewReply (String content) {
         this.content = content;

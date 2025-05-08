@@ -2,7 +2,7 @@ package com.IMJM.chat.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -18,7 +18,7 @@ public class ChatMessageDto {
     private String senderId;    // 사용자 ID 또는 샵 ID
     private String message;
     private Boolean isRead;
-    private LocalDateTime sentAt;
+    private OffsetDateTime sentAt;
     private String translatedMessage;
     private String translationStatus;
     private List<ChatPhotoDto> photos;

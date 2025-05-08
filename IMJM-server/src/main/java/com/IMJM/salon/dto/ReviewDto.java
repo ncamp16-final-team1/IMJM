@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -15,7 +15,7 @@ public class ReviewDto {
     private Long id;
     private String userId;
     private String salonId;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private BigDecimal score;
     private String content;
     private String reviewTag;

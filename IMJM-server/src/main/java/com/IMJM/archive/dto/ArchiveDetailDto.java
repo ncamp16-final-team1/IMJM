@@ -1,7 +1,7 @@
 package com.IMJM.archive.dto;
 
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -19,7 +19,7 @@ public class ArchiveDetailDto {
     private String color;
     private String length;
     private String profileUrl;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private List<String> photoUrls;
     private List<ArchiveCommentDto> comments;
     private long likeCount;

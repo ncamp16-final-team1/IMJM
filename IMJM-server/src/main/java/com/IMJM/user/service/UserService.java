@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -99,7 +99,7 @@ public class UserService {
                     .user(user)
                     .usageType("SAVE")
                     .price(MEMBERSHIP_POINT)
-                    .useDate(LocalDateTime.now())
+                    .useDate(OffsetDateTime.now())
                     .content("Membership Points Earned")
                     .build();
 

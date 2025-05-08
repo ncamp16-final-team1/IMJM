@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +57,7 @@ public class AdminCouponService {
                 .startDate(couponDto.getStartDate().atStartOfDay())
                 .expiryDate(couponDto.getExpiryDate().atStartOfDay())
                 .isActive(couponDto.isIsActive())
-                .createdAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
                 .salon(salon)
                 .build();
 

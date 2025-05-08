@@ -2,7 +2,7 @@ package com.IMJM.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -31,10 +31,10 @@ public class TranslationCache {
     private String translatedText;
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "last_used_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime lastUsedAt;
+    private OffsetDateTime lastUsedAt;
 
     @Column(name = "use_count")
     private Integer useCount = 1;

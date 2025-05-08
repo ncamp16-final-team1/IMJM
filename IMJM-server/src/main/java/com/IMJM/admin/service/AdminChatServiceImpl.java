@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,7 +47,7 @@ public class AdminChatServiceImpl implements AdminChatRepository {
                 .senderType(messageDto.getSenderType())
                 .message(messageDto.getMessage())
                 .isRead(false)
-                .sentAt(LocalDateTime.now())
+                .sentAt(OffsetDateTime.now())
                 .build();
 
         ChatMessage savedMessage = adminChatMessageRepository.save(chatMessage);
@@ -56,7 +56,7 @@ public class AdminChatServiceImpl implements AdminChatRepository {
         List<ChatPhotos> savedPhotos = savePhotos(savedMessage, messageDto.getPhotos());
 
         // 채팅방 마지막 메시지 시간 업데이트
-        chatRoom.updateLastMessageTime(LocalDateTime.now());
+        chatRoom.updateLastMessageTime(OffsetDateTime.now());
         adminChatRoomRepository.save(chatRoom);
 
         // 메시지 DTO 변환
@@ -114,7 +114,7 @@ public class AdminChatServiceImpl implements AdminChatRepository {
                     ChatPhotos photo = ChatPhotos.builder()
                             .chatMessage(savedMessage)
                             .photoUrl(photoDto.getPhotoUrl())
-                            .uploadDate(LocalDateTime.now())
+                            .uploadDate(OffsetDateTime.now())
                             .build();
                     return adminChatPhotosRepository.save(photo);
                 })

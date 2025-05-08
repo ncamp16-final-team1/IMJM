@@ -3,7 +3,7 @@ package com.IMJM.admin.dto;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -19,7 +19,7 @@ public class CouponDto {
     private LocalDate startDate;
     private LocalDate expiryDate;
     private Boolean isActive;
-    private LocalDateTime createAt;
+    private OffsetDateTime createAt;
     private int useCount;
 
     public Boolean isIsActive() {

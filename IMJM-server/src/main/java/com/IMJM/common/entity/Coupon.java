@@ -3,7 +3,10 @@ package com.IMJM.common.entity;
 import com.IMJM.admin.dto.CouponDto;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -43,7 +46,7 @@ public class Coupon {
     private Boolean isActive;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public void updateCoupon(CouponDto couponDto){
         this.name = couponDto.getName();
