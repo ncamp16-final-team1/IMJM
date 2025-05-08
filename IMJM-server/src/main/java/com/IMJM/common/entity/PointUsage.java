@@ -3,7 +3,7 @@ package com.IMJM.common.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -28,7 +28,7 @@ public class PointUsage {
     private int price;
 
     @Column(name = "use_date", nullable = false)
-    private LocalDateTime useDate;
+    private OffsetDateTime useDate;
 
     @Column(length = 100, nullable = false)
     private String content;

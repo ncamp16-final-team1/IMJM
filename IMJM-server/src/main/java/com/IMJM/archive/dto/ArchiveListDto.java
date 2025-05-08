@@ -2,7 +2,7 @@ package com.IMJM.archive.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class ArchiveListDto {
     private Long id;
     private String content;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private String thumbnailUrl;
     private String userId;
 }

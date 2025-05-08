@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 
@@ -17,12 +17,12 @@ public class UserReviewResponseDto {
     private Long reservationId;
     private String reviewContent;
     private BigDecimal score;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private List<String> reviewTags;
     private List<String> reviewPhotoUrls;
 
     public UserReviewResponseDto(Long reviewId, String userId, Long reservationId,
-                                 String reviewContent, BigDecimal score, LocalDateTime regDate,
+                                 String reviewContent, BigDecimal score, OffsetDateTime regDate,
                                  List<String> reviewTags, List<String> reviewPhotoUrls) {
         this.reviewId = reviewId;
         this.userId = userId;

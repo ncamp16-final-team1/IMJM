@@ -5,7 +5,7 @@ import com.IMJM.common.entity.ReviewReply;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @AllArgsConstructor
@@ -13,7 +13,7 @@ public class UserReviewReplyResponseDto {
     private Long id;
     private Long reviewId;
     private String content;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public UserReviewReplyResponseDto(ReviewReply reviewReply) {
         this.id = reviewReply.getId();

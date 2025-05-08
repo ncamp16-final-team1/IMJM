@@ -20,7 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -97,7 +97,7 @@ public class ArchiveDetailService {
                 .archive(archive)
                 .user(user)
                 .content(content)
-                .regDate(LocalDateTime.now());
+                .regDate(OffsetDateTime.now());
         // 대댓글인 경우
         if (parentCommentId != null) {
             ArchiveComment parentComment = archiveCommentRepository.findById(parentCommentId)

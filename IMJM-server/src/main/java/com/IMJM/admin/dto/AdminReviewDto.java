@@ -2,7 +2,7 @@ package com.IMJM.admin.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -13,6 +13,6 @@ public class AdminReviewDto {
     private Long reviewId;
     private String nickName;
     private String userName;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private Boolean answered;
 }

@@ -3,7 +3,7 @@ package com.IMJM.notification.dto;
 import com.IMJM.common.entity.Alarm;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -18,7 +18,7 @@ public class AlarmDto {
     private boolean isRead;
     private String notificationType;
     private Integer referenceId;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     // 엔티티를 DTO로 변환하는 정적 메서드
     public static AlarmDto fromEntity(Alarm alarm) {
