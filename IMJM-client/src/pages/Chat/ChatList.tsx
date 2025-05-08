@@ -104,7 +104,15 @@ const ChatList: React.FC = () => {
                                 }}
                             >
                                 <ListItemAvatar>
-                                    <Avatar alt={room.salonName} />
+                                    <Avatar
+                                        alt={room.salonName}
+                                        src={room.salonProfileUrl}
+                                        sx={{
+                                            bgcolor: !room.salonProfileUrl ? '#FF9080' : undefined
+                                        }}
+                                    >
+                                        {!room.salonProfileUrl && room.salonName ? room.salonName.charAt(0) : ''}
+                                    </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={

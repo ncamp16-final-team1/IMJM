@@ -22,6 +22,7 @@ public class ChatRoomDto {
     private OffsetDateTime lastMessageTime;
     private String lastMessage;
     private boolean hasUnreadMessages;
-
     private int unreadCount;
+    private String userProfileUrl;
+    private String salonProfileUrl;
 }

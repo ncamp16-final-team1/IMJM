@@ -12,6 +12,8 @@ export interface ChatRoom {
     lastMessage: string;
     hasUnreadMessages: boolean;
     unreadCount: number;
+    userProfileUrl?: string;
+    salonProfileUrl?: string;
 }
 
 // 메시지 타입

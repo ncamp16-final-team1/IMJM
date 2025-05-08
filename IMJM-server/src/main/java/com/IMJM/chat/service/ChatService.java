@@ -350,7 +350,6 @@ public class ChatService {
         return chatMessageRepository.countByReadFalseAndSenderType(chatRoomId, oppositeType);
     }
 
-    // 엔티티를 DTO로 변환하는 메서드들
     private ChatRoomDto convertToChatRoomDto(ChatRoom chatRoom, String userType) {
         // 마지막 메시지 찾기
         ChatMessage lastMessage = chatMessageRepository
@@ -384,6 +383,7 @@ public class ChatService {
                 .lastMessage(lastMessageContent)
                 .hasUnreadMessages(hasUnreadMessages)
                 .unreadCount(unreadCount)
+                .userProfileUrl(chatRoom.getUser().getProfile())
                 .build();
     }
 
