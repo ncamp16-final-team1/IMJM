@@ -139,6 +139,7 @@ public class AdminChatServiceImpl implements AdminChatRepository {
                 .lastMessageTime(chatRoom.getLastMessageTime())
                 .lastMessage(lastMessage.map(ChatMessage::getMessage).orElse(null))
                 .unreadCount(unreadCount)
+                .userProfileUrl(chatRoom.getUser().getProfile())
                 .build();
     }
 

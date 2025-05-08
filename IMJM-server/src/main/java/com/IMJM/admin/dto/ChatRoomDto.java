@@ -19,4 +19,5 @@ public class ChatRoomDto {
     private String lastMessage;
     private boolean hasUnreadMessages;
     private int unreadCount;
+    private String userProfileUrl;
 }
