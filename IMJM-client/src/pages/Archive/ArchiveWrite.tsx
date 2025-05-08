@@ -66,9 +66,9 @@ const ArchiveWrite: React.FC = () => {
             console.log('폼 데이터:', form);
             console.log('사진 개수:', photos.length);
 
-            const token = localStorage.getItem('token'); // 토큰은 여전히 필요합니다
+            const token = localStorage.getItem('token');
 
-            const response = await fetch('/api/archive/', {
+            const response = await fetch('/api/archive', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
