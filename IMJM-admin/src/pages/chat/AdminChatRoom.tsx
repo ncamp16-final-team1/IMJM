@@ -117,7 +117,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
 
         // 번역 상태가 없는 경우 (첫 번역 요청)
-        console.log("번역 요청:", message.id, message.message);
         setTranslations(prev => ({
             ...prev,
             [messageId]: { isLoading: true, text: null, error: null }
@@ -134,17 +133,13 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
     };
 
-    // 실제 번역 함수
-    // 실제 번역 함수
     const requestTranslation = async (message: ChatMessage) => {
         const messageId = message.id;
         console.log(`메시지 ${messageId} 번역 시작:`, message.message);
 
-        // 서버에서 이미 번역된 메시지가 있는 경우
         if (message.translatedMessage && message.translationStatus === "completed") {
             console.log(`메시지 ${messageId} 서버 번역 사용:`, message.translatedMessage);
 
-            // 상태 업데이트를 Promise로 래핑하여 완료 보장
             await new Promise<void>(resolve => {
                 setTranslations(prev => {
                     const result = {
@@ -161,17 +156,14 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 });
             });
 
-            console.log(`메시지 ${messageId} 번역 상태 설정 완료`);
             return;
         }
 
-        // 언어 코드 확인
         const sourceLang = message.senderType === 'USER' ? userLanguage : salonLanguage;
         const targetLang = message.senderType === 'USER' ? salonLanguage : userLanguage;
 
         console.log("번역 요청 언어:", { sourceLang, targetLang });
 
-        // 빈 메시지 체크
         if (!message.message || message.message.trim() === '') {
             setTranslations(prev => ({
                 ...prev,
@@ -181,16 +173,12 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
 
         try {
-            // 번역 시도
             const translatedText = await TranslationService.translate(
                 message.message,
                 sourceLang,
                 targetLang
             );
 
-            console.log("번역 결과:", translatedText);
-
-            // 번역 결과가 있으면 저장
             if (translatedText) {
                 setTranslations(prev => ({
                     ...prev,
@@ -201,7 +189,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     }
                 }));
             } else {
-                // 번역 결과가 없으면 에러 처리
                 throw new Error("번역 결과가 없습니다");
             }
         } catch (error) {
@@ -230,12 +217,10 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
                 // 언어 코드 초기화 (기본값 설정)
                 if (!userLanguage) {
-                    console.log("사용자 언어가 설정되지 않아 기본값 'en'으로 설정합니다.");
                     setUserLanguage('en');
                 }
 
                 if (!salonLanguage) {
-                    console.log("미용실 언어가 설정되지 않아 기본값 'ko'로 설정합니다.");
                     setSalonLanguage('ko');
                 }
 
@@ -246,11 +231,9 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 AdminWebSocketService.initialize(currentSalonId);
 
                 try {
-                    // 채팅방 존재 여부 확인을 위한 API 호출 (백엔드에 해당 API 필요)
                     await axios.get(`/api/chat/room/check/${roomId}`);
                 } catch (checkError: any) {
                     console.error('채팅방 존재 확인 실패:', checkError);
-                    // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
                     if (checkError.response && checkError.response.status === 404) {
                         setErrorMessage('존재하지 않는 채팅방이거나 이미 삭제된 채팅방입니다.');
                         setChatRoomDeletedModalOpen(true);
@@ -265,14 +248,11 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                         setUserName(roomResponse.data.userName);
                     }
 
-                    // 사용자와 미용실 언어 설정
                     if (roomResponse.data.userLanguage) {
-                        console.log("사용자 언어 설정:", roomResponse.data.userLanguage);
                         setUserLanguage(roomResponse.data.userLanguage);
                     }
 
                     if (roomResponse.data.salonLanguage) {
-                        console.log("미용실 언어 설정:", roomResponse.data.salonLanguage);
                         setSalonLanguage(roomResponse.data.salonLanguage);
                     }
 
@@ -280,7 +260,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     setSalonProfileUrl(roomResponse.data.salonProfileUrl);
                 } catch (roomError: any) {
                     console.error('채팅방 정보를 불러오는데 실패했습니다:', roomError);
-                    // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
+
                     if (roomError.response && roomError.response.status === 404) {
                         setErrorMessage('존재하지 않는 채팅방입니다.');
                         setChatRoomDeletedModalOpen(true);
@@ -291,7 +271,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
                 try {
                     const chatMessages = await AdminChatService.getChatMessages(Number(roomId));
-                    console.log("메시지 로드 완료:", chatMessages.length);
                     setMessages(chatMessages);
 
                     if (!userName && chatMessages.length > 0) {
@@ -314,9 +293,11 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     }
 
                     await AdminChatService.markMessagesAsRead(Number(roomId));
+
+                    AdminWebSocketService.emitMessageRead(Number(roomId));
                 } catch (messageError: any) {
                     console.error('채팅 메시지를 불러오는데 실패했습니다:', messageError);
-                    // 404 에러인 경우 (채팅방이 존재하지 않는 경우)
+
                     if (messageError.response && messageError.response.status === 404) {
                         setErrorMessage('존재하지 않는 채팅방이거나 이미 삭제된 채팅방입니다.');
                         setChatRoomDeletedModalOpen(true);
@@ -352,42 +333,28 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         fetchSalonAndChatRoom();
 
         const handleNewMessage = (messageData: ChatMessage) => {
-            console.log("새 메시지 수신:", messageData);
-
-            // 서버에서 받은 메시지에 번역된 내용이 있는지 확인
-            if (messageData.translatedMessage) {
-                console.log("서버에서 번역된 메시지:", messageData.translatedMessage);
-            }
-
             if (messageData.chatRoomId === Number(roomId)) {
                 setMessages(prev => {
-                    // 1. 정확히 같은 ID를 가진 메시지 체크
                     const exactIdMatch = prev.some(msg => msg.id === messageData.id);
                     if (exactIdMatch) {
-                        console.log("정확히 같은 ID의 메시지가 이미 존재함:", messageData.id);
                         return prev;
                     }
 
-                    // 2. 내가 보낸 메시지이면서 내용과 시간이 유사한 메시지 체크
                     if (messageData.senderType === 'SALON' && messageData.senderId === salonId) {
                         const similarMessage = prev.find(msg =>
                             msg.senderType === 'SALON' &&
                             msg.senderId === salonId &&
                             msg.message === messageData.message &&
-                            // 임시 ID를 가진 메시지 (클라이언트에서 생성한 것)
                             msg.id > 1000000000
                         );
 
                         if (similarMessage) {
-                            console.log("임시 ID를 가진 유사 메시지 발견, 업데이트:", similarMessage.id);
-                            // 임시 메시지를 서버 메시지로 교체
                             return prev.map(msg =>
                                 msg === similarMessage ? messageData : msg
                             );
                         }
                     }
 
-                    // 중복이 아닌 경우 새 메시지 추가
                     return [...prev, messageData];
                 });
 
@@ -409,11 +376,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         };
 
     }, [roomId, userId, userName, navigate]);
-
-    // 언어 설정 확인을 위한 추가 useEffect
-    useEffect(() => {
-        console.log("언어 설정 상태:", { userLanguage, salonLanguage });
-    }, [userLanguage, salonLanguage]);
 
     useEffect(() => {
         scrollToBottom();
@@ -501,7 +463,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
             setMessages(prev => [...prev, tempMessage]);
 
-            // 입력 초기화
             setNewMessage('');
             setSelectedFiles([]);
             previewUrls.forEach(url => URL.revokeObjectURL(url));
@@ -522,7 +483,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         } catch (error: any) {
             console.error('메시지 전송 실패:', error);
 
-            // 채팅방이 존재하지 않는 경우 처리
             if (error.response && error.response.status === 404) {
                 setErrorMessage('메시지를 전송할 수 없습니다. 채팅방이 이미 삭제되었을 수 있습니다.');
                 setChatRoomDeletedModalOpen(true);
@@ -583,7 +543,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
     return (
         <Paper elevation={3} className={styles.container}>
-            {/* 삭제된 채팅방 알림 모달 */}
             <Dialog
                 open={chatRoomDeletedModalOpen}
                 onClose={handleChatRoomDeletedModalClose}
@@ -603,7 +562,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 </DialogActions>
             </Dialog>
 
-            {/* 헤더 */}
             <Box className={styles.header} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>{userName}</Typography>
@@ -618,7 +576,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
             <Divider />
 
-            {/* 메시지 영역 */}
             <Box className={styles.messagesContainer}>
                 {messages.map((message) => {
                     const isSalonMessage = message.senderType === 'SALON';
@@ -645,7 +602,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                     {message.message}
                                 </Typography>
 
-                                {/* 이미지 표시 */}
                                 {message.photos && message.photos.length > 0 && (
                                     <Box className={styles.imageContainer}>
                                         {message.photos.map((photo, index) => (
@@ -660,14 +616,11 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                     </Box>
                                 )}
 
-                                {/* 서버에서 이미 번역된 메시지가 있는 경우 */}
                                 {message.translatedMessage && (
                                     <Button
                                         size="small"
                                         onClick={() => {
-                                            // 이미 번역된 메시지를 토글하기 위한 상태 업데이트
                                             setTranslations(prev => {
-                                                // 현재 번역이 표시되고 있지 않으면 표시
                                                 if (!prev[message.id]) {
                                                     return {
                                                         ...prev,
@@ -679,7 +632,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                                         }
                                                     };
                                                 }
-                                                // 이미 표시 중이면 숨김
                                                 else {
                                                     const newTranslations = { ...prev };
                                                     delete newTranslations[message.id];
@@ -693,7 +645,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                     </Button>
                                 )}
 
-                                {/* 서버에서 번역된 메시지가 없는 경우에만 실시간 번역 버튼 표시 */}
                                 {!message.translatedMessage && (
                                     <Button
                                         size="small"
@@ -707,7 +658,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                                     </Button>
                                 )}
 
-                                {/* 번역 표시 */}
                                 {translations[message.id] && !translations[message.id].isLoading && !translations[message.id].error && (
                                     <Typography className={styles.translatedMessage}>
                                         {translations[message.id].text}
@@ -743,7 +693,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 <div ref={messagesEndRef} />
             </Box>
 
-            {/* 이미지 미리보기 */}
             {previewUrls.length > 0 && (
                 <Box className={styles.previewContainer}>
                     {previewUrls.map((url, index) => (
@@ -765,7 +714,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 </Box>
             )}
 
-            {/* 메시지 입력 영역 */}
             <Box className={styles.inputContainer}>
                 <input
                     type="file"
@@ -814,7 +762,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 />
             </Box>
 
-            {/* 채팅방 삭제 확인 모달 */}
             <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
                 <DialogTitle>채팅방 삭제</DialogTitle>
                 <DialogContent>
@@ -828,10 +775,9 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                 </DialogActions>
             </Dialog>
 
-            {/* 채팅방 삭제 완료 모달 */}
             <Dialog open={deletedOpen} onClose={() => {
                 setDeletedOpen(false);
-                window.location.href = "/chat"; // navigate 대신 직접 URL 변경
+                window.location.href = "/chat";
             }}>
                 <DialogTitle>삭제 완료</DialogTitle>
                 <DialogContent>
@@ -841,7 +787,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     <Button
                         onClick={() => {
                             setDeletedOpen(false);
-                            window.location.href = "/chat"; // navigate 대신 window.location.href 사용
+                            window.location.href = "/chat";
                         }}
                         autoFocus
                     >

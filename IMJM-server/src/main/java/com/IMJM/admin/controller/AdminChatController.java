@@ -40,6 +40,25 @@ public class AdminChatController {
         return ResponseEntity.ok(adminChatRepository.getSalonChatRooms(salonDetails.getSalon().getId()));
     }
 
+    @MessageMapping("/chat/message-read/{roomId}")
+    public void handleMessageRead(@DestinationVariable Long roomId) {
+        adminChatRepository.markMessagesAsRead(roomId);
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+
+        messagingTemplate.convertAndSendToUser(
+                chatRoom.getUser().getId(),
+                "/queue/message-read",
+                roomId
+        );
+        messagingTemplate.convertAndSendToUser(
+                chatRoom.getSalon().getId(),
+                "/queue/message-read",
+                roomId
+        );
+    }
+
     @GetMapping("/room/{roomId}")
     public ResponseEntity<Map<String, Object>> getAdminChatRoomDetail(@PathVariable Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
@@ -51,17 +70,14 @@ public class AdminChatController {
         roomInfo.put("salonId", chatRoom.getSalon().getId());
         roomInfo.put("salonName", chatRoom.getSalon().getName());
 
-        // 사용자 닉네임 또는 이름 추가
         String userName = chatRoom.getUser().getNickname();
         if (userName == null || userName.isEmpty()) {
             userName = chatRoom.getUser().getFirstName() + " " + chatRoom.getUser().getLastName();
         }
         roomInfo.put("userName", userName);
 
-        // 사용자 프로필 이미지 추가
         roomInfo.put("userProfileUrl", chatRoom.getUser().getProfile());
 
-        // 미용실 프로필 이미지 추가
         List<SalonPhotos> salonPhotos = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(chatRoom.getSalon().getId());
         String salonProfileUrl = !salonPhotos.isEmpty() ? salonPhotos.get(0).getPhotoUrl() : null;
         roomInfo.put("salonProfileUrl", salonProfileUrl);
