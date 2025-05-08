@@ -108,7 +108,15 @@ const AdminChatList: React.FC<{ onSelectRoom: (roomId: number, userId: string) =
                                 }}
                             >
                                 <ListItemAvatar>
-                                    <Avatar alt={room.userName} />
+                                    <Avatar
+                                        alt={room.userName}
+                                        src={room.userProfileUrl || undefined}
+                                        sx={{
+                                            bgcolor: room.userProfileUrl ? 'transparent' : '#FF9080' // 이미지가 없을 경우 배경색 설정
+                                        }}
+                                    >
+                                        {!room.userProfileUrl && room.userName ? room.userName.charAt(0) : ''}
+                                    </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={

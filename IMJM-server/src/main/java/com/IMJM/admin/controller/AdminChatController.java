@@ -1,13 +1,14 @@
 package com.IMJM.admin.controller;
 
 import com.IMJM.admin.dto.ChatMessageDto;
-import com.IMJM.admin.dto.ChatRoomDto;
-import com.IMJM.admin.dto.CustomSalonDetails;
 import com.IMJM.admin.repository.AdminChatRepository;
 import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.chat.repository.ChatRoomRepository;
+import com.IMJM.chat.service.ChatService;
 import com.IMJM.common.entity.ChatRoom;
 import com.IMJM.common.entity.SalonPhotos;
+import com.IMJM.user.dto.CustomOAuth2UserDto;
+import com.IMJM.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -16,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,8 @@ public class AdminChatController {
     private final AdminChatRepository adminChatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final SalonPhotosRepository salonPhotosRepository;
+    private final ChatService chatService;
+    private final UserRepository userRepository;
 
     @MessageMapping("/sendMessage")
     public void sendMessage(@Payload ChatMessageDto chatMessageDto) {
@@ -35,9 +39,46 @@ public class AdminChatController {
     }
 
     @GetMapping("/rooms")
-    public ResponseEntity<List<ChatRoomDto>> getSalonChatRooms(
-            @AuthenticationPrincipal CustomSalonDetails salonDetails) {
-        return ResponseEntity.ok(adminChatRepository.getSalonChatRooms(salonDetails.getSalon().getId()));
+    public ResponseEntity<List<Map<String, Object>>> getSalonChatRooms(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        String salonId = userDetails.getId();
+
+        // 원래 서비스 호출
+        List<com.IMJM.chat.dto.ChatRoomDto> chatRooms = chatService.getSalonChatRooms(salonId);
+
+        // 응답 데이터 구성
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (com.IMJM.chat.dto.ChatRoomDto room : chatRooms) {
+            Map<String, Object> roomData = new HashMap<>();
+            // 기존 데이터 복사
+            roomData.put("id", room.getId());
+            roomData.put("userId", room.getUserId());
+            roomData.put("salonId", room.getSalonId());
+            roomData.put("userName", room.getUserName());
+            roomData.put("salonName", room.getSalonName());
+            roomData.put("createdAt", room.getCreatedAt());
+            roomData.put("lastMessageTime", room.getLastMessageTime());
+            roomData.put("lastMessage", room.getLastMessage());
+            roomData.put("hasUnreadMessages", room.isHasUnreadMessages());
+            roomData.put("unreadCount", room.getUnreadCount());
+
+            // 사용자 프로필 이미지 URL 추가
+            try {
+                com.IMJM.common.entity.Users user = userRepository.findById(room.getUserId()).orElse(null);
+                if (user != null) {
+                    roomData.put("userProfileUrl", user.getProfile());
+                } else {
+                    roomData.put("userProfileUrl", null);
+                }
+            } catch (Exception e) {
+                // 에러 처리
+                roomData.put("userProfileUrl", null);
+            }
+
+            result.add(roomData);
+        }
+
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/room/{roomId}")
