@@ -51,7 +51,7 @@ export default function MyPage() {
           method: "POST",
           credentials: "include",
         });
-        navigate("/");
+        window.location.href = '/';
       } else {
         alert("Delete account failed. Please try again.");
       }

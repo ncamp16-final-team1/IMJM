@@ -64,7 +64,7 @@ const UserFinalSubmit: React.FC = () => {
       });
 
       if (response.status === 200) {
-        navigate('/'); 
+        window.location.href = '/';
       }
     } catch (err) {
       console.error(err);
