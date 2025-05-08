@@ -7,6 +7,7 @@ import StarHalfIcon from '@mui/icons-material/StarHalf';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 import './HairSalon.css';
 
@@ -654,34 +655,45 @@ function HairSalon() {
                             className="salon-card"
                             onClick={() => handleSalonClick(salon.id)}
                         >
-                            {salon.photos && salon.photos.length > 0 && (
-                                <div className="salon-photo">
-                                    <img
-                                        src={salon.photos[0].photoUrl}
-                                        alt={`${salon.name} 대표 이미지`}
-                                    />
-                                </div>
-                            )}
-                            <div className="salon-info">
-                                <h2>
-                                    {salon.name}
-                                    {salon.distance !== undefined && (
-                                        <span className="salon-distance"> ({salon.distance?.toFixed(1)}km)</span>
-                                    )}
-                                </h2>
-                                <div className="salon-business-hours">
-                                    {salon.start_time && salon.end_time ? (
-                                        <p>영업시간: {salon.start_time.slice(0, 5)} - {salon.end_time.slice(0, 5)}</p>
-                                    ) : (
-                                        <p>영업시간 정보가 없습니다.</p>
-                                    )}
-                                </div>
-                                {salon.score && (
-                                    <div className="salon-rating">
-                                        {renderStars(salon.score)}
-                                        <span className="score-text">({salon.score})</span>
+                            <div className="salon-card-content">
+                                {salon.photos && salon.photos.length > 0 ? (
+                                    <div className="salon-photo">
+                                        <img
+                                            src={salon.photos[0].photoUrl}
+                                            alt={`${salon.name} 대표 이미지`}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="salon-photo">
+                                        {/* 이미지가 없을 경우 빈 div */}
                                     </div>
                                 )}
+
+                                <div className="salon-info">
+                                    <h2>
+                                        {salon.name}
+                                        {salon.distance !== undefined && (
+                                            <span className="salon-distance"> ({salon.distance?.toFixed(1)}km)</span>
+                                        )}
+                                    </h2>
+                                    <div className="salon-address">
+                                        <LocationOnIcon fontSize="small" /> <span>{salon.address || '주소 정보 없음'}</span>
+                                    </div>
+                                    <div className="salon-business-hours">
+                                        <AccessTimeIcon fontSize="small" />
+                                        <span>
+                                            {salon.start_time && salon.end_time
+                                                ? `${salon.start_time.slice(0, 5)} - ${salon.end_time.slice(0, 5)}`
+                                                : '영업시간 정보가 없습니다'}
+                                          </span>
+                                    </div>
+                                    {salon.score && (
+                                        <div className="salon-rating">
+                                            {renderStars(salon.score)}
+                                            <span className="score-text">{salon.score}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
