@@ -28,7 +28,7 @@ const UserDetailRegister: React.FC = () => {
     profilePreview: null,
     birthday: '',
     region: '',
-    is_notification: true,
+    isNotification: true,
   });
 
   const handleChange = (
@@ -284,9 +284,9 @@ const UserDetailRegister: React.FC = () => {
       <FormControlLabel
         control={
           <Checkbox
-            checked={form.is_notification}
+            checked={form.isNotification}
             onChange={handleChange}
-            name="is_notification"
+            name="isNotification"
             sx={{ color: '#FF9080' }}
           />
         }

@@ -20,7 +20,7 @@ const UserFinalSubmit: React.FC = () => {
     profile,
     birthday,
     region,
-    is_notification,
+    isNotification,
     salonName,
     license,
   } = location.state || {};
@@ -38,7 +38,7 @@ const UserFinalSubmit: React.FC = () => {
         nickname,
         birthday,
         region,
-        is_notification,
+        isNotification,
         termsAgreed: agreed,
       };
 
