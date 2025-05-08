@@ -1,5 +1,6 @@
 package com.IMJM.chat.service;
 
+import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
@@ -39,6 +40,8 @@ public class ChatService {
     private final ReservationRepository reservationRepository;
 
     private final StorageService storageService;
+
+    private final SalonPhotosRepository salonPhotosRepository;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -351,6 +354,12 @@ public class ChatService {
     }
 
     private ChatRoomDto convertToChatRoomDto(ChatRoom chatRoom, String userType) {
+        String salonProfileUrl = null;
+        List<SalonPhotos> salonPhotos = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(chatRoom.getSalon().getId());
+        if (!salonPhotos.isEmpty()) {
+            salonProfileUrl = salonPhotos.get(0).getPhotoUrl();
+        }
+
         // 마지막 메시지 찾기
         ChatMessage lastMessage = chatMessageRepository
                 .findTopByChatRoomIdOrderBySentAtDesc(chatRoom.getId())
@@ -384,6 +393,7 @@ public class ChatService {
                 .hasUnreadMessages(hasUnreadMessages)
                 .unreadCount(unreadCount)
                 .userProfileUrl(chatRoom.getUser().getProfile())
+                .salonProfileUrl(salonProfileUrl)
                 .build();
     }
 
