@@ -140,14 +140,25 @@ export default function AppointmentCard({
             <Divider sx={{ marginY: 2, borderColor: 'grey.500', borderWidth: 2 }} />
             
             <Box sx={{ display: 'flex', mb: 3 }}>
-                <Box sx={{ flexGrow: 1 }}>
+                <Box 
+                    sx={{ 
+                        flexGrow: 1, 
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'rgba(255, 144, 128, 0.05)' }
+                    }}
+                    onClick={() => navigate(`/my/reservation-detail/${reservationId}`, {
+                        state: {
+                        salonPhotoUrl,
+                        }
+                    })}
+                    >
                     <Typography variant="h6" fontWeight="bold">{salonName}
                         <Chip 
                         label={status === 'upcoming' ? '예정된 예약' : (isReviewed ? '리뷰 작성 완료' : '리뷰 미작성')}
                         color={status === 'upcoming' ? 'success' : (isReviewed ? 'primary' : 'error')}
                         size="small"
                         variant="outlined"
-                        sx = {{ ml: '10px' }}
+                        sx={{ ml: '10px' }}
                         />
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
@@ -163,22 +174,22 @@ export default function AppointmentCard({
                 </Box>
 
                 <Avatar
-    variant="rounded"
-    src={salonPhotoUrl}
-    sx={{
-        width: {
-            xs: '150px', 
-            sm: '200px',
-            md: '300px', 
-        },
-        height: {
-            xs: '75px', 
-            sm: '100px', 
-            md: '150px', 
-        },
-        ml: 2, 
-    }}
-/>
+                    variant="rounded"
+                    src={salonPhotoUrl}
+                    sx={{
+                        width: {
+                            xs: '150px', 
+                            sm: '200px',
+                            md: '300px', 
+                        },
+                        height: {
+                            xs: '75px', 
+                            sm: '100px', 
+                            md: '150px', 
+                        },
+                        ml: 2, 
+                    }}
+                />
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

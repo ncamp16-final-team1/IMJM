@@ -36,8 +36,11 @@ spring:
     username: guest
     password: guest
     virtual-host: /
+  jackson:
+    time-zone: Asia/Seoul
 
 server:
+  timezone: Asia/Seoul
   port: 8080
   servlet:
     encoding:

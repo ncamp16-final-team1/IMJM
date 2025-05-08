@@ -57,7 +57,7 @@ const MyArchive: React.FC = () => {
             setLoading(true);
             try {
                 // 일반 아카이브 API를 사용하되, 클라이언트 측에서 내 게시물만 필터링
-                const response = await fetch(`/api/archive/?page=${page}&size=12`);
+                const response = await fetch(`/api/archive?page=${page}&size=12`);
 
                 if (!response.ok) {
                     throw new Error('아카이브 데이터를 불러오는데 실패했습니다.');

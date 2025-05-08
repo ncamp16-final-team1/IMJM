@@ -6,23 +6,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.security.PermitAll;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/test")
-public class TestTranslationController {
+@RequestMapping("/api/admin")
+public class AdminTranslationController {
 
     private final TranslationService translationService;
 
-    public TestTranslationController(TranslationService translationService) {
+    public AdminTranslationController(TranslationService translationService) {
         this.translationService = translationService;
     }
 
     @GetMapping("/translate")
-    @PermitAll
-    public Map<String, String> testTranslate(
+    public Map<String, String> adminTranslate(
             @RequestParam String text,
             @RequestParam String source,
             @RequestParam String target) {

@@ -34,6 +34,8 @@ interface TranslationState {
     isLoading: boolean;
     text: string | null;
     error: string | null;
+    isServerTranslation?: boolean;
+    isLocalTranslation?: boolean;
 }
 
 const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, userId }) => {
@@ -62,8 +64,19 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
+    // 번역 요청 처리 함수
     const handleTranslateRequest = async (message: ChatMessage) => {
         const messageId = message.id;
+
+        // 메시지 세부 정보 로깅
+        console.log("번역 요청 메시지 세부 정보:", {
+            id: message.id,
+            content: message.message,
+            translatedMessage: message.translatedMessage,
+            translationStatus: message.translationStatus,
+            hasTranslatedMessage: !!message.translatedMessage,
+            hasStatus: !!message.translationStatus
+        });
 
         // 이미 번역 상태가 있는 경우
         if (translations[messageId]) {
@@ -121,24 +134,34 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
     };
 
+    // 실제 번역 함수
+    // 실제 번역 함수
     const requestTranslation = async (message: ChatMessage) => {
         const messageId = message.id;
+        console.log(`메시지 ${messageId} 번역 시작:`, message.message);
 
-        // 디버깅을 위한 로그 추가
-        console.log("번역 요청 메시지 전체:", message);
-
-        // 서버에서 이미 번역된 메시지가 있는지 먼저 확인
+        // 서버에서 이미 번역된 메시지가 있는 경우
         if (message.translatedMessage && message.translationStatus === "completed") {
-            console.log("서버 번역 사용:", message.translatedMessage);
-            setTranslations(prev => ({
-                ...prev,
-                [messageId]: {
-                    isLoading: false,
-                    text: message.translatedMessage,
-                    error: null,
-                    isServerTranslation: true
-                }
-            }));
+            console.log(`메시지 ${messageId} 서버 번역 사용:`, message.translatedMessage);
+
+            // 상태 업데이트를 Promise로 래핑하여 완료 보장
+            await new Promise<void>(resolve => {
+                setTranslations(prev => {
+                    const result = {
+                        ...prev,
+                        [messageId]: {
+                            isLoading: false,
+                            text: message.translatedMessage,
+                            error: null,
+                            isServerTranslation: true
+                        }
+                    };
+                    resolve(); // 상태 업데이트 완료 신호
+                    return result;
+                });
+            });
+
+            console.log(`메시지 ${messageId} 번역 상태 설정 완료`);
             return;
         }
 
@@ -158,9 +181,9 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         }
 
         try {
-            // 번역 서비스 호출
+            // 번역 시도
             const translatedText = await TranslationService.translate(
-                message.translatedMessage,
+                message.message,
                 sourceLang,
                 targetLang
             );
@@ -171,27 +194,24 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
             if (translatedText) {
                 setTranslations(prev => ({
                     ...prev,
-                    [messageId]: { isLoading: false, text: translatedText, error: null }
-                }));
-            } else {
-                // 번역 결과가 없으면 오류 처리
-                setTranslations(prev => ({
-                    ...prev,
                     [messageId]: {
                         isLoading: false,
-                        text: null,
-                        error: '번역 결과를 가져올 수 없습니다'
+                        text: translatedText,
+                        error: null
                     }
                 }));
+            } else {
+                // 번역 결과가 없으면 에러 처리
+                throw new Error("번역 결과가 없습니다");
             }
         } catch (error) {
-            console.error('번역 요청 실패:', error);
+            console.error('번역 처리 실패:', error);
             setTranslations(prev => ({
                 ...prev,
                 [messageId]: {
                     isLoading: false,
                     text: null,
-                    error: '번역 요청에 실패했습니다'
+                    error: '번역에 실패했습니다. 나중에 다시 시도해주세요.'
                 }
             }));
         }
@@ -207,6 +227,17 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         const fetchSalonAndChatRoom = async () => {
             try {
                 if (!roomId) return;
+
+                // 언어 코드 초기화 (기본값 설정)
+                if (!userLanguage) {
+                    console.log("사용자 언어가 설정되지 않아 기본값 'en'으로 설정합니다.");
+                    setUserLanguage('en');
+                }
+
+                if (!salonLanguage) {
+                    console.log("미용실 언어가 설정되지 않아 기본값 'ko'로 설정합니다.");
+                    setSalonLanguage('ko');
+                }
 
                 const salonResponse = await axios.get('/api/admin/salons/my');
                 const currentSalonId = salonResponse.data.id;
@@ -234,6 +265,17 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                         setUserName(roomResponse.data.userName);
                     }
 
+                    // 사용자와 미용실 언어 설정
+                    if (roomResponse.data.userLanguage) {
+                        console.log("사용자 언어 설정:", roomResponse.data.userLanguage);
+                        setUserLanguage(roomResponse.data.userLanguage);
+                    }
+
+                    if (roomResponse.data.salonLanguage) {
+                        console.log("미용실 언어 설정:", roomResponse.data.salonLanguage);
+                        setSalonLanguage(roomResponse.data.salonLanguage);
+                    }
+
                     setUserProfileUrl(roomResponse.data.userProfileUrl);
                     setSalonProfileUrl(roomResponse.data.salonProfileUrl);
                 } catch (roomError: any) {
@@ -249,6 +291,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
 
                 try {
                     const chatMessages = await AdminChatService.getChatMessages(Number(roomId));
+                    console.log("메시지 로드 완료:", chatMessages.length);
                     setMessages(chatMessages);
 
                     if (!userName && chatMessages.length > 0) {
@@ -366,6 +409,11 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
         };
 
     }, [roomId, userId, userName, navigate]);
+
+    // 언어 설정 확인을 위한 추가 useEffect
+    useEffect(() => {
+        console.log("언어 설정 상태:", { userLanguage, salonLanguage });
+    }, [userLanguage, salonLanguage]);
 
     useEffect(() => {
         scrollToBottom();
@@ -578,7 +626,6 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
                     const translationState = translations[message.id];
 
                     return (
-                        // AdminChatRoom.tsx 파일의 메시지 렌더링 부분 수정
                         <Box
                             key={message.id}
                             className={messageClassName}
