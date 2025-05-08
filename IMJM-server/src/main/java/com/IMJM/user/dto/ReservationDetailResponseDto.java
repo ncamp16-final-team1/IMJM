@@ -1,9 +1,10 @@
 package com.IMJM.user.dto;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+
 import lombok.Getter;
 import lombok.Builder;
 
@@ -31,7 +32,7 @@ public class ReservationDetailResponseDto {
     public static class PaymentInfoDto {
         private String paymentMethod;
         private String paymentStatus;
-        private LocalDateTime paymentDate;
+        private OffsetDateTime paymentDate;
         private boolean isCanceled;
         private BigDecimal canceledAmount;
         private int price;
@@ -50,7 +51,7 @@ public class ReservationDetailResponseDto {
     @Builder
     public static class PointUsageDto {
         private int points;
-        private LocalDateTime useDate;
+        private OffsetDateTime useDate;
         private String content;
     }
 

@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -133,7 +133,7 @@ public class MyPageService {
                 .score(BigDecimal.valueOf(requestDto.getRating()))
                 .content(requestDto.getReviewText())
                 .reviewTag(reviewTag)
-                .regDate(LocalDateTime.now())
+                .regDate(OffsetDateTime.now())
                 .build();
 
         Review savedReview = reviewRepository.save(review);
@@ -150,7 +150,7 @@ public class MyPageService {
                 .user(user)
                 .usageType("SAVE")
                 .price(pointsToGive)
-                .useDate(LocalDateTime.now())
+                .useDate(OffsetDateTime.now())
                 .content(salon.getName() + " 리뷰 작성")
                 .build();
 
@@ -173,7 +173,7 @@ public class MyPageService {
                     .review(review)
                     .photoUrl(photoUrl)
                     .photoOrder(i)
-                    .uploadDate(LocalDateTime.now())
+                    .uploadDate(OffsetDateTime.now())
                     .build();
 
             reviewPhotos.add(reviewPhoto);
@@ -357,7 +357,7 @@ public class MyPageService {
         }
 
         // 결제 시간
-        LocalDateTime paymentDateTime = payment.getPaymentDate();
+        OffsetDateTime paymentDateTime = payment.getPaymentDate();
 
         return pointUsages.stream()
                 .filter(pointUsage -> {

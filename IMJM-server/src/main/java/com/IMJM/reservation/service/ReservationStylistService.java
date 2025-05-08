@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -276,7 +276,7 @@ public class ReservationStylistService {
                 .user(user)
                 .usageType("USE")
                 .price(usedPoints)
-                .useDate(LocalDateTime.now())
+                .useDate(OffsetDateTime.now())
                 .content(String.format("%s - %s 예약에 포인트 사용",
                         stylist.getSalon().getName(),
                         serviceMenu.getServiceName()))
@@ -296,7 +296,7 @@ public class ReservationStylistService {
                 .user(user)
                 .usageType("SAVE")
                 .price(reservationPoint)
-                .useDate(LocalDateTime.now())
+                .useDate(OffsetDateTime.now())
                 .content(stylist.getSalon().getName() + " 예약 포인트 적립")
                 .build();
 
@@ -333,7 +333,7 @@ public class ReservationStylistService {
                 .paymentMethod(request.getPaymentMethod())
                 .paymentStatus(request.getPaymentStatus())
                 .transactionId("TRANS_" + System.currentTimeMillis())
-                .paymentDate(LocalDateTime.now())
+                .paymentDate(OffsetDateTime.now())
                 .isCanceled(false)
                 .isRefunded(false)
                 .build();

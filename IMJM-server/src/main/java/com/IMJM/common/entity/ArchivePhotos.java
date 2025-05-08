@@ -3,7 +3,7 @@ package com.IMJM.common.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -29,5 +29,5 @@ public class ArchivePhotos {
     private int photoOrder;
 
     @Column(name = "upload_date")
-    private LocalDateTime uploadDate;
+    private OffsetDateTime uploadDate;
 }

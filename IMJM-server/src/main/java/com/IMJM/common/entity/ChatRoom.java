@@ -2,7 +2,7 @@ package com.IMJM.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -27,12 +27,12 @@ public class ChatRoom {
     private Salon salon;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "last_message_time", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime lastMessageTime;
+    private OffsetDateTime lastMessageTime;
 
-    public void updateLastMessageTime(LocalDateTime time) {
+    public void updateLastMessageTime(OffsetDateTime time) {
         this.lastMessageTime = time;
     }
 }

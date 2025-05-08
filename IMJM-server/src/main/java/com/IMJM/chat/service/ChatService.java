@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,8 +63,8 @@ public class ChatService {
                             ChatRoom.builder()
                                     .user(user)
                                     .salon(salon)
-                                    .createdAt(LocalDateTime.now())
-                                    .lastMessageTime(LocalDateTime.now())
+                                    .createdAt(OffsetDateTime.now())
+                                    .lastMessageTime(OffsetDateTime.now())
                                     .build()
                     );
                 });
@@ -104,7 +104,7 @@ public class ChatService {
         ChatMessage savedMessage = saveNewMessage(chatRoom, messageDto, translationResult);
 
         // 채팅방 마지막 메시지 시간 업데이트
-        chatRoom.updateLastMessageTime(LocalDateTime.now());
+        chatRoom.updateLastMessageTime(OffsetDateTime.now());
         chatRoomRepository.save(chatRoom);
 
         // 사진 처리 및 응답 DTO 생성
@@ -212,7 +212,7 @@ public class ChatService {
                 .senderType(messageDto.getSenderType())
                 .message(messageDto.getMessage())
                 .isRead(false)
-                .sentAt(LocalDateTime.now())
+                .sentAt(OffsetDateTime.now())
                 .translatedMessage(translationResult.translatedMessage)
                 .translationStatus(translationResult.translationStatus)
                 .build();
@@ -230,7 +230,7 @@ public class ChatService {
                     ChatPhotos photo = ChatPhotos.builder()
                             .chatMessage(savedMessage)
                             .photoUrl(photoDto.getPhotoUrl())
-                            .uploadDate(LocalDateTime.now())
+                            .uploadDate(OffsetDateTime.now())
                             .build();
 
                     ChatPhotos savedPhoto = chatPhotosRepository.save(photo);
@@ -492,8 +492,8 @@ public class ChatService {
                             ChatRoom.builder()
                                     .user(user)
                                     .salon(salon)
-                                    .createdAt(LocalDateTime.now())
-                                    .lastMessageTime(LocalDateTime.now())
+                                    .createdAt(OffsetDateTime.now())
+                                    .lastMessageTime(OffsetDateTime.now())
                                     .build()
                     );
                 });

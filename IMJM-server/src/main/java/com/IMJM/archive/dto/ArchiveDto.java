@@ -2,7 +2,7 @@ package com.IMJM.archive.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -20,6 +20,6 @@ public class ArchiveDto {
     private String gender;
     private String color;
     private String length;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private List<String> photoUrls;
 }

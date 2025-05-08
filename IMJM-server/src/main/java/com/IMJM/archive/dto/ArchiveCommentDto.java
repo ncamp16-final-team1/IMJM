@@ -2,7 +2,7 @@ package com.IMJM.archive.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -16,7 +16,7 @@ public class ArchiveCommentDto {
     private String userId;
     private String username;
     private String profileUrl;
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
     private String content;
     private boolean isCommentForComment;
     private Long parentCommentId;
