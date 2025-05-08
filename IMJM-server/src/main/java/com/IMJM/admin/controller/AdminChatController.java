@@ -10,8 +10,10 @@ import com.IMJM.common.entity.ChatRoom;
 import com.IMJM.common.entity.SalonPhotos;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +30,7 @@ public class AdminChatController {
     private final AdminChatRepository adminChatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final SalonPhotosRepository salonPhotosRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/sendMessage")
     public void sendMessage(@Payload ChatMessageDto chatMessageDto) {
