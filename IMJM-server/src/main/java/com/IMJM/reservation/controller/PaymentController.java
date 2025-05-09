@@ -30,7 +30,6 @@ public class PaymentController {
     private final ReservationStylistService reservationStylistService;
     private final ObjectMapper objectMapper;
 
-    // 동시 요청 처리를 위한 락 매커니즘
     private final ConcurrentHashMap<String, Boolean> paymentProcessingLocks = new ConcurrentHashMap<>();
 
     @PostMapping("/approve")
@@ -47,33 +46,29 @@ public class PaymentController {
                 return ResponseEntity.badRequest().body(Map.of("error", "인코딩된 데이터가 없습니다."));
             }
 
-            // Base64 디코딩 시도
             String decodedString = new String(Base64.getDecoder().decode(encodedData));
             log.debug("디코딩된 데이터: {}", decodedString);
 
-            // JSON 문자열을 객체로 변환
             PaymentApprovalRequestDto approvalRequest = paymentService.parsePaymentRequest(decodedString);
             log.debug("처리할 결제 요청: paymentKey={}, orderId={}, amount={}",
                     approvalRequest.getPaymentKey(),
                     approvalRequest.getOrderId(),
                     approvalRequest.getAmount());
 
-            // 동시 처리 락 확인
             lockKey = approvalRequest.getPaymentKey();
             if (Boolean.TRUE.equals(paymentProcessingLocks.putIfAbsent(lockKey, Boolean.TRUE))) {
                 log.warn("이미 처리 중인 결제 요청입니다: paymentKey={}", approvalRequest.getPaymentKey());
 
-                // 이미 처리 중인 요청이므로 현재 결제 상태 확인
                 try {
                     PaymentStatusResponseDto status = paymentService.getPaymentStatus(approvalRequest.getPaymentKey());
                     log.info("결제 상태 확인: paymentKey={}, status={}", approvalRequest.getPaymentKey(), status.getStatus());
 
                     if ("DONE".equals(status.getStatus())) {
-                        // 이미 완료된 결제라면 예약 정보 확인
+
                         Map<String, Object> reservationInfo = reservationStylistService.findReservationInfoByOrderId(approvalRequest.getOrderId());
 
                         if (reservationInfo != null && reservationInfo.containsKey("reservationId")) {
-                            // 이미 처리된 결제 및 예약 정보 반환
+
                             Map<String, Object> response = new HashMap<>();
                             response.put("success", true);
                             response.put("message", "이미 처리된 결제입니다.");
@@ -94,7 +89,6 @@ public class PaymentController {
                                 ));
                     }
 
-                    // 그 외 상태는 처리 중으로 간주
                     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                             .body(Map.of(
                                     "success", false,
@@ -103,7 +97,7 @@ public class PaymentController {
                             ));
                 } catch (Exception e) {
                     log.warn("결제 상태 확인 중 오류: {}", e.getMessage());
-                    // 오류 발생 시 기본 메시지 반환
+
                     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                             .body(Map.of(
                                     "success", false,
@@ -114,7 +108,6 @@ public class PaymentController {
             }
 
             try {
-                // 토스페이먼츠 API를 호출하여 결제 승인
                 PaymentResponseDto paymentResponse = paymentService.approvePayment(
                         approvalRequest.getPaymentKey(),
                         approvalRequest.getOrderId(),
@@ -122,7 +115,6 @@ public class PaymentController {
                         userId
                 );
 
-                // 결제 상태가 성공이 아닌 경우
                 if (!"DONE".equals(paymentResponse.getStatus())) {
                     log.warn("결제 상태가 완료되지 않음: status={}", paymentResponse.getStatus());
                     return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
@@ -133,30 +125,24 @@ public class PaymentController {
                             ));
                 }
 
-                // ReservationRequestDto 추출 및 orderId 설정
                 ReservationRequestDto reservationRequest = approvalRequest.getReservationData();
                 if (reservationRequest != null) {
-                    // 중요: 토스페이먼츠 orderId를 transactionId로 사용하도록 설정
                     reservationRequest.setOrderId(approvalRequest.getOrderId());
 
-                    // paymentMethod가 null이면 기본값 설정
                     if (reservationRequest.getPaymentMethod() == null) {
                         reservationRequest.setPaymentMethod("toss");
                     }
 
-                    // 추가: paymentStatus가 null이면 기본값 설정 (이 부분이 누락됨)
                     if (reservationRequest.getPaymentStatus() == null) {
                         reservationRequest.setPaymentStatus("COMPLETED");
                     }
 
-                    // 예약 완료 처리
                     Long reservationId = reservationStylistService.completeReservation(reservationRequest, userId);
                     log.info("예약 완료: orderId={}, reservationId={}", approvalRequest.getOrderId(), reservationId);
 
-                    // 예약 정보 조회
                     Map<String, Object> reservationInfo = reservationStylistService.findReservationInfoByOrderId(approvalRequest.getOrderId());
 
-                    // 성공 응답 - 결제 승인 및 예약 정보 함께 반환
+
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", true);
                     response.put("paymentKey", approvalRequest.getPaymentKey());
@@ -176,7 +162,6 @@ public class PaymentController {
 
                     return ResponseEntity.ok(response);
                 } else {
-                    // 예약 정보가 없는 경우 - 결제만 성공한 경우
                     return ResponseEntity.ok(Map.of(
                             "success", true,
                             "paymentKey", approvalRequest.getPaymentKey(),
@@ -190,21 +175,18 @@ public class PaymentController {
                     ));
                 }
             } finally {
-                // 락 해제
                 if (lockKey != null) {
                     paymentProcessingLocks.remove(lockKey);
                 }
             }
 
         } catch (Exception e) {
-            // 오류 발생 시 락 해제
             if (lockKey != null) {
                 paymentProcessingLocks.remove(lockKey);
             }
 
             log.error("결제 승인 중 오류 발생", e);
 
-            // 보다 상세한 오류 정보 제공
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "결제 승인 중 오류가 발생했습니다.");
@@ -220,9 +202,6 @@ public class PaymentController {
         }
     }
 
-    /**
-     * 결제 상태 조회 API
-     */
     @GetMapping("/status/{paymentKey}")
     public ResponseEntity<?> getPaymentStatus(
             @PathVariable String paymentKey,
@@ -251,7 +230,6 @@ public class PaymentController {
             if (status.getOrderId() != null) {
                 response.put("orderId", status.getOrderId());
 
-                // 예약 정보도 함께 조회
                 try {
                     Map<String, Object> reservationInfo = reservationStylistService.findReservationInfoByOrderId(status.getOrderId());
                     if (reservationInfo != null && !reservationInfo.isEmpty()) {
@@ -274,9 +252,6 @@ public class PaymentController {
         }
     }
 
-    /**
-     * 주문 ID로 예약 정보 조회 API
-     */
     @GetMapping("/reservation/by-order/{orderId}")
     public ResponseEntity<?> getReservationByOrderId(
             @PathVariable String orderId,
@@ -312,9 +287,6 @@ public class PaymentController {
         }
     }
 
-    /**
-     * 결제 취소 API
-     */
     @PostMapping("/cancel/{paymentKey}")
     public ResponseEntity<?> cancelPayment(
             @PathVariable String paymentKey,
@@ -324,7 +296,6 @@ public class PaymentController {
         try {
             String cancelReason = requestBody != null ? requestBody.get("cancelReason") : "사용자 요청에 의한 취소";
 
-            // 결제 취소 처리
             Map<String, Object> cancelResult = paymentService.cancelPayment(paymentKey, cancelReason);
 
             return ResponseEntity.ok(cancelResult);

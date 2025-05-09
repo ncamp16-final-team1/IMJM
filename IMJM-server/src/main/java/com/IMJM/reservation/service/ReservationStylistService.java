@@ -174,7 +174,6 @@ public class ReservationStylistService {
     @Transactional
     public Long completeReservation(ReservationRequestDto request, String userId) {
         log.info("예약 완료 처리 시작: {}", request);
-        // 추가: 포인트 사용 정보 디버깅 로그
         log.info("포인트 정보 확인: paymentInfo={}, paymentRequest.pointUsage={}",
                 request.getPaymentInfo(), request.getPaymentRequest().getPointUsage());
 
@@ -183,7 +182,6 @@ public class ReservationStylistService {
             AdminStylist stylist = findStylistById(request.getPaymentRequest().getReservation().getStylistId());
             ServiceMenu serviceMenu = findServiceMenuById(request.getPaymentRequest().getReservation().getServiceMenuId());
 
-            // 수정: 올바른 경로로 포인트 사용량 확인
             int usedPoints = 0;
             if (request.getPaymentRequest() != null &&
                     request.getPaymentRequest().getPointUsage() != null &&
@@ -273,7 +271,6 @@ public class ReservationStylistService {
             AdminStylist stylist,
             ServiceMenu serviceMenu
     ) {
-        // 수정: 올바른 경로로 포인트 사용 정보 체크
         if (request.getPaymentRequest() == null ||
                 request.getPaymentRequest().getPointUsage() == null ||
                 request.getPaymentRequest().getPointUsage().getPrice() == null) {
@@ -312,12 +309,12 @@ public class ReservationStylistService {
 
     private void awardReservationPoint(Users user, AdminStylist stylist) {
         int reservationPoint = 100;
-        int beforePoint = user.getPoint(); // 추가: 적립 전 포인트
+        int beforePoint = user.getPoint();
 
         user.savePoint(reservationPoint);
         userRepository.save(user);
 
-        log.info("포인트 적립: {} -> {} (+{})", beforePoint, user.getPoint(), reservationPoint); // 추가: 포인트 변화 로그
+        log.info("포인트 적립: {} -> {} (+{})", beforePoint, user.getPoint(), reservationPoint);
 
         PointUsage rewardLog = PointUsage.builder()
                 .user(user)
@@ -354,7 +351,6 @@ public class ReservationStylistService {
     }
 
     private Payment createPayment(ReservationRequestDto request, Reservation reservation) {
-        // orderId가 있으면 사용, 없으면 기존 방식으로 생성
         String transactionId = (request.getOrderId() != null && !request.getOrderId().isEmpty()) ?
                 request.getOrderId() : "TRANS_" + System.currentTimeMillis();
 
@@ -387,16 +383,9 @@ public class ReservationStylistService {
                 couponData.getCouponId(), couponData.getDiscountAmount());
     }
 
-
-    /**
-     * 주문 ID(transactionId)로 예약 정보 조회
-     * @param orderId 주문 ID (transactionId)
-     * @return 예약 정보를 포함한 Map
-     */
     @Transactional(readOnly = true)
     public Map<String, Object> findReservationInfoByOrderId(String orderId) {
         try {
-            // 1. 결제 정보 조회 (transactionId를 orderId로 사용)
             Optional<Payment> paymentOpt = paymentRepository.findByTransactionId(orderId);
 
             if (paymentOpt.isEmpty()) {
@@ -405,13 +394,11 @@ public class ReservationStylistService {
 
             Payment payment = paymentOpt.get();
 
-            // 2. 결제와 연결된 예약 정보 조회
             Reservation reservation = payment.getReservation();
             if (reservation == null) {
                 return null;
             }
 
-            // 3. 결과 맵 생성
             Map<String, Object> result = new HashMap<>();
             result.put("reservationId", reservation.getId());
             result.put("status", reservation.isPaid() ? "PAID" : "PENDING");
