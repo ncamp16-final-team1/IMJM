@@ -17,6 +17,7 @@ import {
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LanguageIcon from '@mui/icons-material/Language';
 import LoginIcon from '@mui/icons-material/Login';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import NotificationList from '../notification/NotificationList';
 import NotificationService from '../../services/notification/NotificationService';
 import axios from 'axios';
@@ -239,9 +240,20 @@ function Header(): React.ReactElement {
                     onChange={handleLanguageChange}
                     variant="outlined"
                     size="small"
-                    sx={{ minWidth: '120px' }}
-                    IconComponent={() => null} 
+                    sx={{
+                        minWidth: '120px',
+                        '& .MuiSelect-select': {
+                            display: 'flex',
+                            alignItems: 'center',
+                            paddingRight: '28px', // 화살표 아이콘을 위한 공간 확보
+                        }
+                    }}
+                    // 기본 드롭다운 아이콘은 제거
+                    IconComponent={() => null}
+                    // 시작 부분에 언어 아이콘
                     startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
+                    // 끝 부분에 화살표 아이콘 추가
+                    endAdornment={<ArrowDropDownIcon sx={{ fontSize: 20, color: '#777', position: 'absolute', right: 8 }} />}
                 >
                     <MenuItem value="KR" sx={{
                         '&.Mui-selected': {
