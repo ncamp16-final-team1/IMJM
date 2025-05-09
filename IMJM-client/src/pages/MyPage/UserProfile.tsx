@@ -43,8 +43,6 @@ const UserProfile = () => {
         setIsNotificationEnabled(data.notification);
       })
       .catch(err => {
-        console.log('유저 정보 호출 실패: ', err);
-
       });
   }, []);
 
@@ -59,7 +57,7 @@ const UserProfile = () => {
 
   const handleSave = () => {
     if (editingNickname && nicknameValid !== true) {
-      alert('닉네임 중복 확인이 필요합니다.');
+      alert('You need to verify nickname availability.');
       return;
     }
 
@@ -104,7 +102,6 @@ const UserProfile = () => {
         }
       })
       .catch(err => {
-        console.log('닉네임 중복 확인 실패:', err);
       });
   };
 
@@ -116,7 +113,7 @@ const UserProfile = () => {
       await NotificationService.updateNotificationSettings(newValue); // 서버에 저장
     } catch (error) {
       console.error('알림 설정 변경 실패', error);
-      alert('알림 설정 변경에 실패했습니다.');
+      alert('Failed to change notification settings.');
       setIsNotificationEnabled(!newValue); // 실패 시 원래 값으로 복구
     }
   };
@@ -184,19 +181,19 @@ const UserProfile = () => {
                 borderColor: '#FF9080'
               }}
             >
-              중복 확인
+                Check Availability
             </Button>
           </Box>
         )}
 
         {nicknameValid === true && (
           <Typography color="success.main" fontSize="0.9rem" mt={1}>
-            사용 가능한 닉네임입니다.
+              This nickname is available.
           </Typography>
         )}
         {nicknameValid === false && (
           <Typography color="error.main" fontSize="0.9rem" mt={1}>
-            이미 사용 중인 닉네임입니다.
+              This nickname is already taken.
           </Typography>
         )}
       </Box>
@@ -219,7 +216,6 @@ const UserProfile = () => {
         <Divider sx={{ mt: 4 }} />
       </Stack>
 
-      {/* 알림 설정 섹션 추가 */}
       <Box
           display="flex"
           justifyContent="space-between"
@@ -239,8 +235,8 @@ const UserProfile = () => {
           sx={{ mt: 1, textAlign: 'right' }}
       >
         {isNotificationEnabled
-            ? '모든 알림을 받고 있습니다.'
-            : '모든 알림이 차단되었습니다.'}
+            ? 'All notifications are enabled.'
+            : 'All notifications are blocked.'}
       </Typography>
 
       <Box display="flex" justifyContent="center" mt={4}>
