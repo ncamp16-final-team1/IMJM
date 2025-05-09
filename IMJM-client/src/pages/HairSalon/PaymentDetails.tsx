@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { loadTossPayments } from '@tosspayments/payment-sdk';
+import GooglePayButton from "@google-pay/button-react"; // 추가된 import
 
 // Interfaces
 export interface ReservationRequest {
@@ -437,10 +438,147 @@ const PaymentDetails: React.FC = () => {
     return "이미 사용한 쿠폰입니다.";
   };
 
+// 브라우저 타입 확인 (애플페이 사용 가능 여부 확인)
+useEffect(() => {
+  const isSafari = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    return (
+      userAgent.indexOf("safari") !== -1 && userAgent.indexOf("chrome") === -1
+    );
+  };
+  setIsSafariBrowser(isSafari());
+}, []);
+
+// 구글페이/애플페이 결제 성공 처리 함수 추가
+const handleDirectPaymentSuccess = async (paymentData: any) => {
+  try {
+    let paymentMethod = selectedPayment === "google" ? "google" : "apple";
+    let paymentToken = null;
+    let transactionId = "PAY_" + Date.now();
+
+    if (paymentData && paymentData.paymentMethodData) {
+      paymentToken = paymentData.paymentMethodData.tokenizationData?.token;
+
+      if (paymentData.transactionId) {
+        transactionId = paymentData.transactionId;
+      }
+    }
+/////////////////////////////////////////
+    // 결제 정보 구성 - 서버에서 처리할 수 있는 형태로 구성
+    const reservationData = {
+      price: effectiveFinalAmount,
+      paymentMethod: paymentMethod,
+      transactionId: transactionId,
+      paymentStatus: "COMPLETED",
+      paymentInfo: {
+        discount_amount: couponDiscountAmount,
+        pointUsed: pointApplied ? usedPoints : 0,
+        currency: "KRW",
+      },
+      paymentToken: paymentToken,
+      paymentRequest: {
+        price: effectiveFinalAmount,
+        pointUsage: pointApplied && usedPoints > 0
+          ? {
+              usageType: "USE",
+              price: usedPoints,
+              content: salonName
+            }
+          : undefined,
+        couponData: selectedCoupon
+          ? {
+              couponId: selectedCoupon.couponId,
+              discountAmount: couponDiscountAmount
+            }
+          : undefined,
+        reservation: {
+          stylistId: Number(stylistId),
+          reservationDate: selectedDate,
+          reservationTime: selectedTime,
+          isPaid: false,
+          requirements: requirements || "",
+          serviceMenuId: selectedMenu?.id || 0,
+          salonId: salonId
+        }
+      },
+      salonName,
+      orderId: transactionId,
+    };
+
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    console.log("구글/애플페이 결제 정보 전송:", reservationData);
+
+    // 예약 완료 API 호출
+    const response = await axios.post(
+      "/api/salon/reservation/complete",
+      reservationData,
+      config
+    );
+    
+    if (response.status === 200 && response.data?.success) {
+      const reservationIdFromServer = response.data.reservationId;
+      setReservationId(reservationIdFromServer);
+      setSuccessModalOpen(true); // 성공 시에만 모달 열기
+    } else {
+      alert(
+        "예약 처리 실패: " + (response.data?.message || "알 수 없는 오류")
+      );
+    }
+  } catch (error) {
+    console.error("서버 요청 오류:", error);
+
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("응답 상태:", error.response.status);
+      console.error("응답 데이터:", error.response.data);
+      alert(
+        `서버 오류 (${error.response.status}): ${
+          error.response.data?.message || "알 수 없는 오류"
+        }`
+      );
+    } else {
+      alert("서버 요청 중 오류가 발생했습니다.");
+    }
+  }
+};
+
+// 구글페이 결제 요청 객체 추가
+const googlePayRequest = {
+  apiVersion: 2,
+  apiVersionMinor: 0,
+  allowedPaymentMethods: [
+    {
+      type: "CARD",
+      parameters: {
+        allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+        allowedCardNetworks: ["MASTERCARD", "VISA"],
+      },
+      tokenizationSpecification: {
+        type: "PAYMENT_GATEWAY",
+        parameters: {
+          gateway: "example",
+          gatewayMerchantId: "exampleGatewayMerchantId",
+        },
+      },
+    },
+  ],
+  merchantInfo: {
+    merchantName: salonName,
+    merchantId: "exampleMerchantId",
+  },
+  transactionInfo: {
+    totalPriceStatus: "FINAL",
+    totalPrice: effectiveFinalAmount.toString(),
+    currencyCode: "KRW",
+  },
+};
 
 
-
-  
+/////////////////////////////////////////
 // 결제 페이지 로드 시 세션스토리지 초기화
 useEffect(() => {
   console.log("결제 페이지 로드: 세션스토리지 초기화 중...");
@@ -899,94 +1037,182 @@ useEffect(() => {
         </Typography>
 
         <Grid container spacing={2} justifyContent="center">
-          <Grid item>
-            <Button
-              variant="contained"
-              onClick={() => setSelectedPaymentMethod("card")}
-              sx={{
-                width: "200px",
-                height: "50px",
-                backgroundColor: selectedPaymentMethod === "card" ? "#3445FF" : "#fff",
-                color: selectedPaymentMethod === "card" ? "#fff" : "#3445FF",
-                fontSize: "16px",
-                fontWeight: "bold",
-                borderRadius: "4px",
-                padding: "0px",
-                display: "flex",
-                justifyContent: "center",
-                boxShadow: "none", 
-                border: "1px solid #3445FF",
-                alignItems: "center",
-                textTransform: "none",
-                "&:hover": {
-                  backgroundColor: "#3445FF",
-                  color: "#fff",
-                  boxShadow: "none", 
-                },
-              }}
-            >
-              카드결제
-            </Button>
-          </Grid>
-          <Grid item>
-            <Button
-              variant="contained"
-              onClick={() => setSelectedPaymentMethod("transfer")}
-              sx={{
-                width: "200px",
-                height: "50px",
-                backgroundColor: selectedPaymentMethod === "transfer" ? "#3445FF" : "#fff",
-                color: selectedPaymentMethod === "transfer" ? "#fff" : "#3445FF",
-                fontSize: "16px",
-                fontWeight: "bold",
-                borderRadius: "4px",
-                padding: "0px",
-                display: "flex",
-                justifyContent: "center",
-                boxShadow: "none", 
-                border: "1px solid #3445FF",
-                alignItems: "center",
-                textTransform: "none",
-                "&:hover": {
-                  backgroundColor: "#3445FF",
-                  color: "#fff",
-                  boxShadow: "none", 
-                },
-              }}
-            >
-              계좌이체
-            </Button>
-          </Grid>
-          <Grid item>
-            <Button
-              variant="contained"
-              onClick={() => setSelectedPaymentMethod("pay")}
-              sx={{
-                width: "200px",
-                height: "50px",
-                backgroundColor: selectedPaymentMethod === "pay" ? "#3445FF" : "#fff",
-                color: selectedPaymentMethod === "pay" ? "#fff" : "#3445FF",
-                fontSize: "16px",
-                fontWeight: "bold",
-                borderRadius: "4px",
-                padding: "0px",
-                display: "flex",
-                justifyContent: "center",
-                boxShadow: "none", 
-                border: "1px solid #3445FF",
-                alignItems: "center",
-                textTransform: "none",
-                "&:hover": {
-                  backgroundColor: "#3445FF",
-                  color: "#fff",
-                  boxShadow: "none", 
-                },
-              }}
-            >
-              페이 결제
-            </Button>
-          </Grid>
-        </Grid>
+  {/* 토스페이먼츠 결제 버튼들 */}
+  <Grid item>
+    <Button
+      variant="contained"
+      onClick={() => {
+        setSelectedPaymentMethod("card");
+        setSelectedPayment(null);
+      }}
+      sx={{
+        width: "200px",
+        height: "50px",
+        backgroundColor: selectedPaymentMethod === "card" ? "#3445FF" : "#fff",
+        color: selectedPaymentMethod === "card" ? "#fff" : "#3445FF",
+        fontSize: "16px",
+        fontWeight: "bold",
+        borderRadius: "4px",
+        padding: "0px",
+        display: "flex",
+        justifyContent: "center",
+        boxShadow: "none", 
+        border: "1px solid #3445FF",
+        alignItems: "center",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#3445FF",
+          color: "#fff",
+          boxShadow: "none", 
+        },
+      }}
+    >
+      카드결제
+    </Button>
+  </Grid>
+  <Grid item>
+    <Button
+      variant="contained"
+      onClick={() => {
+        setSelectedPaymentMethod("transfer");
+        setSelectedPayment(null);
+      }}
+      sx={{
+        width: "200px",
+        height: "50px",
+        backgroundColor: selectedPaymentMethod === "transfer" ? "#3445FF" : "#fff",
+        color: selectedPaymentMethod === "transfer" ? "#fff" : "#3445FF",
+        fontSize: "16px",
+        fontWeight: "bold",
+        borderRadius: "4px",
+        padding: "0px",
+        display: "flex",
+        justifyContent: "center",
+        boxShadow: "none", 
+        border: "1px solid #3445FF",
+        alignItems: "center",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#3445FF",
+          color: "#fff",
+          boxShadow: "none", 
+        },
+      }}
+    >
+      계좌이체
+    </Button>
+  </Grid>
+  <Grid item>
+    <Button
+      variant="contained"
+      onClick={() => {
+        setSelectedPaymentMethod("pay");
+        setSelectedPayment(null);
+      }}
+      sx={{
+        width: "200px",
+        height: "50px",
+        backgroundColor: selectedPaymentMethod === "pay" ? "#3445FF" : "#fff",
+        color: selectedPaymentMethod === "pay" ? "#fff" : "#3445FF",
+        fontSize: "16px",
+        fontWeight: "bold",
+        borderRadius: "4px",
+        padding: "0px",
+        display: "flex",
+        justifyContent: "center",
+        boxShadow: "none", 
+        border: "1px solid #3445FF",
+        alignItems: "center",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#3445FF",
+          color: "#fff",
+          boxShadow: "none", 
+        },
+      }}
+    >
+      페이 결제
+    </Button>
+  </Grid>
+  
+  {/* 구글페이 버튼 */}
+  <Grid item>
+    <Button
+      variant="contained"
+      onClick={() => {
+        setSelectedPayment("google");
+        setSelectedPaymentMethod(null);
+      }}
+      sx={{
+        width: "200px",
+        height: "50px",
+        backgroundColor: selectedPayment === "google" ? "#000" : "#fff",
+        color: selectedPayment === "google" ? "#fff" : "#000",
+        fontSize: "16px",
+        fontWeight: "bold",
+        borderRadius: "4px",
+        padding: "0px",
+        display: "flex",
+        justifyContent: "center",
+        boxShadow: "none",
+        border: "1px solid #000",
+        alignItems: "center",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#333",
+          color: "#fff",
+          boxShadow: "none",
+        },
+      }}
+    >
+      Google Pay
+    </Button>
+  </Grid>
+  
+  {/* 애플페이 버튼 (사파리 브라우저에서만 활성화) */}
+  <Grid item>
+    <Button
+      variant="contained"
+      disabled={!isSafariBrowser}
+      onClick={() => {
+        setSelectedPayment("apple");
+        setSelectedPaymentMethod(null);
+      }}
+      sx={{
+        width: "200px",
+        height: "50px",
+        backgroundColor: selectedPayment === "apple" ? "#000" : "#fff",
+        color: selectedPayment === "apple" ? "#fff" : "#000",
+        fontSize: "16px",
+        fontWeight: "bold",
+        borderRadius: "4px",
+        padding: "0px",
+        display: "flex",
+        justifyContent: "center",
+        boxShadow: "none",
+        border: "1px solid #000",
+        alignItems: "center",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#333",
+          color: "#fff",
+          boxShadow: "none",
+        },
+      }}
+    >
+      Apple Pay
+    </Button>
+    {!isSafariBrowser && (
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: "block", mt: 0.5, textAlign: "center" }}
+      >
+        Safari 브라우저에서만 사용 가능합니다.
+      </Typography>
+    )}
+  </Grid>
+</Grid>
 
         <Divider sx={{ marginY: 5, borderColor: "grey.500", borderWidth: 2 }} />
         {/* 요청사항 */}
@@ -1069,49 +1295,108 @@ useEffect(() => {
           </Box>
         </Box>
         {/* 결제 버튼 영역 */}
-        {selectedPaymentMethod &&
-          allChecked &&
-          (pointApplied || usedPoints === 0) && (
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-              <Button
-                onClick={handleTossPayment}
-                variant="contained"
-                sx={{
-                  width: "300px",
-                  height: "50px",
-                  backgroundColor: "#3445FF",
-                  color: "#fff",
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  boxShadow: "none",
-                  "&:hover": {
-                    backgroundColor: "#2338DF",
-                    boxShadow: "none",
+{(selectedPaymentMethod || selectedPayment) &&
+  allChecked &&
+  (pointApplied || usedPoints === 0) && (
+    <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+      {/* 토스페이먼츠 결제 버튼 */}
+      {selectedPaymentMethod && (
+        <Button
+          onClick={handleTossPayment}
+          variant="contained"
+          sx={{
+            width: "300px",
+            height: "50px",
+            backgroundColor: "#3445FF",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "bold",
+            boxShadow: "none",
+            "&:hover": {
+              backgroundColor: "#2338DF",
+              boxShadow: "none",
+            },
+          }}
+        >
+          {effectiveFinalAmount.toLocaleString()}원 결제하기
+        </Button>
+      )}
+      
+      {/* 구글페이 결제 버튼 */}
+      {selectedPayment === "google" && (
+        <GooglePayButton
+          environment="TEST"
+          paymentRequest={{
+            apiVersion: 2,
+            apiVersionMinor: 0,
+            allowedPaymentMethods: [
+              {
+                type: "CARD",
+                parameters: {
+                  allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+                  allowedCardNetworks: ["MASTERCARD", "VISA"],
+                },
+                tokenizationSpecification: {
+                  type: "PAYMENT_GATEWAY",
+                  parameters: {
+                    gateway: "example",
+                    gatewayMerchantId: "exampleGatewayMerchantId",
                   },
-                }}
-              >
-                {effectiveFinalAmount.toLocaleString()}원 결제하기
-              </Button>
-            </Box>
-          )}
-
-        {!(
-          selectedPaymentMethod &&
-          allChecked &&
-          (pointApplied || usedPoints === 0)
-        ) && (
-          <Box sx={{ mt: 3, textAlign: "center" }}>
-            <Typography variant="body2" sx={{ color: 'error.main' }}>
-              {!selectedPaymentMethod
-                ? "결제 수단을 선택해주세요."
-                : !allChecked
-                ? "모든 약관에 동의해주세요."
-                : usedPoints > 0 && !pointApplied
-                ? "포인트 적용하기 버튼을 눌러 포인트를 적용해주세요."
-                : "결제를 진행해주세요."}
-            </Typography>
-          </Box>
-        )}
+                },
+              },
+            ],
+            merchantInfo: {
+              merchantName: salonName,
+              merchantId: "exampleMerchantId",
+            },
+            transactionInfo: {
+              totalPriceStatus: "FINAL",
+              totalPrice: effectiveFinalAmount.toString(),
+              currencyCode: "KRW",
+            },
+          }}
+          onLoadPaymentData={(paymentData) => {
+            handleDirectPaymentSuccess(paymentData);
+          }}
+          buttonType="pay"
+          buttonSizeMode="fill"
+          buttonColor="black"
+          style={{ width: "300px", height: "50px" }}
+        />
+      )}
+      
+      {/* 애플페이 결제 버튼 */}
+      {selectedPayment === "apple" && isSafariBrowser && (
+        <Button
+          onClick={() => {
+            // 애플페이 테스트용 호출
+            handleDirectPaymentSuccess({
+              paymentMethodData: {
+                tokenizationData: { token: "apple-pay-token" }
+              },
+              transactionId: "APPLE_" + Date.now()
+            });
+          }}
+          variant="contained"
+          sx={{
+            width: "300px",
+            height: "50px",
+            backgroundColor: "#000",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "bold",
+            boxShadow: "none",
+            "&:hover": {
+              backgroundColor: "#333",
+              boxShadow: "none",
+            },
+          }}
+        >
+          Apple Pay로 결제하기
+        </Button>
+      )}
+    </Box>
+  )}
 
         {/* 결제 성공 모달 */}
         <Dialog
