@@ -205,6 +205,7 @@ function Dashboard() {
                               divider
                               button
                               onClick={() => handleChatRoomClick(room.id, room.userId)}
+                              sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } }}
                           >
                             <ListItemText
                                 primary={room.userName}
