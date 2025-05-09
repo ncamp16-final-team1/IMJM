@@ -11,42 +11,70 @@ class AdminWebSocketService {
     private messageListeners: Map<string, MessageListener[]> = new Map();
     private salonId: string | null = null;
 
-    // 웹소켓 연결 초기화
-    initialize(salonId: string) {
-        this.salonId = salonId;
+    // AdminWebSocketService.ts에 추가
+    isConnected(): boolean {
+        return this.client !== null && this.client.connected;
+    }
 
-        if (this.client && this.client.connected) {
-            this.disconnect();
-        }
+// initialize 메소드를 수정하여 Promise를 반환하도록 변경
+    initialize(salonId: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.salonId = salonId;
 
-        this.client = new Client({
-            brokerURL: undefined,
-            webSocketFactory: () => new SockJS('/ws'),
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
+            if (this.client && this.client.connected) {
+                this.disconnect();
+            }
+
+            this.client = new Client({
+                brokerURL: undefined,
+                webSocketFactory: () => new SockJS('/ws'),
+                reconnectDelay: 5000,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
+            });
+
+            this.client.onConnect = (frame) => {
+                // 메시지 구독
+                this.client?.subscribe(`/user/${this.salonId}/queue/messages`, (message) => {
+                    const messageData = JSON.parse(message.body);
+                    this.notifyListeners('message', messageData);
+                });
+
+                // 메시지 읽음 이벤트 구독 추가
+                this.client?.subscribe(`/user/${this.salonId}/queue/message-read`, (message) => {
+                    const roomId = JSON.parse(message.body);
+                    this.notifyListeners('message-read', roomId);
+                });
+
+                // 연결 성공 시 Promise 해결
+                resolve();
+            };
+
+            this.client.onStompError = (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+                // 에러 시 Promise 거부
+                reject(new Error(`WebSocket error: ${frame.headers['message']}`));
+            };
+
+            // 연결 시간 초과 처리
+            const timeoutId = setTimeout(() => {
+                reject(new Error('WebSocket connection timeout'));
+            }, 10000);
+
+            this.client.onWebSocketClose = (event) => {
+                clearTimeout(timeoutId);
+                console.error('WebSocket closed:', event);
+                reject(new Error('WebSocket closed'));
+            };
+
+            try {
+                this.client.activate();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                reject(error);
+            }
         });
-
-        this.client.onConnect = (frame) => {
-            // 메시지 구독
-            this.client?.subscribe(`/user/${this.salonId}/queue/messages`, (message) => {
-                const messageData = JSON.parse(message.body);
-                this.notifyListeners('message', messageData);
-            });
-
-            // 메시지 읽음 이벤트 구독 추가
-            this.client?.subscribe(`/user/${this.salonId}/queue/message-read`, (message) => {
-                const roomId = JSON.parse(message.body);
-                this.notifyListeners('message-read', roomId);
-            });
-        };
-
-        this.client.onStompError = (frame) => {
-            console.error('Broker reported error: ' + frame.headers['message']);
-            console.error('Additional details: ' + frame.body);
-        };
-
-        this.client.activate();
     }
 
     disconnect() {

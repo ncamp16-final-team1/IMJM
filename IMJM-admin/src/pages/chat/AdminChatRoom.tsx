@@ -507,7 +507,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     };
     const handleDeleteRoom = async () => {
         try {
-            await axios.delete(`/api/admin/chat/room/${roomId}`);
+            await axios.delete(`/api/chat/room/${roomId}`);
             navigate('/chat');
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);
@@ -522,16 +522,42 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     const handleConfirmDelete = async () => {
         try {
             setIsDeleting(true);
-            await axios.delete(`/api/chat/room/${roomId}`);
-            setConfirmOpen(false);
-            setDeletedOpen(true);
-        } catch (error) {
-            console.error('채팅방 삭제 실패:', error);
+
+            // DELETE 요청 직접 전송 (웹소켓 의존성 제거)
+            try {
+                console.log(`채팅방 삭제 요청 시작: chatRoomId=${roomId}`);
+                // axios를 사용하여 직접 요청
+                await axios.delete(`/api/admin/chat/room/${roomId}`);
+                console.log('채팅방 삭제 성공!');
+                setConfirmOpen(false);
+                setDeletedOpen(true);
+            } catch (axiosError: any) {
+                // axios 오류 상세 로깅
+                console.error('DELETE 요청 실패:', axiosError.message);
+                if (axiosError.response) {
+                    console.error('응답 상태:', axiosError.response.status);
+                    console.error('응답 데이터:', axiosError.response.data);
+                }
+
+                // 두 번째 방법으로 시도 - 클라이언트 API 사용
+                try {
+                    console.log('대체 방법으로 삭제 시도...');
+                    await axios.delete(`/api/chat/room/${roomId}`);
+                    console.log('대체 방법으로 삭제 성공!');
+                    setConfirmOpen(false);
+                    setDeletedOpen(true);
+                } catch (secondError: any) {
+                    console.error('두 번째 삭제 시도 실패:', secondError);
+                    throw secondError; // 다시 throw하여 외부 catch 블록에서 처리
+                }
+            }
+        } catch (error: any) {
+            console.error('채팅방 삭제 최종 실패:', error);
             setIsDeleting(false);
-            alert('삭제에 실패했습니다.');
+            alert(`삭제에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
         }
     };
-
+    
     if (loading && messages.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
