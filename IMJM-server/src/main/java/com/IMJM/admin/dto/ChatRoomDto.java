@@ -1,7 +1,7 @@
 package com.IMJM.admin.dto;
 
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -14,9 +14,10 @@ public class ChatRoomDto {
     private String salonId;
     private String salonName;
     private String userName;
-    private LocalDateTime createdAt;
-    private LocalDateTime lastMessageTime;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime lastMessageTime;
     private String lastMessage;
     private boolean hasUnreadMessages;
     private int unreadCount;
+    private String userProfileUrl;
 }

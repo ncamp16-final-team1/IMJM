@@ -5,13 +5,14 @@ class TranslationService {
         try {
             console.log("번역 API 요청:", { text, source, target });
 
-            const response = await axios.get('/api/test/translate', {
+            // API 호출
+            const response = await axios.get('/api/admin/translate', {
                 params: { text, source, target }
             });
 
             console.log("번역 API 응답:", response.data);
 
-            // response.data가 있고 translated 필드가 있는지 확인
+            // 응답에서 번역 결과 추출
             if (response.data && response.data.translated) {
                 return response.data.translated;
             } else {

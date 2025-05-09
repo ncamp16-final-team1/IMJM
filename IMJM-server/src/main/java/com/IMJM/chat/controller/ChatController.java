@@ -94,7 +94,16 @@ public class ChatController {
     @GetMapping("/rooms/user")
     public ResponseEntity<List<ChatRoomDto>> getUserChatRooms(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
         String userId = userDetails.getId();
-        return ResponseEntity.ok(chatService.getUserChatRooms(userId));
+        List<ChatRoomDto> chatRooms = chatService.getUserChatRooms(userId);
+
+        // 각 채팅방에 대해 미용실 프로필 URL 추가
+        chatRooms.forEach(room -> {
+            List<SalonPhotos> salonPhotos = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(room.getSalonId());
+            String salonProfileUrl = !salonPhotos.isEmpty() ? salonPhotos.get(0).getPhotoUrl() : null;
+            room.setSalonProfileUrl(salonProfileUrl);
+        });
+
+        return ResponseEntity.ok(chatRooms);
     }
 
     // 채팅방 목록 조회 (미용실)

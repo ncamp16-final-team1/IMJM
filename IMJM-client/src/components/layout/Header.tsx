@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import logo from '../../assets/images/IMJM-logo-Regi.png';
@@ -12,16 +12,18 @@ import {
     IconButton,
     styled,
     alpha,
-    Fade
+    Fade,
+    CircularProgress
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LanguageIcon from '@mui/icons-material/Language';
 import LoginIcon from '@mui/icons-material/Login';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import NotificationList from '../notification/NotificationList';
 import NotificationService from '../../services/notification/NotificationService';
 import axios from 'axios';
 
-type Language = 'ko' | 'en';
+type Language = 'KR' | 'EN';
 
 // 스타일링된 컴포넌트들
 const StyledHeader = styled('header')(({ theme }) => ({
@@ -116,14 +118,66 @@ const StyledNotificationIcon = styled(NotificationsIcon)(({ theme }) => ({
 }));
 
 function Header(): React.ReactElement {
-    const [language, setLanguage] = useState<Language>('ko');
+    const [language, setLanguage] = useState<Language>('KR');
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
     const [unreadCount, setUnreadCount] = useState<number>(0);
+    const [isLanguageLoading, setIsLanguageLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
     const isNotificationOpen = Boolean(notificationAnchorEl);
 
+    // 언어 설정을 가져오는 함수를 useCallback으로 래핑
+    const fetchLanguage = useCallback(async () => {
+        setIsLanguageLoading(true);
+        try {
+            // 로컬 스토리지에서 먼저 확인
+            const savedLanguage = localStorage.getItem('language') as Language;
+            if (savedLanguage) {
+                if (savedLanguage === 'ko' || savedLanguage === 'kr') {
+                    setLanguage('KR');
+                } else if (savedLanguage === 'en') {
+                    setLanguage('EN');
+                } else {
+                    setLanguage(savedLanguage as Language); // 'KR' 또는 'EN'인 경우 그대로 사용
+                }
+            }
+
+            // 로그인된 경우 서버에서 언어 설정 가져오기
+            if (isLoggedIn) {
+                const langResponse = await axios.get('/api/user/language');
+                if (langResponse.data && langResponse.data.language) {
+                    // 서버에서 받은 값을 KR/EN 형식으로 변환
+                    const serverLanguage = langResponse.data.language.toLowerCase();
+                    const normalizedLanguage = serverLanguage === 'ko' || serverLanguage === 'kr' ? 'KR' : 'EN';
+                    setLanguage(normalizedLanguage);
+
+                    // 로컬 스토리지 업데이트
+                    localStorage.setItem('language', normalizedLanguage);
+                }
+            }
+        } catch (error) {
+            console.error('언어 설정 가져오기 실패:', error);
+            // 에러 발생 시 기본값 설정
+            setLanguage('KR');
+        } finally {
+            setIsLanguageLoading(false);
+        }
+    }, [isLoggedIn]);
+
+    // 알림 개수를 가져오는 함수
+    const fetchUnreadCount = useCallback(async () => {
+        if (!isLoggedIn) return;
+
+        try {
+            const count = await NotificationService.getUnreadCount();
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('읽지 않은 알림 수 조회 실패:', error);
+        }
+    }, [isLoggedIn]);
+
+    // 초기 로그인 상태 확인
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
@@ -131,7 +185,6 @@ function Header(): React.ReactElement {
                     withCredentials: true
                 });
                 setIsLoggedIn(true);
-                fetchUnreadCount();
             } catch (error) {
                 setIsLoggedIn(false);
             }
@@ -140,19 +193,17 @@ function Header(): React.ReactElement {
         checkLoginStatus();
     }, []);
 
-    const fetchUnreadCount = async () => {
-        try {
-            const count = await NotificationService.getUnreadCount();
-            setUnreadCount(count);
-        } catch (error) {
-            console.error('읽지 않은 알림 수 조회 실패:', error);
-        }
-    };
-
+    // 로그인 상태가 변경되면 언어 설정과 알림 개수 가져오기
     useEffect(() => {
+        fetchLanguage();
         if (isLoggedIn) {
             fetchUnreadCount();
+        }
+    }, [isLoggedIn, fetchLanguage, fetchUnreadCount]);
 
+    // 알림 관련 이벤트 리스너 설정
+    useEffect(() => {
+        if (isLoggedIn) {
             const handleNewNotification = () => {
                 fetchUnreadCount();
             };
@@ -182,10 +233,32 @@ function Header(): React.ReactElement {
                 clearInterval(intervalId);
             };
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, fetchUnreadCount]);
 
-    const handleLanguageChange = (event: SelectChangeEvent<Language>): void => {
-        setLanguage(event.target.value as Language);
+    const handleLanguageChange = async (event: SelectChangeEvent<Language>) => {
+        const newLanguage = event.target.value as Language;
+        setLanguage(newLanguage);
+
+        // 로컬 스토리지에 저장
+        localStorage.setItem('language', newLanguage);
+
+        // 언어 변경 이벤트 발생
+        window.dispatchEvent(new Event('languageChange'));
+
+        // 로그인된 경우 서버에도 저장 (서버 형식에 맞게 변환)
+        if (isLoggedIn) {
+            try {
+                // 서버에 전송할 때는 소문자로 변환 ('KR' -> 'ko', 'EN' -> 'en')
+                const serverLanguage = newLanguage === 'KR' ? 'ko' : 'en';
+
+                await axios.put('/api/user/language', null, {
+                    params: { language: serverLanguage },
+                    withCredentials: true
+                });
+            } catch (error) {
+                console.error('언어 설정 저장 실패:', error);
+            }
+        }
     };
 
     const navigateToLogin = (): void => {
@@ -211,42 +284,59 @@ function Header(): React.ReactElement {
             />
 
             <HeaderActions>
-                <StyledSelect
-                    value={language}
-                    onChange={handleLanguageChange}
-                    variant="outlined"
-                    size="small"
-                    sx={{ minWidth: '120px' }}
-                    IconComponent={() => null} // 기본 아이콘 숨기기
-                    startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
-                >
-                    <MenuItem value="ko" sx={{
-                        '&.Mui-selected': {
-                            backgroundColor: alpha('#FDC7BF', 0.1),
-                            '&:hover': {
-                                backgroundColor: alpha('#FDC7BF', 0.2)
+                {isLanguageLoading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '120px', justifyContent: 'center' }}>
+                        <CircularProgress size={20} sx={{ color: '#FF9080' }} />
+                    </Box>
+                ) : (
+                    <StyledSelect
+                        value={language}
+                        onChange={handleLanguageChange}
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                            minWidth: '120px',
+                            '& .MuiSelect-select': {
+                                display: 'flex',
+                                alignItems: 'center',
+                                paddingRight: '28px', // 화살표 아이콘을 위한 공간 확보
                             }
-                        },
-                        '&:hover': {
-                            backgroundColor: alpha('#FDC7BF', 0.1)
-                        }
-                    }}>
-                        한국어
-                    </MenuItem>
-                    <MenuItem value="en" sx={{
-                        '&.Mui-selected': {
-                            backgroundColor: alpha('#FDC7BF', 0.1),
+                        }}
+                        // 기본 드롭다운 아이콘은 제거
+                        IconComponent={() => null}
+                        // 시작 부분에 언어 아이콘
+                        startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
+                        // 끝 부분에 화살표 아이콘 추가
+                        endAdornment={<ArrowDropDownIcon sx={{ fontSize: 20, color: '#777', position: 'absolute', right: 8 }} />}
+                    >
+                        <MenuItem value="KR" sx={{
+                            '&.Mui-selected': {
+                                backgroundColor: alpha('#FDC7BF', 0.1),
+                                '&:hover': {
+                                    backgroundColor: alpha('#FDC7BF', 0.2)
+                                }
+                            },
                             '&:hover': {
-                                backgroundColor: alpha('#FDC7BF', 0.2)
+                                backgroundColor: alpha('#FDC7BF', 0.1)
                             }
-                        },
-                        '&:hover': {
-                            backgroundColor: alpha('#FDC7BF', 0.1)
-                        }
-                    }}>
-                        English
-                    </MenuItem>
-                </StyledSelect>
+                        }}>
+                            한국어
+                        </MenuItem>
+                        <MenuItem value="EN" sx={{
+                            '&.Mui-selected': {
+                                backgroundColor: alpha('#FDC7BF', 0.1),
+                                '&:hover': {
+                                    backgroundColor: alpha('#FDC7BF', 0.2)
+                                }
+                            },
+                            '&:hover': {
+                                backgroundColor: alpha('#FDC7BF', 0.1)
+                            }
+                        }}>
+                            English
+                        </MenuItem>
+                    </StyledSelect>
+                )}
 
                 {isLoggedIn ? (
                     <IconButton

@@ -1,7 +1,7 @@
 package com.IMJM.admin.dto;
 
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -16,7 +16,7 @@ public class ChatMessageDto {
     private String senderId;
     private String message;
     private Boolean isRead;
-    private LocalDateTime sentAt;
+    private OffsetDateTime sentAt;
     private String translatedMessage;
     private String translationStatus;
     private List<ChatPhotoDto> photos;

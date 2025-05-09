@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,7 +108,7 @@ public class AdminJoinService {
                             .salon(salon)
                             .photoUrl(photoUrl)
                             .photoOrder(order++)
-                            .uploadDate(LocalDateTime.now())
+                            .uploadDate(OffsetDateTime.now())
                             .build());
                 } catch (IOException e) {
                     e.printStackTrace();

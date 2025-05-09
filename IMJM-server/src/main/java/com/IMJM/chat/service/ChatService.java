@@ -1,5 +1,6 @@
 package com.IMJM.chat.service;
 
+import com.IMJM.admin.repository.SalonPhotosRepository;
 import com.IMJM.chat.dto.ChatMessageDto;
 import com.IMJM.chat.dto.ChatPhotoDto;
 import com.IMJM.chat.dto.ChatRoomDto;
@@ -18,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,8 @@ public class ChatService {
     private final ReservationRepository reservationRepository;
 
     private final StorageService storageService;
+
+    private final SalonPhotosRepository salonPhotosRepository;
 
     @Value("${ncp.bucket-name}")
     private String bucketName;
@@ -63,8 +66,8 @@ public class ChatService {
                             ChatRoom.builder()
                                     .user(user)
                                     .salon(salon)
-                                    .createdAt(LocalDateTime.now())
-                                    .lastMessageTime(LocalDateTime.now())
+                                    .createdAt(OffsetDateTime.now())
+                                    .lastMessageTime(OffsetDateTime.now())
                                     .build()
                     );
                 });
@@ -104,7 +107,7 @@ public class ChatService {
         ChatMessage savedMessage = saveNewMessage(chatRoom, messageDto, translationResult);
 
         // 채팅방 마지막 메시지 시간 업데이트
-        chatRoom.updateLastMessageTime(LocalDateTime.now());
+        chatRoom.updateLastMessageTime(OffsetDateTime.now());
         chatRoomRepository.save(chatRoom);
 
         // 사진 처리 및 응답 DTO 생성
@@ -212,7 +215,7 @@ public class ChatService {
                 .senderType(messageDto.getSenderType())
                 .message(messageDto.getMessage())
                 .isRead(false)
-                .sentAt(LocalDateTime.now())
+                .sentAt(OffsetDateTime.now())
                 .translatedMessage(translationResult.translatedMessage)
                 .translationStatus(translationResult.translationStatus)
                 .build();
@@ -230,7 +233,7 @@ public class ChatService {
                     ChatPhotos photo = ChatPhotos.builder()
                             .chatMessage(savedMessage)
                             .photoUrl(photoDto.getPhotoUrl())
-                            .uploadDate(LocalDateTime.now())
+                            .uploadDate(OffsetDateTime.now())
                             .build();
 
                     ChatPhotos savedPhoto = chatPhotosRepository.save(photo);
@@ -350,8 +353,13 @@ public class ChatService {
         return chatMessageRepository.countByReadFalseAndSenderType(chatRoomId, oppositeType);
     }
 
-    // 엔티티를 DTO로 변환하는 메서드들
     private ChatRoomDto convertToChatRoomDto(ChatRoom chatRoom, String userType) {
+        String salonProfileUrl = null;
+        List<SalonPhotos> salonPhotos = salonPhotosRepository.findBySalon_IdOrderByPhotoOrderAsc(chatRoom.getSalon().getId());
+        if (!salonPhotos.isEmpty()) {
+            salonProfileUrl = salonPhotos.get(0).getPhotoUrl();
+        }
+
         // 마지막 메시지 찾기
         ChatMessage lastMessage = chatMessageRepository
                 .findTopByChatRoomIdOrderBySentAtDesc(chatRoom.getId())
@@ -384,6 +392,8 @@ public class ChatService {
                 .lastMessage(lastMessageContent)
                 .hasUnreadMessages(hasUnreadMessages)
                 .unreadCount(unreadCount)
+                .userProfileUrl(chatRoom.getUser().getProfile())
+                .salonProfileUrl(salonProfileUrl)
                 .build();
     }
 
@@ -492,8 +502,8 @@ public class ChatService {
                             ChatRoom.builder()
                                     .user(user)
                                     .salon(salon)
-                                    .createdAt(LocalDateTime.now())
-                                    .lastMessageTime(LocalDateTime.now())
+                                    .createdAt(OffsetDateTime.now())
+                                    .lastMessageTime(OffsetDateTime.now())
                                     .build()
                     );
                 });

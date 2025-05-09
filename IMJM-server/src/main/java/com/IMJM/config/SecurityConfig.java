@@ -1,13 +1,8 @@
 package com.IMJM.config;
 
-import com.IMJM.jwt.AdminJWTFilter;
-import com.IMJM.jwt.JWTUtil;
-import com.IMJM.jwt.AdminLoginFilter;
-import com.IMJM.jwt.UserJWTFilter;
-import com.IMJM.jwt.UserSuccessHandler;
+import com.IMJM.jwt.*;
 import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.CustomOAuth2UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +17,6 @@ import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationF
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.List;
 
@@ -101,10 +95,8 @@ public class SecurityConfig {
                                 ,"/api/admin/join"
                                 ,"/api/user/location"
                                 ,"/api/salon/**"
-                                ,"/api/archive/**"
                                 ,"/api/archive"
                                 ,"/api/review/**"
-                                ,"/api/review-reply/**"
                                 ,"/api/review-reply/**"
                                 ,"/api/user/**"
                         ).permitAll()

@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @NoArgsConstructor
@@ -18,10 +18,11 @@ public class ChatRoomDto {
     private String salonId;
     private String salonName;  // 미용실 이름 (표시용)
     private String userName;   // 사용자 이름 (표시용)
-    private LocalDateTime createdAt;
-    private LocalDateTime lastMessageTime;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime lastMessageTime;
     private String lastMessage;
     private boolean hasUnreadMessages;
-
     private int unreadCount;
+    private String userProfileUrl;
+    private String salonProfileUrl;
 }

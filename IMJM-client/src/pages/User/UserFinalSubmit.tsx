@@ -20,7 +20,7 @@ const UserFinalSubmit: React.FC = () => {
     profile,
     birthday,
     region,
-    is_notification,
+    isNotification,
     salonName,
     license,
   } = location.state || {};
@@ -38,7 +38,7 @@ const UserFinalSubmit: React.FC = () => {
         nickname,
         birthday,
         region,
-        is_notification,
+        isNotification,
         termsAgreed: agreed,
       };
 
@@ -64,7 +64,7 @@ const UserFinalSubmit: React.FC = () => {
       });
 
       if (response.status === 200) {
-        navigate('/'); 
+        window.location.href = '/';
       }
     } catch (err) {
       console.error(err);

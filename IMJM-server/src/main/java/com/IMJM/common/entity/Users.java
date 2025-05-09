@@ -128,4 +128,8 @@ public class Users {
     public void changeNotificationSetting(boolean isNotification) {
         this.isNotification = isNotification;
     }
+
+    public void updateLanguage(String language) {
+        this.language = language;
+    }
 }

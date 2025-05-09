@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +26,6 @@ public class AdminReviewService {
     private final ReviewReplyRepository reviewReplyRepository;
     private final ReviewRepository reviewRepository;
     private final ReviewPhotosRepository reviewPhotosRepository;
-    private final SalonRepository salonRepository;
 
     public List<AdminReviewDto> getReviewList(String salonId) {
 
@@ -50,7 +49,7 @@ public class AdminReviewService {
         ReviewReply reviewReply = ReviewReply.builder()
                 .review(review)
                 .content(content)
-                .createdAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
                 .build();
         reviewReplyRepository.save(reviewReply);
     }

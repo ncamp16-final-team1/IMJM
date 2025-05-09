@@ -27,15 +27,12 @@ const AdminChatList: React.FC<{ onSelectRoom: (roomId: number, userId: string) =
     useEffect(() => {
         const fetchSalonAndChatRooms = async () => {
             try {
-                // 현재 로그인된 미용실 정보 가져오기
                 const salonResponse = await axios.get('/api/admin/salons/my');
                 const currentSalonId = salonResponse.data.id;
                 setSalonId(currentSalonId);
 
-                // WebSocket 연결 초기화
                 AdminWebSocketService.initialize(currentSalonId);
 
-                // 채팅방 목록 가져오기
                 const rooms = await AdminChatService.getSalonChatRooms();
                 setChatRooms(rooms);
                 setLoading(false);
@@ -47,7 +44,6 @@ const AdminChatList: React.FC<{ onSelectRoom: (roomId: number, userId: string) =
 
         fetchSalonAndChatRooms();
 
-        // 새 메시지 수신 시 채팅방 목록 업데이트
         const handleNewMessage = async () => {
             try {
                 const rooms = await AdminChatService.getSalonChatRooms();
@@ -57,13 +53,29 @@ const AdminChatList: React.FC<{ onSelectRoom: (roomId: number, userId: string) =
             }
         };
 
+        const handleMessageRead = async (roomId: number) => {
+            try {
+                setChatRooms(prevRooms =>
+                    prevRooms.map(room =>
+                        room.id === roomId
+                            ? { ...room, unreadCount: 0, hasUnreadMessages: false }
+                            : room
+                    )
+                );
+            } catch (error) {
+                console.error('채팅방 읽음 상태 업데이트 실패:', error);
+            }
+        };
+
         if (salonId) {
             AdminWebSocketService.addListener('message', handleNewMessage);
+            AdminWebSocketService.addListener('message-read', handleMessageRead);
         }
 
         return () => {
             if (salonId) {
                 AdminWebSocketService.removeListener('message', handleNewMessage);
+                AdminWebSocketService.removeListener('message-read', handleMessageRead);
             }
         };
     }, [salonId]);
@@ -108,7 +120,15 @@ const AdminChatList: React.FC<{ onSelectRoom: (roomId: number, userId: string) =
                                 }}
                             >
                                 <ListItemAvatar>
-                                    <Avatar alt={room.userName} />
+                                    <Avatar
+                                        alt={room.userName}
+                                        src={room.userProfileUrl}
+                                        sx={{
+                                            bgcolor: !room.userProfileUrl ? '#FF9080' : undefined
+                                        }}
+                                    >
+                                        {!room.userProfileUrl && room.userName ? room.userName.charAt(0) : ''}
+                                    </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={

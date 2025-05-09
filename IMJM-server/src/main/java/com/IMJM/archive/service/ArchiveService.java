@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,7 +54,7 @@ public class ArchiveService {
                 .gender(null)
                 .color(null)
                 .length(null)
-                .regDate(LocalDateTime.now())
+                .regDate(OffsetDateTime.now())
                 .build();
 
         Archive savedArchive = archiveRepository.save(archive);
@@ -215,7 +215,7 @@ public class ArchiveService {
                             .archive(archive)
                             .photoUrl(photoUrl)
                             .photoOrder(order++)
-                            .uploadDate(LocalDateTime.now())
+                            .uploadDate(OffsetDateTime.now())
                             .build();
 
                     archivePhotosRepository.save(archivePhoto);
@@ -265,7 +265,7 @@ public class ArchiveService {
                             .archive(archive)
                             .photoUrl(photoUrl)
                             .photoOrder(order++)
-                            .uploadDate(LocalDateTime.now())
+                            .uploadDate(OffsetDateTime.now())
                             .build());
                 } catch (IOException e) {
                     log.error("사진 업로드 중 오류 발생: {}", e.getMessage());

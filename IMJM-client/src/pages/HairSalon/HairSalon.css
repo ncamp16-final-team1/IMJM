@@ -1,6 +1,6 @@
 .hair-salon-container {
     padding: 16px;
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .location-change-btn:hover {
-    background-color: rgba(63, 120, 255, 0.08);
+    background-color: rgba(253, 199, 191, 0.1);
 }
 
 .loading, .error {
@@ -63,94 +63,124 @@
     align-items: center;
     height: 200px;
     font-size: 18px;
+    color: #666;
 }
 
 .error {
     color: #e53935;
 }
 
+/* 살롱 리스트 스타일 강화 */
 .salon-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 16px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    margin-top: 16px !important;
+    width: 100% !important;
 }
 
-.salon-card {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background-color: white;
-    transition: transform 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
+/* 살롱 카드 스타일 강화 */
+.hair-salon-container .salon-card {
+    width: 100% !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+    background-color: white !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    margin-bottom: 20px !important;
+    cursor: pointer !important;
+    display: block !important;
 }
 
-.salon-card:hover {
-    transform: translateY(-3px);
+.hair-salon-container .salon-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
 }
 
-.salon-info {
-    padding: 16px;
-    flex: 1;
+.hair-salon-container .salon-card-content {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
 }
 
-.salon-info h2 {
-    margin: 0 0 12px 0;
-    font-size: 20px;
-    color: #333;
+.hair-salon-container .salon-photo {
+    flex: 0 0 200px !important;
+    min-width: 200px !important;
+    height: 180px !important;
+    position: relative !important;
+    overflow: hidden !important;
 }
 
-.salon-address, .salon-phone {
-    margin: 8px 0;
-    font-size: 14px;
-    color: #555;
+.hair-salon-container .salon-photo img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
 }
 
-.salon-intro {
-    margin: 12px 0;
-    font-size: 14px;
-    color: #666;
-    line-height: 1.5;
+.hair-salon-container .salon-info {
+    flex: 1 !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
 }
 
-.salon-business-hours {
-    margin: 8px 0;
-    font-size: 14px;
-    color: #555;
+.hair-salon-container .salon-info h2 {
+    margin: 0 0 12px 0 !important;
+    font-size: 20px !important;
+    color: #333 !important;
+    font-weight: 600 !important;
 }
 
-.salon-rating {
-    display: flex;
-    align-items: center;
-    margin-top: 8px;
+/* 살롱 카드 내부 정보 스타일 수정 */
+.hair-salon-container .salon-address,
+.hair-salon-container .salon-business-hours {
+    display: flex !important;
+    align-items: center !important;
+    margin: 8px 0 !important;
+    font-size: 14px !important;
+    color: #666 !important;
+    line-height: 24px !important; /* 일관된 높이 설정 */
 }
 
-.score-text {
-    margin-left: 6px;
-    font-weight: bold;
-    color: #333;
+.hair-salon-container .salon-address svg,
+.hair-salon-container .salon-business-hours svg {
+    margin-right: 8px !important;
+    color: #FF9080 !important;
+    width: 20px !important; /* 아이콘 크기 고정 */
+    height: 20px !important;
+    min-width: 20px !important; /* 아이콘 최소 너비 설정 */
+    vertical-align: middle !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
-.salon-photo {
-    width: 100%;
-    height: 200px;
-    position: relative;
+.hair-salon-container .salon-rating {
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 12px !important;
 }
 
-.salon-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+.hair-salon-container .score-text {
+    margin-left: 6px !important;
+    font-weight: normal !important;
+    color: #666 !important;
+}
+
+.hair-salon-container .salon-distance {
+    font-size: 0.8em !important;
+    font-weight: normal !important;
+    color: #666 !important;
+    margin-left: 5px !important;
 }
 
 /* 지도 관련 스타일 */
 .map-container {
     margin-bottom: 30px;
     width: 100%;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     background-color: white;
@@ -160,6 +190,7 @@
 .map-container h2 {
     padding: 15px;
     margin: 0;
+    font-weight: 600;
     border-bottom: 1px solid #eee;
 }
 
@@ -175,6 +206,7 @@
 .nearby-salons h3 {
     font-size: 18px;
     margin: 15px 0 10px 0;
+    font-weight: 600;
 }
 
 .nearby-salon-list {
@@ -182,6 +214,21 @@
     overflow-x: auto;
     gap: 12px;
     padding-bottom: 10px;
+    scrollbar-width: thin;
+}
+
+.nearby-salon-list::-webkit-scrollbar {
+    height: 6px;
+}
+
+.nearby-salon-list::-webkit-scrollbar-thumb {
+    background-color: #FDC7BF;
+    border-radius: 3px;
+}
+
+.nearby-salon-list::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+    border-radius: 3px;
 }
 
 .nearby-salon-item {
@@ -191,6 +238,7 @@
     padding: 12px;
     cursor: pointer;
     transition: transform 0.2s ease;
+    background-color: white;
 }
 
 .nearby-salon-item:hover {
@@ -225,8 +273,15 @@
     position: relative;
 }
 
-/* 모바일 대응 */
-@media (max-width: 600px) {
+.loading-more {
+    text-align: center;
+    color: #888;
+    padding: 15px 0;
+    font-size: 14px;
+}
+
+/* 모바일 대응 - 좀 더 넓은 화면까지 모바일 스타일 적용 */
+@media (max-width: 768px) {
     .location-header {
         padding: 8px 12px;
     }
@@ -243,10 +298,38 @@
     .map {
         height: 400px;
     }
+
+    .hair-salon-container .salon-card-content {
+        flex-direction: column !important;
+    }
+
+    .hair-salon-container .salon-photo {
+        flex: none !important;
+        height: 180px !important;
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+
+    .hair-salon-container .salon-info {
+        padding: 12px !important;
+    }
+
+    .hair-salon-container .salon-info h2 {
+        font-size: 18px !important;
+        margin-bottom: 8px !important;
+    }
 }
-.salon-distance {
-    font-size: 0.8em;
-    font-weight: normal;
-    color: #666;
-    margin-left: 5px;
+
+@media (max-width: 480px) {
+    .hair-salon-container {
+        padding: 10px;
+    }
+
+    .map {
+        height: 300px;
+    }
+
+    .nearby-salon-item {
+        min-width: 160px;
+    }
 }

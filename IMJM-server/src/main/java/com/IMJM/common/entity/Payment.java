@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -35,7 +35,7 @@ public class Payment {
     private String transactionId;
 
     @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
+    private OffsetDateTime paymentDate;
 
     @Column(name = "is_canceled")
     private boolean isCanceled;
@@ -44,7 +44,7 @@ public class Payment {
     private BigDecimal canceledAmount;
 
     @Column(name = "canceled_at")
-    private LocalDateTime canceledAt;
+    private OffsetDateTime canceledAt;
 
     @Column(name = "is_refunded")
     private boolean isRefunded;

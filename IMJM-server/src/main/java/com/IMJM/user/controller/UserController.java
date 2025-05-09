@@ -1,8 +1,10 @@
 package com.IMJM.user.controller;
 
+import com.IMJM.common.entity.Users;
 import com.IMJM.user.dto.CustomOAuth2UserDto;
 import com.IMJM.user.dto.LocationDto;
 import com.IMJM.user.dto.UserDto;
+import com.IMJM.user.repository.UserRepository;
 import com.IMJM.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto,
@@ -111,6 +114,40 @@ public class UserController {
             @RequestParam boolean isNotificationEnabled
     ) {
         userService.updateNotificationSettings(userDetails.getId(), isNotificationEnabled);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/language")
+    public ResponseEntity<Map<String, String>> getUserLanguage(@AuthenticationPrincipal CustomOAuth2UserDto userDetails) {
+        String language = "EN"; // 기본값은 영어
+
+        if (userDetails != null) {
+            Users user = userRepository.findById(userDetails.getId()).orElse(null);
+            if (user != null && user.getLanguage() != null) {
+                language = user.getLanguage();
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("language", language));
+    }
+
+    @PutMapping("/language")
+    public ResponseEntity<?> updateUserLanguage(
+            @AuthenticationPrincipal CustomOAuth2UserDto userDetails,
+            @RequestParam String language) {
+
+        if (userDetails == null) {
+            // 로그인하지 않은 경우 localStorage에만 저장하도록 프론트엔드에서 처리
+            return ResponseEntity.ok().build();
+        }
+
+        Users user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // language 필드만 업데이트
+        user.updateLanguage(language);
+        userRepository.save(user);
+
         return ResponseEntity.ok().build();
     }
 }

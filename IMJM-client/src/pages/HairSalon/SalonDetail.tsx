@@ -115,10 +115,17 @@ function SalonDetail() {
     const [reviewsLoading, setReviewsLoading] = useState<boolean>(false);
     const [reviewPage, setReviewPage] = useState<number>(0);
     const [hasMoreReviews, setHasMoreReviews] = useState<boolean>(true);
-    const [selectedServiceType, setSelectedServiceType] = useState<string>('전체');
-    const [serviceTypes, setServiceTypes] = useState<string[]>(['전체']);
+    const [selectedServiceType, setSelectedServiceType] = useState<string>('');
+    const [serviceTypes, setServiceTypes] = useState<string[]>([]);
     // 리뷰 답글을 저장할 상태 추가
     const [reviewReplies, setReviewReplies] = useState<Record<number, ReviewReply>>({});
+
+    // 서비스 타입이 로드되면 첫 번째 사용 가능한 타입을 초기 선택 타입으로 설정
+    useEffect(() => {
+        if (serviceTypes.length > 0 && selectedServiceType === '') {
+            setSelectedServiceType(serviceTypes[0]);
+        }
+    }, [serviceTypes]);
 
     const isDayOff = (dayIndex: number, holidayMask: number) => {
         const bitValue = 1 << dayIndex;
@@ -313,7 +320,8 @@ function SalonDetail() {
 
                             const typeSet = new Set<string>();
                             serviceMenus.forEach(menu => typeSet.add(menu.serviceType));
-                            const types = ['전체', ...Array.from(typeSet)];
+                            // '전체' 옵션 제거
+                            const types = [...Array.from(typeSet)];
                             setServiceTypes(types);
 
                             setServiceMenus(serviceMenus);
@@ -485,7 +493,8 @@ function SalonDetail() {
         '일': 6
     };
 
-    const filteredServiceMenus = selectedServiceType === '전체'
+    // 필터링 로직 수정 - selectedServiceType이 빈 문자열일 때 처리
+    const filteredServiceMenus = selectedServiceType === ''
         ? serviceMenus
         : serviceMenus.filter(menu => menu.serviceType === selectedServiceType);
 
@@ -649,7 +658,7 @@ function SalonDetail() {
                         ))
                     ) : (
                         <p className="no-services">
-                            {selectedServiceType === '전체'
+                            {selectedServiceType === ''
                                 ? '등록된 서비스 메뉴가 없습니다.'
                                 : `${selectedServiceType} 유형의 서비스 메뉴가 없습니다.`}
                         </p>
@@ -673,12 +682,12 @@ function SalonDetail() {
                                             {renderStars(review.score)}
                                         </div>
                                         <div className="review-user">
-                                            {review.user_nickname} | {formatTimeAgo(review.reg_date)}
+                                            {review.user_nickname ? review.user_nickname : "탈퇴한 회원입니다"} | {formatTimeAgo(review.reg_date)}
                                         </div>
                                     </div>
 
                                     <div className="review-content">
-                                        <p>{review.content}</p>
+                                    <p>{review.content}</p>
                                     </div>
 
                                     {review.photos && review.photos.length > 0 && (

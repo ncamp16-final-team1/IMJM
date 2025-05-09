@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -19,7 +19,7 @@ public class Review {
     private Long id;
 
     @Column(name = "reg_date", nullable = false)
-    private LocalDateTime regDate;
+    private OffsetDateTime regDate;
 
     @Column(nullable = false, precision = 2, scale = 1)
     private BigDecimal score;
@@ -42,7 +42,7 @@ public class Review {
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
-    @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "review")
     private ReviewReply reviewReply;
 
 
