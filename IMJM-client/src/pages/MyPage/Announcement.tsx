@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Container, Typography, Box, Paper, Divider, Chip, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { styled } from '@mui/system';
 
-// 공지사항 아이템 인터페이스
 interface AnnouncementItem {
     id: number;
     title: string;
@@ -13,7 +12,6 @@ interface AnnouncementItem {
     views: number;
 }
 
-// 스타일 컴포넌트
 const StyledContainer = styled(Container)(({ theme }) => ({
     maxWidth: '900px',
     marginTop: theme.spacing(4),
@@ -55,22 +53,21 @@ const AnnouncementHeader = styled(Box)(({ theme }) => ({
     width: '100%',
 }));
 
-// 제목 스타일 수정 - 말줄임표 처리 추가
 const TitleContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
-    width: '65%', // 제목 영역 너비 설정
-    overflow: 'hidden', // 넘치는 부분 숨김
+    width: '65%',
+    overflow: 'hidden',
 }));
 
 // 말줄임표 처리를 위한 제목 텍스트 스타일
 const TitleText = styled(Typography)(({ theme }) => ({
     fontWeight: 600,
     fontSize: '1rem',
-    whiteSpace: 'nowrap', // 줄바꿈 방지
-    overflow: 'hidden', // 넘치는 부분 숨김
-    textOverflow: 'ellipsis', // 말줄임표 처리
-    marginLeft: theme.spacing(1), // 카테고리 칩과의 간격
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    marginLeft: theme.spacing(1),
 }));
 
 const AnnouncementMeta = styled(Box)(({ theme }) => ({
@@ -79,7 +76,7 @@ const AnnouncementMeta = styled(Box)(({ theme }) => ({
     alignItems: 'center',
     color: '#888',
     fontSize: '0.85rem',
-    flexShrink: 0, // 메타 정보 영역은 줄어들지 않도록
+    flexShrink: 0,
 }));
 
 interface CategoryChipProps {
@@ -102,7 +99,7 @@ const CategoryChip = styled(Chip)<CategoryChipProps>(({ theme, category }) => {
         fontWeight: 600,
         fontSize: '0.75rem',
         height: '24px',
-        flexShrink: 0, // 카테고리 칩은 줄어들지 않도록
+        flexShrink: 0,
     };
 });
 
@@ -112,7 +109,7 @@ const ImportantBadge = styled(Chip)({
     fontWeight: 600,
     fontSize: '0.75rem',
     height: '24px',
-    flexShrink: 0, // 중요 배지는 줄어들지 않도록
+    flexShrink: 0,
     marginRight: '8px',
 });
 
