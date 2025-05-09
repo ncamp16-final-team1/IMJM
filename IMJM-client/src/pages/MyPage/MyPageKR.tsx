@@ -16,7 +16,7 @@ export default function MyPageKR() {
             right: point !== null ? `${point.toLocaleString()} P` : "로딩 중...",
         },
         { label: "예약 내역", path: "/my/appointments" },
-        { label: "내 아카이브", path: "/my/archive" },
+        { label: "내 아카이브", path: "/my/acahive" },
         { label: "공지사항", path: "/my/announcements" },
         { label: "로그아웃", path: "/logout", isLogout: true },
     ];
