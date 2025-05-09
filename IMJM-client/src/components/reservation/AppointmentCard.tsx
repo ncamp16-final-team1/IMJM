@@ -73,7 +73,7 @@ export default function AppointmentCard({
                 return {
                     label: 'View Reservation',
                     icon: <EventIcon fontSize="small" />,
-                    color: '#4CAF50',
+                    color: '#4CAF50', // Kept green but could be softened if needed
                     action: () => {
                         navigate(`/my/reservation-detail/${reservationId}`,{
                             state:{
@@ -84,9 +84,9 @@ export default function AppointmentCard({
                 };
             case 'past-no-review':
                 return {
-                    label: 'Write a Review',
+                    label: 'Write Review',
                     icon: <RateReviewIcon fontSize="small" />,
-                    color: '#FF9080',
+                    color: '#777', // More muted color
                     action: () => {
                         navigate(`/my/write-review`, {
                             state: {
@@ -111,7 +111,7 @@ export default function AppointmentCard({
                 return {
                     label: 'View Review',
                     icon: <RateReviewIcon fontSize="small" />,
-                    color: '#2196F3',
+                    color: '#666', // More muted color
                     action: () => {
                         navigate(`/my/view-review`,{
                             state: {
@@ -137,6 +137,17 @@ export default function AppointmentCard({
 
     const buttonConfig = getButtonConfig();
 
+    // Handle chat navigation
+    const handleChatClick = async () => {
+        try {
+            const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
+            navigate(`/chat/${chatRoom.id}`);
+        } catch (error) {
+            console.error('Error navigating to chat room:', error);
+            alert('Unable to open chat room. Please try again later.');
+        }
+    };
+
     return (
         <Paper
             elevation={0}
@@ -146,7 +157,7 @@ export default function AppointmentCard({
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 '&:hover': {
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(0,0,0,0.12)'
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.08)' // Softened shadow
                 }
             }}
         >
@@ -232,58 +243,54 @@ export default function AppointmentCard({
                         height: 80,
                         ml: 2,
                         borderRadius: 1,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)' // Softened shadow
                     }}
                 />
             </Box>
 
-            <Divider sx={{ my: 2, opacity: 0.6 }} />
+            <Divider sx={{ my: 2, opacity: 0.4 }} /> {/* Reduced opacity for subtlety */}
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Chip
                     label={serviceName}
                     variant="outlined"
                     sx={{
-                        borderColor: '#FF9080',
-                        color: '#FF9080',
+                        borderColor: '#aaa', // Muted color
+                        color: '#555', // Muted text
                         fontWeight: 500,
                         borderRadius: 4
                     }}
                 />
 
                 <Stack direction="row" spacing={1}>
-                    <Tooltip title="Chat with salon">
-                        <Button
-                            variant="text"
-                            size="small"
-                            onClick={async () => {
-                                try {
-                                    const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
-                                    navigate(`/chat/${chatRoom.id}`);
-                                } catch (error) {
-                                    console.error('Error navigating to chat room:', error);
-                                    alert('Unable to open chat room. Please try again later.');
-                                }
-                            }}
-                            sx={{
-                                minWidth: 'unset',
-                                borderRadius: '50%',
-                                p: 1,
-                                color: '#FF9080',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 144, 128, 0.1)',
-                                }
-                            }}
-                        >
-                            <ChatIcon fontSize="small" />
-                        </Button>
-                    </Tooltip>
+                    {/* Chat button with text */}
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleChatClick}
+                        startIcon={<ChatIcon fontSize="small" />}
+                        sx={{
+                            borderRadius: '18px',
+                            textTransform: 'none',
+                            borderColor: '#aaa', // Muted color
+                            color: '#666', // Muted text color
+                            fontSize: '0.75rem',
+                            py: 0.5,
+                            px: 1.5,
+                            '&:hover': {
+                                borderColor: '#888',
+                                backgroundColor: 'rgba(0,0,0,0.04)'
+                            }
+                        }}
+                    >
+                        Chat
+                    </Button>
 
                     <Button
                         variant="contained"
                         size="small"
                         sx={{
-                            borderRadius: '20px',
+                            borderRadius: '18px',
                             textTransform: 'none',
                             backgroundColor: buttonConfig.color,
                             color: 'white',
@@ -294,7 +301,7 @@ export default function AppointmentCard({
                             '&:hover': {
                                 backgroundColor: buttonConfig.color,
                                 opacity: 0.9,
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                             },
                         }}
                         onClick={buttonConfig.action}

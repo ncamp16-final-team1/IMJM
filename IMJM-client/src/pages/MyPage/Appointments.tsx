@@ -13,12 +13,14 @@ import {
   Fade,
   useTheme,
   useMediaQuery,
-  Container
+  Container,
+  Button
 } from '@mui/material';
 
 import AppointmentCard from '../../components/reservation/AppointmentCard';
 import { getUserReservations, UserReservations } from '../../services/reservation/getUserReservations';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import ChatIcon from '@mui/icons-material/Chat';
 
 export default function Appointments() {
   const theme = useTheme();
@@ -101,6 +103,32 @@ export default function Appointments() {
 
   const filteredAppointments = getFilteredAndSortedAppointments();
 
+  // This is a mock replacement for the AppointmentCard component's chat button
+  const ChatButton = ({ onChatClick }) => (
+      <Button
+          variant="outlined"
+          size="small"
+          onClick={onChatClick}
+          startIcon={<ChatIcon fontSize="small" />}
+          sx={{
+            borderRadius: '16px',
+            textTransform: 'none',
+            borderColor: '#aaa', // Muted color
+            color: '#666', // Muted text color
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              borderColor: '#888',
+            },
+            fontSize: '0.75rem',
+            py: 0.5,
+            px: 1.5
+          }}
+      >
+        Chat
+      </Button>
+  );
+
   return (
       <Container maxWidth="sm" sx={{ py: 3 }}>
         <Paper
@@ -109,7 +137,7 @@ export default function Appointments() {
               p: 3,
               borderRadius: 2,
               backgroundColor: '#fff',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.08)'
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)' // Reduced shadow intensity
             }}
         >
           <Box sx={{
@@ -122,9 +150,7 @@ export default function Appointments() {
                 variant="h5"
                 sx={{
                   fontWeight: 700,
-                  background: 'linear-gradient(45deg, #FF9080 30%, #FF6B66 90%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: '#444', // Simple dark gray instead of gradient
                   letterSpacing: '-0.5px'
                 }}
             >
@@ -135,7 +161,7 @@ export default function Appointments() {
                 variant="outlined"
                 size="small"
                 sx={{
-                  minWidth: 130,
+                  minWidth: 150, // Increased to prevent overlap
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: '#f9f9f9',
@@ -147,8 +173,11 @@ export default function Appointments() {
                       borderColor: 'transparent'
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#FF9080',
+                      borderColor: '#aaa', // Muted color
                       borderWidth: 1
+                    },
+                    '& .MuiSelect-select': {
+                      paddingRight: '32px', // Added space for the dropdown icon
                     }
                   }
                 }}
@@ -157,10 +186,18 @@ export default function Appointments() {
                   value={selectedOption}
                   onChange={handleChange}
                   displayEmpty
-                  startAdornment={<FilterListIcon sx={{ color: '#FF9080', mr: 1, fontSize: 20 }} />}
+                  startAdornment={<FilterListIcon sx={{ color: '#666', mr: 1, fontSize: 20 }} />}
                   sx={{
                     fontSize: '0.875rem',
-                    fontWeight: 500
+                    fontWeight: 500,
+                    color: '#555' // Muted text color
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
+                      }
+                    }
                   }}
               >
                 <MenuItem value="All">All Reservations</MenuItem>
@@ -171,7 +208,7 @@ export default function Appointments() {
             </FormControl>
           </Box>
 
-          <Divider sx={{ my: 2, opacity: 0.6 }} />
+          <Divider sx={{ my: 2, opacity: 0.4 }} /> {/* Reduced opacity for subtlety */}
 
           {error && (
               <Fade in={Boolean(error)}>
@@ -213,6 +250,9 @@ export default function Appointments() {
                         timeout={300 + index * 100}
                     >
                       <Box>
+                        {/* Note: You would need to update your AppointmentCard component
+                            to accept the textWithIcon prop for the chat button.
+                            This is a mockup of what would need to change */}
                         <AppointmentCard
                             salonId={item.salonId}
                             salonName={item.salonName}
@@ -228,6 +268,8 @@ export default function Appointments() {
                             reservationId={item.reservationId}
                             reviewId={item.reviewId}
                             stylistName={item.stylistName}
+                            // Include ChatButton component or pass text indicator for the icons
+                            // textWithIcon={true}
                         />
                       </Box>
                     </Fade>
