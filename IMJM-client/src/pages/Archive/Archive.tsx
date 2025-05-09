@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, Box, CircularProgress} from '@mui/material';
+import { Container, Typography, Button, Box, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 interface ArchiveItem {
@@ -40,7 +40,6 @@ const Archive: React.FC = () => {
                 }
 
                 const data: PageResponse = await response.json();
-
                 setHasMore(data.hasNext);
 
                 if (data.contents.length === 0) {
@@ -97,16 +96,24 @@ const Archive: React.FC = () => {
 
     return (
         <Container fixed maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Box display="flex" justifyContent="flex-end" alignItems="center" mb={3}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+                <Typography variant="h4" fontWeight="bold" fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" color="#333">
+                    Archive
+                </Typography>
+
                 <Button
                     variant="contained"
                     sx={{
-                        backgroundColor: '#FDC7BF',
-                        boxShadow: 'none',
+                        background: 'linear-gradient(45deg, #FF9A8B 30%, #FF6A88 90%)',
+                        color: 'white',
+                        borderRadius: '30px',
+                        px: 4,
+                        py: 1,
+                        fontWeight: 'bold',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                         '&:hover': {
-                            boxShadow: 'none',
-                            backgroundColor: '#FDC7BF'
-                        }
+                            background: 'linear-gradient(45deg, #FF6A88 30%, #FF9A8B 90%)',
+                        },
                     }}
                     onClick={handleWriteClick}
                 >
