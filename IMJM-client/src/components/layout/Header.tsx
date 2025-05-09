@@ -199,6 +199,9 @@ function Header(): React.ReactElement {
         // 로컬 스토리지에 저장
         localStorage.setItem('language', newLanguage);
 
+        // 언어 변경 이벤트 발생
+        window.dispatchEvent(new Event('languageChange'));
+
         // 로그인된 경우 서버에도 저장
         if (isLoggedIn) {
             try {

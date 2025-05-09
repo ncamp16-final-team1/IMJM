@@ -1,174 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import './Home.css';
-import { Box, Typography, Button } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import PlaceIcon from '@mui/icons-material/Place';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import promoBanner from '../../assets/images/promo-banner-wide.png';
-
-interface TrendingStyle {
-    id: number;
-    content: string;
-    thumbnailUrl: string;
-    regDate: string;
-}
-
-interface PopularSalonDto {
-    id: string;
-    name: string;
-    address: string;
-    score: number;
-    reservationCount: number;
-    photoUrl: string;
-}
+import HomeEN from './HomeEN';
+import HomeKR from './HomeKR';
 
 function Home(): React.ReactElement {
-    const [trendingStyles, setTrendingStyles] = useState<TrendingStyle[]>([]);
-    const [popularSalons, setPopularSalons] = useState<PopularSalonDto[]>([]);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
-    const [error, setError] = useState<string | null>(null);
+    const [language, setLanguage] = useState<string>('EN');
 
     useEffect(() => {
-        const fetchTrendingStyles = async () => {
-            try {
-                const response = await axios.get('/api/archive/trending');
-                setTrendingStyles(response.data.contents || []);
-            } catch (error) {
-                console.error('Failed to fetch trending styles:', error);
-            } finally {
-                setLoading(false);
+        // 로컬 스토리지에서 언어 설정 가져오기
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage) {
+            setLanguage(savedLanguage);
+        }
+
+        // 언어 변경 이벤트 리스너 추가
+        const handleLanguageChange = () => {
+            const currentLanguage = localStorage.getItem('language');
+            if (currentLanguage) {
+                setLanguage(currentLanguage);
             }
         };
 
-        fetchTrendingStyles();
+        window.addEventListener('languageChange', handleLanguageChange);
 
-        const fetchPopularSalons = async () => {
-            try {
-                const response = await axios.get('/api/salon/popular');
-                setPopularSalons(response.data);
-                setLoading(false);
-            } catch (err) {
-                setError('인기 미용실 정보를 불러오는데 실패했습니다.');
-                setLoading(false);
-                console.error('Error fetching popular salons:', err);
-            }
+        // 컴포넌트 언마운트 시 리스너 제거
+        return () => {
+            window.removeEventListener('languageChange', handleLanguageChange);
         };
-
-        fetchPopularSalons();
     }, []);
 
-    const handleCardClick = (id: number) => {
-        navigate(`/archive/${id}`);
-    };
+    // 헤더에서 언어가 변경될 때 실시간으로 반영하기 위한 이벤트 리스닝
+    useEffect(() => {
+        // 추가적인 이벤트 리스너를 만들어 언어 변경을 감지할 수 있음
+        // 여기서는 localStorage를 사용하는 방식으로 구현
 
-    const handleSalonCardClick = (salonId: string) => {
-        navigate(`/salon/${salonId}`);
-    };
+        const checkLanguage = setInterval(() => {
+            const currentLanguage = localStorage.getItem('language');
+            if (currentLanguage && currentLanguage !== language) {
+                setLanguage(currentLanguage);
+            }
+        }, 1000); // 1초마다 확인
 
-    return (
-        <div className="home-page">
-            {/* 프로모션 배너 */}
-            <section className="promo-banner" style={{ backgroundImage: `url(${promoBanner})` }}>
-                <Button
-                    variant="contained"
-                    className="promo-button"
-                    endIcon={<ArrowForwardIcon />}
-                    onClick={() => navigate('/salon')}
-                >
-                    Find hair salon
-                </Button>
-            </section>
+        return () => clearInterval(checkLanguage);
+    }, [language]);
 
-            {/* Trending Styles */}
-            <section className="section">
-                <div className="section-title">
-                    <TrendingUpIcon className="section-icon" />
-                    <Typography variant="h5">Trending Styles</Typography>
-                </div>
-
-                {loading ? (
-                    <div className="loading-container">
-                        <div className="loading-spinner"></div>
-                        <p>로딩 중...</p>
-                    </div>
-                ) : trendingStyles.length === 0 ? (
-                    <div className="empty-state">표시할 스타일이 없습니다.</div>
-                ) : (
-                    <div className="card-grid">
-                        {trendingStyles.map((style) => (
-                            <div
-                                key={style.id}
-                                className="style-card"
-                                onClick={() => handleCardClick(style.id)}
-                            >
-                                <div className="card-image-container">
-                                    {style.thumbnailUrl && (
-                                        <img
-                                            src={style.thumbnailUrl}
-                                            alt={`Style ${style.id}`}
-                                            className="card-image"
-                                        />
-                                    )}
-                                    <div className="card-badge">Hot</div>
-                                </div>
-                                <div className="card-hover-effect"></div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </section>
-
-            {/* Popular Salons */}
-            <section className="section">
-                <div className="section-title">
-                    <PlaceIcon className="section-icon" />
-                    <Typography variant="h5">Best Salons</Typography>
-                </div>
-
-                {loading ? (
-                    <div className="loading-container">
-                        <div className="loading-spinner"></div>
-                        <p>로딩 중...</p>
-                    </div>
-                ) : error ? (
-                    <div className="error-state">{error}</div>
-                ) : (
-                    <div className="card-grid">
-                        {popularSalons.map((salon) => (
-                            <div
-                                key={salon.id}
-                                className="salon-card"
-                                onClick={() => handleSalonCardClick(salon.id)}
-                            >
-                                <div className="card-image-container">
-                                    <img
-                                        src={salon.photoUrl || '/default-salon.jpg'}
-                                        alt={salon.name}
-                                        className="card-image"
-                                    />
-                                    {salon.score > 0 && (
-                                        <div className="card-rating">
-                                            <StarIcon className="rating-icon" />
-                                            <span>{salon.score.toFixed(1)}</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="card-content">
-                                    <h3 className="card-title">{salon.name}</h3>
-                                    <p className="card-subtitle">{salon.address}</p>
-                                </div>
-                                <div className="card-hover-effect"></div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </section>
-        </div>
-    );
+    return language === 'KR' ? <HomeKR /> : <HomeEN />;
 }
 
 export default Home;
