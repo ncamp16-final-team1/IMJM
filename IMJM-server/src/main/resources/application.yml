@@ -78,9 +78,6 @@ hyperclovax:
     url: ENC(fD8d0nPxCKGCLr/Nhl/B28qoSCjUo2jR+aEtSBtehckrZiugcyLhe98JVCU+X1WiIz1SP//Am4y5IkO5PFdcZuf6Fn4Y5tWHTh4gQ4AwOm1RcqpSRcF7vg==)
     key: ENC(9kWWqdu8IfPdUPglFq2pdTjd6FBYHcObwkSP/2GWe1V85H4v9E4tmcBiiHjt5vr/)
 
-toss:
-  secret-key: ENC(CLqBQgq1Is+hdTqMw10DIUR9qk9ql59Y)
-
 logging:
   level:
     org:
