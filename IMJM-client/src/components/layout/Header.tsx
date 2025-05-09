@@ -148,9 +148,13 @@ function Header(): React.ReactElement {
 
     const fetchUnreadCount = async () => {
         try {
-            const response = await axios.get('/api/user/language');
+            // 언어 설정과 알림 카운트를 별도로 가져오기
+            const langResponse = await axios.get('/api/user/language');
+            if (langResponse.data && langResponse.data.language) {
+                setLanguage(langResponse.data.language.toLowerCase() as Language);
+            }
+
             const count = await NotificationService.getUnreadCount();
-            setLanguage(userLanguage);
             setUnreadCount(count);
         } catch (error) {
             console.error('읽지 않은 알림 수 조회 실패:', error);
