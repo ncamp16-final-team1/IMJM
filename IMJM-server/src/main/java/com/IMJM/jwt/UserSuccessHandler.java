@@ -49,7 +49,6 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
                 .sameSite("None") // 크로스 도메인 대응
                 .path("/")
                 .domain("imjm-hair.com")
-                .domain("localhost")
                 .maxAge(60 * 60 * 24)
                 .build();
 
