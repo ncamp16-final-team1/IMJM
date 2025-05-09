@@ -9,6 +9,7 @@ import com.IMJM.chat.repository.ChatRoomRepository;
 import com.IMJM.common.entity.ChatRoom;
 import com.IMJM.common.entity.SalonPhotos;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -110,5 +111,25 @@ public class AdminChatController {
             @RequestParam("chatRoomId") Long chatRoomId) {
         String imageUrl = adminChatRepository.uploadChatImage(file, chatRoomId);
         return ResponseEntity.ok(Map.of("fileUrl", imageUrl));
+    }
+
+    @DeleteMapping("/room/{roomId}")
+    public ResponseEntity<?> deleteChatRoom(@PathVariable Long roomId) {
+        try {
+            // chatRoomRepository를 사용하여 채팅방 찾기
+            ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                    .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+
+            // 채팅방과 관련된 메시지 삭제 (선택적)
+            // adminChatMessageRepository.deleteByChatRoomId(roomId);
+
+            // 채팅방 삭제
+            chatRoomRepository.deleteById(roomId);
+
+            return ResponseEntity.ok().body(Map.of("success", true, "message", "채팅방이 성공적으로 삭제되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "채팅방 삭제 실패: " + e.getMessage()));
+        }
     }
 }
