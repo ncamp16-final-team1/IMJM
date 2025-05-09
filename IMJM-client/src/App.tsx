@@ -34,6 +34,7 @@ import Archive from './pages/Archive/Archive.tsx';
 import MyArchive from "./pages/Archive/MyArchive.tsx";
 import { NotificationProvider, InAppNotificationReceiver } from './components/notification/InAppNotification';
 import './styles/global.css';
+import Announcement from "./pages/MyPage/Announcement.tsx";
 
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -165,11 +166,16 @@ function App() {
                                 <ArchiveEdit />
                             </ProtectedRoute>
                         } />
-                        <Route path="/my/acahive" element={
+                        <Route path="/my/archive" element={
                             <ProtectedRoute>
                                  <MyArchive />
                             </ProtectedRoute>
                         } />
+                            <Route path="/my/announcements" element={
+                                <ProtectedRoute>
+                                    <Announcement />
+                                </ProtectedRoute>
+                            } />
 
                             {/* 로그인되지 않은 사용자만 접근 가능한 경로 */}
                             <Route path="/login" element={
