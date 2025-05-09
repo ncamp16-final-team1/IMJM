@@ -125,6 +125,11 @@ function Header(): React.ReactElement {
     const isNotificationOpen = Boolean(notificationAnchorEl);
 
     useEffect(() => {
+        const savedLanguage = localStorage.getItem('language') as Language;
+        if (savedLanguage) {
+            setLanguage(savedLanguage);
+        }
+
         const checkLoginStatus = async () => {
             try {
                 const response = await axios.get('/api/user/check-login', {
@@ -142,7 +147,9 @@ function Header(): React.ReactElement {
 
     const fetchUnreadCount = async () => {
         try {
+            const response = await axios.get('/api/user/language');
             const count = await NotificationService.getUnreadCount();
+            setLanguage(userLanguage);
             setUnreadCount(count);
         } catch (error) {
             console.error('읽지 않은 알림 수 조회 실패:', error);
@@ -184,10 +191,26 @@ function Header(): React.ReactElement {
         }
     }, [isLoggedIn]);
 
-    const handleLanguageChange = (event: SelectChangeEvent<Language>): void => {
-        setLanguage(event.target.value as Language);
-    };
+    const handleLanguageChange = async (event: SelectChangeEvent<Language>) => {
+        const newLanguage = event.target.value as Language;
+        setLanguage(newLanguage);
 
+        // 로컬 스토리지에 저장
+        localStorage.setItem('language', newLanguage);
+
+        // 로그인된 경우 서버에도 저장
+        if (isLoggedIn) {
+            try {
+                await axios.put('/api/user/language', null, {
+                    params: { language: newLanguage },
+                    withCredentials: true
+                });
+            } catch (error) {
+                console.error('언어 설정 저장 실패:', error);
+            }
+        }
+    };
+    
     const navigateToLogin = (): void => {
         navigate('/login');
     };
@@ -217,10 +240,10 @@ function Header(): React.ReactElement {
                     variant="outlined"
                     size="small"
                     sx={{ minWidth: '120px' }}
-                    IconComponent={() => null} // 기본 아이콘 숨기기
+                    IconComponent={() => null} 
                     startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
                 >
-                    <MenuItem value="ko" sx={{
+                    <MenuItem value="KR" sx={{
                         '&.Mui-selected': {
                             backgroundColor: alpha('#FDC7BF', 0.1),
                             '&:hover': {
@@ -233,7 +256,7 @@ function Header(): React.ReactElement {
                     }}>
                         한국어
                     </MenuItem>
-                    <MenuItem value="en" sx={{
+                    <MenuItem value="EN" sx={{
                         '&.Mui-selected': {
                             backgroundColor: alpha('#FDC7BF', 0.1),
                             '&:hover': {
