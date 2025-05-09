@@ -134,28 +134,32 @@ function Header(): React.ReactElement {
             // 로컬 스토리지에서 먼저 확인
             const savedLanguage = localStorage.getItem('language') as Language;
             if (savedLanguage) {
-                setLanguage(savedLanguage);
+                if (savedLanguage === 'ko' || savedLanguage === 'kr') {
+                    setLanguage('KR');
+                } else if (savedLanguage === 'en') {
+                    setLanguage('EN');
+                } else {
+                    setLanguage(savedLanguage as Language); // 'KR' 또는 'EN'인 경우 그대로 사용
+                }
             }
 
             // 로그인된 경우 서버에서 언어 설정 가져오기
             if (isLoggedIn) {
                 const langResponse = await axios.get('/api/user/language');
                 if (langResponse.data && langResponse.data.language) {
-                    const serverLanguage = langResponse.data.language.toLowerCase() as Language;
-                    setLanguage(serverLanguage);
-                    // 서버 설정이 로컬 설정과 다르면 로컬 스토리지 업데이트
-                    if (serverLanguage !== savedLanguage) {
-                        localStorage.setItem('language', serverLanguage);
-                    }
+                    // 서버에서 받은 값을 KR/EN 형식으로 변환
+                    const serverLanguage = langResponse.data.language.toLowerCase();
+                    const normalizedLanguage = serverLanguage === 'ko' || serverLanguage === 'kr' ? 'KR' : 'EN';
+                    setLanguage(normalizedLanguage);
+
+                    // 로컬 스토리지 업데이트
+                    localStorage.setItem('language', normalizedLanguage);
                 }
             }
         } catch (error) {
             console.error('언어 설정 가져오기 실패:', error);
-            // 에러 발생 시 로컬 스토리지 값 사용
-            const savedLanguage = localStorage.getItem('language') as Language;
-            if (savedLanguage) {
-                setLanguage(savedLanguage);
-            }
+            // 에러 발생 시 기본값 설정
+            setLanguage('KR');
         } finally {
             setIsLanguageLoading(false);
         }
