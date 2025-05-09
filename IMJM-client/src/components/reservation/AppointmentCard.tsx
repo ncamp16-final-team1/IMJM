@@ -6,33 +6,36 @@ import {
     Stack,
     Paper,
     Divider,
-    Chip
+    Chip,
+    Tooltip
 } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import ChatIcon from '@mui/icons-material/Chat';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import EventIcon from '@mui/icons-material/Event';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PersonIcon from '@mui/icons-material/Person';
 import { useState, useEffect } from 'react';
 import { UserReservations } from '../../services/reservation/getUserReservations';
 import ChatService from '../../services/chat/ChatService';
 import { useNavigate } from 'react-router-dom';
 
 export default function AppointmentCard({
-    salonId,
-    salonName,
-    salonScore,
-    reviewCount,
-    salonAddress,
-    reservationDate,
-    reservationTime,
-    price,
-    salonPhotoUrl,
-    isReviewed,  
-    serviceName,
-    reservationId,
-    reviewId,
-    stylistName,
-}: UserReservations) {
+                                            salonId,
+                                            salonName,
+                                            salonScore,
+                                            reviewCount,
+                                            salonAddress,
+                                            reservationDate,
+                                            reservationTime,
+                                            price,
+                                            salonPhotoUrl,
+                                            isReviewed,
+                                            serviceName,
+                                            reservationId,
+                                            reviewId,
+                                            stylistName,
+                                        }: UserReservations) {
 
     const navigate = useNavigate();
     const [formattedDateTime, setFormattedDateTime] = useState<string>("");
@@ -43,16 +46,14 @@ export default function AppointmentCard({
             const dateObj = new Date(reservationDate);
             const timeParts = reservationTime.split(':').map(Number);
             dateObj.setHours(timeParts[0], timeParts[1], 0);
-            
+
             return dateObj;
         };
 
         const appointmentDate = parseDateTime();
         const now = new Date();
         const isPastAppointment = appointmentDate < now;
-        
-        isPastAppointment;
-        
+
         if (!isPastAppointment) {
             setStatus('upcoming');
         } else if (isPastAppointment && !isReviewed) {
@@ -60,7 +61,8 @@ export default function AppointmentCard({
         } else if (isPastAppointment && isReviewed) {
             setStatus('past-with-review');
         }
-        const formattedTime = reservationTime.slice(0, 5); 
+
+        const formattedTime = reservationTime.slice(0, 5);
         const formatted = `${reservationDate} / ${formattedTime}`;
         setFormattedDateTime(formatted);
     }, [reservationDate, reservationTime, isReviewed]);
@@ -102,7 +104,7 @@ export default function AppointmentCard({
                                 stylistName,
                                 reviewId,
                             }
-                    });
+                        });
                     }
                 };
             case 'past-with-review':
@@ -112,10 +114,10 @@ export default function AppointmentCard({
                     color: '#2196F3',
                     action: () => {
                         navigate(`/my/view-review`,{
-                            state: { 
+                            state: {
                                 salonId,
                                 reviewId,
-                                salonName, 
+                                salonName,
                                 salonScore,
                                 reviewCount,
                                 salonAddress,
@@ -136,132 +138,170 @@ export default function AppointmentCard({
     const buttonConfig = getButtonConfig();
 
     return (
-        <Paper elevation={0} sx={{ maxWidth: '100vw' }}>
-            <Divider sx={{ marginY: 2, borderColor: 'grey.500', borderWidth: 2 }} />
-            
-            <Box sx={{ display: 'flex', mb: 3 }}>
-                <Box 
-                    sx={{ 
-                        flexGrow: 1, 
+        <Paper
+            elevation={0}
+            sx={{
+                p: 3,
+                borderRadius: 2,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.12)'
+                }
+            }}
+        >
+            <Box sx={{ display: 'flex', mb: 2 }}>
+                <Box
+                    sx={{
+                        flexGrow: 1,
                         cursor: 'pointer',
-                        '&:hover': { bgcolor: 'rgba(255, 144, 128, 0.05)' }
                     }}
                     onClick={() => navigate(`/my/reservation-detail/${reservationId}`, {
                         state: {
-                        salonPhotoUrl,
+                            salonPhotoUrl,
                         }
                     })}
-                    >
-                    <Typography variant="h6" fontWeight="bold">{salonName}
-                        <Chip 
-                        label={status === 'upcoming' ? '예정된 예약' : (isReviewed ? '리뷰 작성 완료' : '리뷰 미작성')}
-                        color={status === 'upcoming' ? 'success' : (isReviewed ? 'primary' : 'error')}
-                        size="small"
-                        variant="outlined"
-                        sx={{ ml: '10px' }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mr: 1 }}>{salonName}</Typography>
+                        <Chip
+                            label={status === 'upcoming' ? 'Upcoming' : (isReviewed ? 'Reviewed' : 'Pending Review')}
+                            color={status === 'upcoming' ? 'success' : (isReviewed ? 'primary' : 'warning')}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                                height: '20px',
+                                '& .MuiChip-label': {
+                                    px: 1,
+                                    fontSize: '0.625rem',
+                                    fontWeight: 600
+                                }
+                            }}
                         />
-                    </Typography>
-                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
-                        <StarIcon sx={{ color: '#FFD700', fontSize: 18 }} />
-                        <Typography variant="body2" color="text.secondary">
-                            {(salonScore || "별점없음")} ({(reviewCount || "리뷰없음")})
+                    </Box>
+
+                    <Stack spacing={0.5}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <StarIcon sx={{ color: '#FFD700', fontSize: 16, mr: 0.5 }} />
+                            <Typography variant="body2" fontSize={13}>
+                                {(salonScore || "No ratings")} ({(reviewCount || "0")})
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <LocationOnIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                            <Typography
+                                variant="body2"
+                                fontSize={13}
+                                sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    maxWidth: '190px'
+                                }}
+                            >
+                                {salonAddress}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <EventIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                            <Typography variant="body2" fontSize={13}>{formattedDateTime}</Typography>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                            <PersonIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                            <Typography variant="body2" fontSize={13}>Stylist: {stylistName}</Typography>
+                        </Box>
+
+                        <Typography
+                            variant="body2"
+                            fontWeight="bold"
+                            sx={{ mt: 0.5 }}
+                        >
+                            ${price.toLocaleString()}
                         </Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ mt: 0.5 }}>{salonAddress}</Typography>
-                    <Typography variant="body2" color="text.secondary">{formattedDateTime}</Typography>
-                    <Typography variant="body2" color="text.secondary">스타일리스트 : {stylistName}</Typography>
-                    <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 'bold' }}>{price.toLocaleString()} KRW</Typography>
                 </Box>
 
                 <Avatar
                     variant="rounded"
                     src={salonPhotoUrl}
                     sx={{
-                        width: {
-                            xs: '150px', 
-                            sm: '200px',
-                            md: '300px', 
-                        },
-                        height: {
-                            xs: '75px', 
-                            sm: '100px', 
-                            md: '150px', 
-                        },
-                        ml: 2, 
+                        width: 100,
+                        height: 80,
+                        ml: 2,
+                        borderRadius: 1,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                     }}
                 />
             </Box>
 
+            <Divider sx={{ my: 2, opacity: 0.6 }} />
+
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography
-                    variant="body1"
+                <Chip
+                    label={serviceName}
+                    variant="outlined"
                     sx={{
-                        display: 'inline-block',
-                        border: '1px solid',
-                        borderColor: '#FF9080', 
-                        borderRadius: 4,
-                        padding: '8px 12px',
-                        textTransform: 'none',
+                        borderColor: '#FF9080',
                         color: '#FF9080',
-                        fontWeight: 500, 
+                        fontWeight: 500,
+                        borderRadius: 4
                     }}
-                >
-                    {serviceName}
-                </Typography>
+                />
 
                 <Stack direction="row" spacing={1}>
-                    <Button 
-                        variant="outlined" 
-                        size="medium" 
-                        onClick={async () => {
-                            try {
-                            const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
-                            navigate(`/chat/${chatRoom.id}`);
-                            } catch (error) {
-                            console.error('채팅방 이동 중 오류 발생:', error);
-                            alert('채팅방으로 이동할 수 없습니다. 잠시 후 다시 시도해주세요.');
-                            }
-                        }}
-                        sx={{
-                            borderRadius: 4,
-                            textTransform: 'none',
-                            backgroundColor: 'transparent', 
-                            borderColor: '#FF9080', 
-                            color: '#FF9080',
-                            boxShadow: 'none', 
-                            '&:hover': {
-                            backgroundColor: 'rgba(255, 144, 128, 0.1)', 
-                            borderColor: '#FF9080',
-                            boxShadow: 'none', 
-                            },
-                        }} 
-                        startIcon={<ChatIcon fontSize="small" />}
+                    <Tooltip title="Chat with salon">
+                        <Button
+                            variant="text"
+                            size="small"
+                            onClick={async () => {
+                                try {
+                                    const chatRoom = await ChatService.getChatRoomByReservation(reservationId);
+                                    navigate(`/chat/${chatRoom.id}`);
+                                } catch (error) {
+                                    console.error('Error navigating to chat room:', error);
+                                    alert('Unable to open chat room. Please try again later.');
+                                }
+                            }}
+                            sx={{
+                                minWidth: 'unset',
+                                borderRadius: '50%',
+                                p: 1,
+                                color: '#FF9080',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255, 144, 128, 0.1)',
+                                }
+                            }}
                         >
-                        1:1 Chat
-                    </Button>
+                            <ChatIcon fontSize="small" />
+                        </Button>
+                    </Tooltip>
 
                     <Button
                         variant="contained"
-                        size="medium"
+                        size="small"
                         sx={{
-                            borderRadius: 4,
+                            borderRadius: '20px',
                             textTransform: 'none',
-                            backgroundColor: buttonConfig.color, 
-                            borderColor: buttonConfig.color, 
+                            backgroundColor: buttonConfig.color,
                             color: 'white',
                             boxShadow: 'none',
+                            px: 2,
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
                             '&:hover': {
-                            backgroundColor: buttonConfig.color,
-                            opacity: 0.9,
-                            boxShadow: 'none', 
+                                backgroundColor: buttonConfig.color,
+                                opacity: 0.9,
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                             },
                         }}
                         onClick={buttonConfig.action}
                         startIcon={buttonConfig.icon}
-                        >
+                    >
                         {buttonConfig.label}
                     </Button>
-
                 </Stack>
             </Box>
         </Paper>

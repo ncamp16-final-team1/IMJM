@@ -6,51 +6,27 @@ import {
   MenuItem,
   FormControl,
   SelectChangeEvent,
-  styled
+  Paper,
+  Divider,
+  Skeleton,
+  Alert,
+  Fade,
+  useTheme,
+  useMediaQuery,
+  Container
 } from '@mui/material';
 
 import AppointmentCard from '../../components/reservation/AppointmentCard';
 import { getUserReservations, UserReservations } from '../../services/reservation/getUserReservations';
-
-// Styled components for improved dropdown design
-const StyledFormControl = styled(FormControl)(({ theme }) => ({
-  minWidth: 150,
-  '& .MuiOutlinedInput-root': {
-    borderRadius: 8,
-    transition: 'all 0.3s ease',
-    backgroundColor: '#FF9080',
-    color: '#fff',
-    fontWeight: 500,
-    '&:hover': {
-      backgroundColor: '#FF7A6B',
-    },
-    '&.Mui-focused': {
-      backgroundColor: '#FF7A6B',
-    }
-  }
-}));
-
-const StyledMenuItem = styled(MenuItem)({
-  padding: '10px 15px',
-  margin: '2px 0',
-  borderRadius: 4,
-  '&:hover': {
-    backgroundColor: '#FFF0EE',
-  },
-  '&.Mui-selected': {
-    backgroundColor: '#FFDED9',
-    fontWeight: 'bold',
-    '&:hover': {
-      backgroundColor: '#FFCEC7',
-    }
-  }
-});
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 export default function Appointments() {
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [appointments, setAppointments] = useState<UserReservations[]>([]);
   const [selectedOption, setSelectedOption] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: SelectChangeEvent<string>) => {
     setSelectedOption(e.target.value);
@@ -59,10 +35,13 @@ export default function Appointments() {
   useEffect(() => {
     const loadAppointments = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const data = await getUserReservations();
         setAppointments(data);
       } catch (err) {
         console.error('Failed to load appointments:', err);
+        setError('Failed to load appointments. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -71,14 +50,9 @@ export default function Appointments() {
     loadAppointments();
   }, []);
 
-  if (loading) {
-    return <Typography>Loading...</Typography>;
-  }
-
   const now = new Date();
 
   const getFilteredAndSortedAppointments = () => {
-
     const filtered = appointments.filter((appointment) => {
       const appointmentDate = new Date(appointment.reservationDate);
       const timeParts = appointment.reservationTime.split(':').map(Number);
@@ -109,18 +83,12 @@ export default function Appointments() {
 
       switch (selectedOption) {
         case "Reservation":
-          // Upcoming reservations - ascending order
           return dateA.getTime() - dateB.getTime();
         case "WriteAreview":
         case "ViewReview":
-          // Reviews - descending order (newest first)
           return dateB.getTime() - dateA.getTime();
         case "All":
         default:
-          // Default sorting:
-          // 1. Future reservations in ascending order
-          // 2. Past reservations in descending order
-          // 3. Future before past
           const isPastA = dateA < now;
           const isPastB = dateB < now;
 
@@ -134,73 +102,167 @@ export default function Appointments() {
   const filteredAppointments = getFilteredAndSortedAppointments();
 
   return (
-      <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-            Reservation List
-          </Typography>
-          <StyledFormControl>
-            <Select
-                value={selectedOption}
-                onChange={handleChange}
+      <Container maxWidth="sm" sx={{ py: 3 }}>
+        <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              backgroundColor: '#fff',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)'
+            }}
+        >
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3
+          }}>
+            <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  background: 'linear-gradient(45deg, #FF9080 30%, #FF6B66 90%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  letterSpacing: '-0.5px'
+                }}
+            >
+              Reservation List
+            </Typography>
+
+            <FormControl
                 variant="outlined"
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      borderRadius: 2,
-                      mt: 1,
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                      maxHeight: 300
+                size="small"
+                sx={{
+                  minWidth: 130,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: '#f9f9f9',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5'
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'transparent'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#FF9080',
+                      borderWidth: 1
                     }
                   }
                 }}
             >
-              <StyledMenuItem value="All">All</StyledMenuItem>
-              <StyledMenuItem value="Reservation">Upcoming</StyledMenuItem>
-              <StyledMenuItem value="WriteAreview">Write Review</StyledMenuItem>
-              <StyledMenuItem value="ViewReview">View Review</StyledMenuItem>
-            </Select>
-          </StyledFormControl>
-        </Box>
+              <Select
+                  value={selectedOption}
+                  onChange={handleChange}
+                  displayEmpty
+                  startAdornment={<FilterListIcon sx={{ color: '#FF9080', mr: 1, fontSize: 20 }} />}
+                  sx={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500
+                  }}
+              >
+                <MenuItem value="All">All Reservations</MenuItem>
+                <MenuItem value="Reservation">Upcoming</MenuItem>
+                <MenuItem value="WriteAreview">Write Review</MenuItem>
+                <MenuItem value="ViewReview">View Review</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
-        {filteredAppointments.length > 0 ? (
-            filteredAppointments.map((item, index) => (
-                <AppointmentCard
-                    key={index}
-                    salonId={item.salonId}
-                    salonName={item.salonName}
-                    salonScore={item.salonScore}
-                    reviewCount={item.reviewCount}
-                    salonAddress={item.salonAddress}
-                    reservationDate={item.reservationDate}
-                    reservationTime={item.reservationTime}
-                    price={item.price}
-                    salonPhotoUrl={item.salonPhotoUrl}
-                    isReviewed={item.isReviewed}
-                    serviceName={item.serviceName}
-                    reservationId={item.reservationId}
-                    reviewId={item.reviewId}
-                    stylistName={item.stylistName}
-                />
-            ))
-        ) : (
-            <Box sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '200px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              mt: 4
-            }}>
-              <Typography variant="h6" color="text.secondary">
-                {selectedOption === "All" && "No reservations found."}
-                {selectedOption === "Reservation" && "No upcoming reservations."}
-                {selectedOption === "WriteAreview" && "No reservations to review."}
-                {selectedOption === "ViewReview" && "No reviews found."}
-              </Typography>
-            </Box>
-        )}
-      </Box>
+          <Divider sx={{ my: 2, opacity: 0.6 }} />
+
+          {error && (
+              <Fade in={Boolean(error)}>
+                <Alert
+                    severity="error"
+                    sx={{ mb: 2, borderRadius: 2 }}
+                    onClose={() => setError(null)}
+                >
+                  {error}
+                </Alert>
+              </Fade>
+          )}
+
+          {loading ? (
+              [...Array(3)].map((_, idx) => (
+                  <Box key={idx} sx={{ mb: 4 }}>
+                    <Box sx={{ display: 'flex', mb: 2 }}>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Skeleton variant="text" width="70%" height={30} />
+                        <Skeleton variant="text" width="40%" />
+                        <Skeleton variant="text" width="60%" />
+                        <Skeleton variant="text" width="50%" />
+                      </Box>
+                      <Skeleton variant="rectangular" width={120} height={80} sx={{ ml: 2, borderRadius: 2 }} />
+                    </Box>
+                    <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 8 }} />
+                  </Box>
+              ))
+          ) : filteredAppointments.length > 0 ? (
+              <Box sx={{
+                '& > div:not(:last-child)': {
+                  mb: 3
+                }
+              }}>
+                {filteredAppointments.map((item, index) => (
+                    <Fade
+                        key={item.reservationId}
+                        in={true}
+                        timeout={300 + index * 100}
+                    >
+                      <Box>
+                        <AppointmentCard
+                            salonId={item.salonId}
+                            salonName={item.salonName}
+                            salonScore={item.salonScore}
+                            reviewCount={item.reviewCount}
+                            salonAddress={item.salonAddress}
+                            reservationDate={item.reservationDate}
+                            reservationTime={item.reservationTime}
+                            price={item.price}
+                            salonPhotoUrl={item.salonPhotoUrl}
+                            isReviewed={item.isReviewed}
+                            serviceName={item.serviceName}
+                            reservationId={item.reservationId}
+                            reviewId={item.reviewId}
+                            stylistName={item.stylistName}
+                        />
+                      </Box>
+                    </Fade>
+                ))}
+              </Box>
+          ) : (
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: 200,
+                py: 5,
+                backgroundColor: '#f9f9f9',
+                borderRadius: 2
+              }}>
+                <Typography
+                    variant="h6"
+                    color="text.secondary"
+                    sx={{ fontWeight: 500, mb: 1 }}
+                >
+                  {selectedOption === "All" && "No reservations found."}
+                  {selectedOption === "Reservation" && "No upcoming reservations."}
+                  {selectedOption === "WriteAreview" && "No reservations to review."}
+                  {selectedOption === "ViewReview" && "No reviews found."}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" align="center">
+                  {selectedOption === "All" && "Create a new reservation to get started."}
+                  {selectedOption === "Reservation" && "Book a new appointment to change your style."}
+                  {selectedOption === "WriteAreview" && "You can write a review after completing your visit."}
+                  {selectedOption === "ViewReview" && "Reviews will appear here after you write them."}
+                </Typography>
+              </Box>
+          )}
+        </Paper>
+      </Container>
   );
 }
