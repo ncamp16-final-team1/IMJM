@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import logo from '../../assets/images/IMJM-logo-Regi.png';
@@ -12,7 +12,8 @@ import {
     IconButton,
     styled,
     alpha,
-    Fade
+    Fade,
+    CircularProgress
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -121,23 +122,65 @@ function Header(): React.ReactElement {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
     const [unreadCount, setUnreadCount] = useState<number>(0);
+    const [isLanguageLoading, setIsLanguageLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
     const isNotificationOpen = Boolean(notificationAnchorEl);
 
-    useEffect(() => {
-        const savedLanguage = localStorage.getItem('language') as Language;
-        if (savedLanguage) {
-            setLanguage(savedLanguage);
-        }
+    // 언어 설정을 가져오는 함수를 useCallback으로 래핑
+    const fetchLanguage = useCallback(async () => {
+        setIsLanguageLoading(true);
+        try {
+            // 로컬 스토리지에서 먼저 확인
+            const savedLanguage = localStorage.getItem('language') as Language;
+            if (savedLanguage) {
+                setLanguage(savedLanguage);
+            }
 
+            // 로그인된 경우 서버에서 언어 설정 가져오기
+            if (isLoggedIn) {
+                const langResponse = await axios.get('/api/user/language');
+                if (langResponse.data && langResponse.data.language) {
+                    const serverLanguage = langResponse.data.language.toLowerCase() as Language;
+                    setLanguage(serverLanguage);
+                    // 서버 설정이 로컬 설정과 다르면 로컬 스토리지 업데이트
+                    if (serverLanguage !== savedLanguage) {
+                        localStorage.setItem('language', serverLanguage);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('언어 설정 가져오기 실패:', error);
+            // 에러 발생 시 로컬 스토리지 값 사용
+            const savedLanguage = localStorage.getItem('language') as Language;
+            if (savedLanguage) {
+                setLanguage(savedLanguage);
+            }
+        } finally {
+            setIsLanguageLoading(false);
+        }
+    }, [isLoggedIn]);
+
+    // 알림 개수를 가져오는 함수
+    const fetchUnreadCount = useCallback(async () => {
+        if (!isLoggedIn) return;
+
+        try {
+            const count = await NotificationService.getUnreadCount();
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('읽지 않은 알림 수 조회 실패:', error);
+        }
+    }, [isLoggedIn]);
+
+    // 초기 로그인 상태 확인
+    useEffect(() => {
         const checkLoginStatus = async () => {
             try {
                 const response = await axios.get('/api/user/check-login', {
                     withCredentials: true
                 });
                 setIsLoggedIn(true);
-                fetchUnreadCount();
             } catch (error) {
                 setIsLoggedIn(false);
             }
@@ -146,25 +189,17 @@ function Header(): React.ReactElement {
         checkLoginStatus();
     }, []);
 
-    const fetchUnreadCount = async () => {
-        try {
-            // 언어 설정과 알림 카운트를 별도로 가져오기
-            const langResponse = await axios.get('/api/user/language');
-            if (langResponse.data && langResponse.data.language) {
-                setLanguage(langResponse.data.language.toLowerCase() as Language);
-            }
-
-            const count = await NotificationService.getUnreadCount();
-            setUnreadCount(count);
-        } catch (error) {
-            console.error('읽지 않은 알림 수 조회 실패:', error);
-        }
-    };
-
+    // 로그인 상태가 변경되면 언어 설정과 알림 개수 가져오기
     useEffect(() => {
+        fetchLanguage();
         if (isLoggedIn) {
             fetchUnreadCount();
+        }
+    }, [isLoggedIn, fetchLanguage, fetchUnreadCount]);
 
+    // 알림 관련 이벤트 리스너 설정
+    useEffect(() => {
+        if (isLoggedIn) {
             const handleNewNotification = () => {
                 fetchUnreadCount();
             };
@@ -194,7 +229,7 @@ function Header(): React.ReactElement {
                 clearInterval(intervalId);
             };
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, fetchUnreadCount]);
 
     const handleLanguageChange = async (event: SelectChangeEvent<Language>) => {
         const newLanguage = event.target.value as Language;
@@ -218,7 +253,7 @@ function Header(): React.ReactElement {
             }
         }
     };
-    
+
     const navigateToLogin = (): void => {
         navigate('/login');
     };
@@ -242,53 +277,59 @@ function Header(): React.ReactElement {
             />
 
             <HeaderActions>
-                <StyledSelect
-                    value={language}
-                    onChange={handleLanguageChange}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                        minWidth: '120px',
-                        '& .MuiSelect-select': {
-                            display: 'flex',
-                            alignItems: 'center',
-                            paddingRight: '28px', // 화살표 아이콘을 위한 공간 확보
-                        }
-                    }}
-                    // 기본 드롭다운 아이콘은 제거
-                    IconComponent={() => null}
-                    // 시작 부분에 언어 아이콘
-                    startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
-                    // 끝 부분에 화살표 아이콘 추가
-                    endAdornment={<ArrowDropDownIcon sx={{ fontSize: 20, color: '#777', position: 'absolute', right: 8 }} />}
-                >
-                    <MenuItem value="KR" sx={{
-                        '&.Mui-selected': {
-                            backgroundColor: alpha('#FDC7BF', 0.1),
-                            '&:hover': {
-                                backgroundColor: alpha('#FDC7BF', 0.2)
+                {isLanguageLoading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '120px', justifyContent: 'center' }}>
+                        <CircularProgress size={20} sx={{ color: '#FF9080' }} />
+                    </Box>
+                ) : (
+                    <StyledSelect
+                        value={language}
+                        onChange={handleLanguageChange}
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                            minWidth: '120px',
+                            '& .MuiSelect-select': {
+                                display: 'flex',
+                                alignItems: 'center',
+                                paddingRight: '28px', // 화살표 아이콘을 위한 공간 확보
                             }
-                        },
-                        '&:hover': {
-                            backgroundColor: alpha('#FDC7BF', 0.1)
-                        }
-                    }}>
-                        한국어
-                    </MenuItem>
-                    <MenuItem value="EN" sx={{
-                        '&.Mui-selected': {
-                            backgroundColor: alpha('#FDC7BF', 0.1),
+                        }}
+                        // 기본 드롭다운 아이콘은 제거
+                        IconComponent={() => null}
+                        // 시작 부분에 언어 아이콘
+                        startAdornment={<LanguageIcon sx={{ fontSize: 16, mr: 1, color: '#777' }} />}
+                        // 끝 부분에 화살표 아이콘 추가
+                        endAdornment={<ArrowDropDownIcon sx={{ fontSize: 20, color: '#777', position: 'absolute', right: 8 }} />}
+                    >
+                        <MenuItem value="ko" sx={{
+                            '&.Mui-selected': {
+                                backgroundColor: alpha('#FDC7BF', 0.1),
+                                '&:hover': {
+                                    backgroundColor: alpha('#FDC7BF', 0.2)
+                                }
+                            },
                             '&:hover': {
-                                backgroundColor: alpha('#FDC7BF', 0.2)
+                                backgroundColor: alpha('#FDC7BF', 0.1)
                             }
-                        },
-                        '&:hover': {
-                            backgroundColor: alpha('#FDC7BF', 0.1)
-                        }
-                    }}>
-                        English
-                    </MenuItem>
-                </StyledSelect>
+                        }}>
+                            한국어
+                        </MenuItem>
+                        <MenuItem value="en" sx={{
+                            '&.Mui-selected': {
+                                backgroundColor: alpha('#FDC7BF', 0.1),
+                                '&:hover': {
+                                    backgroundColor: alpha('#FDC7BF', 0.2)
+                                }
+                            },
+                            '&:hover': {
+                                backgroundColor: alpha('#FDC7BF', 0.1)
+                            }
+                        }}>
+                            English
+                        </MenuItem>
+                    </StyledSelect>
+                )}
 
                 {isLoggedIn ? (
                     <IconButton
