@@ -10,4 +10,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByReservation_Stylist_Salon_id(String salonId);
 
     Optional<Payment> findByReservationId(Long reservationId);
+
+    // PaymentRepository에 추가
+    Optional<Payment> findByTransactionId(String transactionId);
 }

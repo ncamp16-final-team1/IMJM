@@ -11,6 +11,7 @@ public class ReservationRequestDto {
     private PaymentInfoDto paymentInfo;
     private PaymentRequestDto paymentRequest;
     private String salonId;
+    private String orderId;
 
     @Data
     public static class PaymentInfoDto {

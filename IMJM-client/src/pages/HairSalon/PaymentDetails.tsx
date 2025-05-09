@@ -17,10 +17,9 @@ import {
   DialogActions,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
-import GooglePay from "../../assets/images/google-pay.svg";
-import applePay from "../../assets/images/apple-pay.svg";
-import GooglePayButton from "@google-pay/button-react";
+import { loadTossPayments } from '@tosspayments/payment-sdk';
 
+// Interfaces
 export interface ReservationRequest {
   stylistId: number;
   reservationDate: string;
@@ -59,7 +58,7 @@ interface Coupon {
 
 export interface PaymentInfo {
   price: number;
-  paymentMethod: "google" | "apple" | "credit_card" | "other";
+  paymentMethod: "toss" | "credit_card" | "other";
   paymentStatus: "pending" | "completed" | "failed" | "cancelled";
   transactionId: string;
 }
@@ -71,50 +70,31 @@ export interface PaymentRequest {
   reservation?: ReservationRequest;
 }
 
-export interface AllowedPaymentMethod {
-  type: "CARD";
-  parameters: {
-    allowedAuthMethods: ("PAN_ONLY" | "CRYPTOGRAM_3DS")[];
-    allowedCardNetworks: ("MASTERCARD" | "VISA")[];
-  };
-  tokenizationSpecification: {
-    type: "PAYMENT_GATEWAY";
-    parameters: {
-      gateway: string;
-      gatewayMerchantId: string;
-    };
-  };
-}
-
-export interface MerchantInfo {
-  merchantName: string;
-  merchantId: string;
-}
-
-export interface TransactionInfo {
-  totalPriceStatus: "FINAL";
-  totalPrice: string;
-  currencyCode: string;
-}
-
 export interface PaymentOptions {
   pointUsage?: PointUsageRequest;
   couponData?: CouponUsageRequest;
 }
 
-export interface GooglePayRequest {
-  apiVersion: number;
-  apiVersionMinor: number;
-  allowedPaymentMethods: AllowedPaymentMethod[];
-  merchantInfo: MerchantInfo;
-  transactionInfo: TransactionInfo;
-  paymentOptions?: PaymentOptions;
-  reservation?: ReservationRequest;
+interface LocationState {
+  stylistId: string;
+  salonName: string;
+  stylistName: string;
+  selectedDate: string;
+  selectedTime: string;
+  selectedType: string;
+  selectedMenu: {
+    id: number;
+    serviceName: string;
+    price: number;
+  };
+  salonId: string;
 }
 
-function PaymentDetails() {
+const PaymentDetails: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const state = location.state as LocationState || {};
+  
   const {
     stylistId,
     salonName,
@@ -124,7 +104,7 @@ function PaymentDetails() {
     selectedType,
     selectedMenu,
     salonId,
-  } = location.state || {};
+  } = state;
 
   const [reservationId, setReservationId] = useState<number | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -135,38 +115,39 @@ function PaymentDetails() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pointError, setPointError] = useState<string>("");
+  const [pointApplied, setPointApplied] = useState<boolean>(false);
+  const [effectiveFinalAmount, setEffectiveFinalAmount] = useState<number>(0);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "transfer" | "pay" | null>(null);
+
+  const [selectedPayment, setSelectedPayment] = useState<"google" | "apple" | null>(null);
   const [isSafariBrowser, setIsSafariBrowser] = useState<boolean>(false);
-  const [selectedPayment, setSelectedPayment] = useState<
-    "google" | "apple" | null
-  >(null);
+  
+  // 약관 동의 상태
   const [termsChecked, setTermsChecked] = useState<boolean>(false);
   const [privacyChecked, setPrivacyChecked] = useState<boolean>(false);
-  const [refundPolicyChecked, setRefundPolicyChecked] =
-    useState<boolean>(false);
+  const [refundPolicyChecked, setRefundPolicyChecked] = useState<boolean>(false);
   const [agreeAll, setAgreeAllChecked] = useState<boolean>(false);
   const [successModalOpen, setSuccessModalOpen] = useState<boolean>(false);
 
   const totalAmount = selectedMenu?.price || 0;
 
+  // 쿠폰 할인 금액 계산
   const couponDiscountAmount = selectedCoupon
     ? selectedCoupon.discountType === "percentage"
       ? Math.floor((totalAmount * selectedCoupon.discountValue) / 100)
       : selectedCoupon.discountValue
     : 0;
 
+  // 최종 금액 계산
   const finalAmount = selectedCoupon
     ? (selectedCoupon.discountType === "percentage"
         ? totalAmount - (totalAmount * selectedCoupon.discountValue) / 100
         : totalAmount - selectedCoupon.discountValue) - usedPoints
     : totalAmount - usedPoints;
 
-  const [pointApplied, setPointApplied] = useState<boolean>(false);
-  const [effectiveFinalAmount, setEffectiveFinalAmount] =
-    useState<number>(finalAmount);
-
   const allChecked = termsChecked && privacyChecked && refundPolicyChecked;
-
-  const applyPoint = () => {
+  // 포인트 적용 함수
+  const applyPoint = (): void => {
     if (isPointValid() && usedPoints > 0) {
       setPointApplied(true);
 
@@ -180,7 +161,8 @@ function PaymentDetails() {
     }
   };
 
-  const resetPoint = () => {
+  // 포인트 초기화 함수
+  const resetPoint = (): void => {
     setUsedPoints(0);
     setPointError("");
     setPointApplied(false);
@@ -194,6 +176,7 @@ function PaymentDetails() {
     setEffectiveFinalAmount(discountedAmount);
   };
 
+  // 예약 데이터 생성
   const reservationData: ReservationRequest = {
     stylistId: Number(stylistId),
     reservationDate: selectedDate,
@@ -204,6 +187,7 @@ function PaymentDetails() {
     salonId: salonId,
   };
 
+  // 결제 요청 데이터 생성
   const paymentRequest: PaymentRequest = {
     price: effectiveFinalAmount,
     pointUsage:
@@ -223,41 +207,11 @@ function PaymentDetails() {
     reservation: reservationData,
   };
 
-  // Google Pay 요청 객체
-  const googlePayRequest: GooglePayRequest = {
-    apiVersion: 2,
-    apiVersionMinor: 0,
-    allowedPaymentMethods: [
-      {
-        type: "CARD",
-        parameters: {
-          allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
-          allowedCardNetworks: ["MASTERCARD", "VISA"],
-        },
-        tokenizationSpecification: {
-          type: "PAYMENT_GATEWAY",
-          parameters: {
-            gateway: "example",
-            gatewayMerchantId: "exampleGatewayMerchantId",
-          },
-        },
-      },
-    ],
-    merchantInfo: {
-      merchantName: salonName,
-      merchantId: "exampleMerchantId",
-    },
-    transactionInfo: {
-      totalPriceStatus: "FINAL",
-      totalPrice: effectiveFinalAmount.toString(),
-      currencyCode: "KRW",
-    },
-  };
-
+  // 체크박스 변경 핸들러
   const handleCheckboxChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: string
-  ) => {
+  ): void => {
     switch (type) {
       case "terms":
         setTermsChecked(e.target.checked);
@@ -273,7 +227,8 @@ function PaymentDetails() {
     }
   };
 
-  const handleAgreeAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 전체 동의 핸들러
+  const handleAgreeAllChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const checked = e.target.checked;
     setAgreeAllChecked(checked);
     setTermsChecked(checked);
@@ -281,13 +236,15 @@ function PaymentDetails() {
     setRefundPolicyChecked(checked);
   };
 
-  const isPointValid = () => {
+  // 포인트 유효성 검사
+  const isPointValid = (): boolean => {
     return (
       usedPoints === 0 || (usedPoints % 10 === 0 && usedPoints <= userPoint)
     );
   };
 
-  const handleSelectCoupon = (coupon: Coupon) => {
+  // 쿠폰 선택 핸들러
+  const handleSelectCoupon = (coupon: Coupon): void => {
     if (!coupon.isAvailable) return;
 
     const newSelectedCoupon = coupon === selectedCoupon ? null : coupon;
@@ -306,7 +263,8 @@ function PaymentDetails() {
     }
   };
 
-  const handlePointChange = (e: any) => {
+  // 포인트 입력 핸들러
+  const handlePointChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = parseInt(e.target.value, 10);
 
     setPointApplied(false);
@@ -332,89 +290,130 @@ function PaymentDetails() {
     setUsedPoints(value);
     setPointError("");
   };
+  // Toss 결제 처리 함수
+ // Toss 결제 처리 함수
+ const handleTossPayment = async (): Promise<void> => {
+  // 1. 결제 진행 중 여부 확인
+  const paymentInProgress = sessionStorage.getItem('payment_in_progress');
+  
+  if (paymentInProgress === 'true') {
+    alert('결제가 이미 진행 중입니다. 잠시만 기다려주세요.');
+    return;
+  }
 
-  useEffect(() => {
-    const discountedAmount = selectedCoupon
-      ? selectedCoupon.discountType === "percentage"
-        ? totalAmount - (totalAmount * selectedCoupon.discountValue) / 100
-        : totalAmount - selectedCoupon.discountValue
-      : totalAmount;
+  try {
+    // 결제 진행 중 상태 설정
+    sessionStorage.setItem('payment_in_progress', 'true');
+    sessionStorage.setItem('last_payment_attempt', Date.now().toString());
 
-    setEffectiveFinalAmount(
-      pointApplied
-        ? Math.max(0, discountedAmount - usedPoints)
-        : discountedAmount
-    );
-  }, [selectedCoupon, totalAmount, pointApplied, usedPoints]);
-
-  const handlePaymentSuccess = async (paymentData: any) => {
-    try {
-      let paymentMethod = "구글페이";
-      let paymentToken = null;
-      let transactionId = "TEST_" + Date.now();
-
-      if (paymentData && paymentData.paymentMethodData) {
-        paymentToken = paymentData.paymentMethodData.tokenizationData?.token;
-
-        if (paymentData.transactionId) {
-          transactionId = paymentData.transactionId;
-        }
-      }
-
-      const reservationData = {
+    // 결제 정보 준비
+    const randomStr = Math.random().toString(36).substring(2, 10);
+    const orderId = `ORDER_${Date.now()}_${randomStr}`;
+    
+    // 결제 예약 정보 구조화
+    const pendingReservationData = {
+      price: effectiveFinalAmount,
+      paymentRequest: {
         price: effectiveFinalAmount,
-        paymentMethod: paymentMethod,
-        transactionId: transactionId,
-        paymentStatus: "true",
-        paymentInfo: {
-          discount_amount: couponDiscountAmount,
-          pointUsed: pointApplied ? usedPoints : 0,
-          currency: "KRW",
-        },
-        paymentToken: paymentToken,
-        paymentRequest,
-        salonName,
-      };
+        pointUsage: pointApplied && usedPoints > 0
+          ? {
+              usageType: "USE",
+              price: usedPoints,
+              content: salonName
+            }
+          : undefined,
+        couponData: selectedCoupon
+          ? {
+              couponId: selectedCoupon.couponId,
+              discountAmount: couponDiscountAmount
+            }
+          : undefined,
+        reservation: {
+          stylistId: Number(stylistId),
+          reservationDate: selectedDate,
+          reservationTime: selectedTime,
+          isPaid: false,
+          requirements: requirements || "",
+          serviceMenuId: selectedMenu?.id || 0,
+          salonId: salonId
+        }
+      },
+      paymentMethod: "toss",
+      transactionId: orderId,
+      paymentStatus: "pending",
+      salonName,
+      orderId,
+      timestamp: Date.now()
+    };
 
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
+    // 세션 스토리지에 결제 정보 저장
+    sessionStorage.setItem('pendingReservation', JSON.stringify(pendingReservationData));
 
-      const response = await axios.post(
-        "/api/salon/reservation/complete",
-        reservationData,
-        config
-      );
-      if (response.status === 200 && response.data?.success) {
-        const reservationIdFromServer = response.data.reservationId;
-        setReservationId(reservationIdFromServer);
-        setSuccessModalOpen(true); // 성공 시에만 모달 열기
-      } else {
-        alert(
-          "예약 처리 실패: " + (response.data?.message || "알 수 없는 오류")
-        );
-      }
-    } catch (error) {
-      console.error("서버 요청 오류:", error);
+    // Toss Payments SDK 로드
+    const tossPayments = await loadTossPayments('test_ck_Z1aOwX7K8mYjwKPqOvDj8yQxzvNP');
 
-      if (axios.isAxiosError(error) && error.response) {
-        console.error("응답 상태:", error.response.status);
-        console.error("응답 데이터:", error.response.data);
-        alert(
-          `서버 오류 (${error.response.status}): ${
-            error.response.data?.message || "알 수 없는 오류"
-          }`
-        );
-      } else {
-        alert("서버 요청 중 오류가 발생했습니다.");
-      }
+    // 결제 방식 매핑
+    const paymentMethodMap: { [key: string]: string } = {
+      'card': '카드',
+      'transfer': '계좌이체',
+      'pay': '토스페이'
+    };
+
+    // 결제 방식 검증
+    if (!selectedPaymentMethod || !paymentMethodMap[selectedPaymentMethod]) {
+      throw new Error('결제 수단을 선택해주세요.');
     }
-  };
 
+    try {
+      await tossPayments.requestPayment(paymentMethodMap[selectedPaymentMethod], {
+        amount: effectiveFinalAmount,
+        orderId: orderId,
+        orderName: `${salonName} - ${selectedMenu?.serviceName || '예약'}`,
+        successUrl: `${window.location.origin}/payment/success`,
+        failUrl: `${window.location.origin}/payment/fail`,
+        customerName: '신동억억', // 실제 사용자 정보로 대체
+        customerEmail: 'ehrflqakstp@gmail.com', // 실제 사용자 이메일로 대체
+        windowTarget: '_self',
+        availablePaymentMethod: [selectedPaymentMethod],
+        metadata: {
+          timestamp: Date.now().toString()
+        }
+      });
+    } catch (tossError) {
+      // 결제 실패 처리
+      console.error('Toss payment SDK error:', tossError);
 
-  const formatDate = (dateString: string) => {
+      // 실패 정보 로깅
+      try {
+        await axios.post('/api/payments/fail', {
+          code: tossError.code || 'PAYMENT_FAILED',
+          message: tossError.message || '결제에 실패했습니다.',
+          orderId: orderId
+        });
+      } catch (logError) {
+        console.error('결제 실패 로깅 중 오류:', logError);
+      }
+
+      // 세션 스토리지 정리
+      sessionStorage.removeItem('payment_in_progress');
+      sessionStorage.removeItem('pendingReservation');
+
+      // 사용자에게 오류 표시
+      alert(tossError.message || '결제에 실패했습니다. 다시 시도해주세요.');
+    }
+  } catch (error) {
+    console.error('Toss payment error:', error);
+
+    // 세션 스토리지 정리
+    sessionStorage.removeItem('payment_in_progress');
+    sessionStorage.removeItem('pendingReservation');
+
+    // 사용자에게 오류 표시
+    alert(error instanceof Error ? error.message : '예상치 못한 오류가 발생했습니다.');
+  }
+};
+  // 날짜 포맷 함수
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(
       2,
@@ -422,6 +421,7 @@ function PaymentDetails() {
     )}. ${String(date.getDate()).padStart(2, "0")}`;
   };
 
+  // 쿠폰 비활성화 메시지 생성 함수
   const getDisabledMessage = (coupon: Coupon): string => {
     if (!coupon.isActive) return "이 쿠폰은 현재 비활성화 상태입니다.";
     if (coupon.minimumPurchase > totalAmount)
@@ -436,7 +436,32 @@ function PaymentDetails() {
 
     return "이미 사용한 쿠폰입니다.";
   };
- 
+
+
+
+
+  
+// 결제 페이지 로드 시 세션스토리지 초기화
+useEffect(() => {
+  console.log("결제 페이지 로드: 세션스토리지 초기화 중...");
+  
+  // 결제 진행 중 표시 제거
+  sessionStorage.removeItem("payment_in_progress");
+  
+  // 모든 processing_ 항목 제거
+  const keys = Object.keys(sessionStorage);
+  const processingKeys = keys.filter(key => key.startsWith('processing_'));
+  processingKeys.forEach(key => {
+    sessionStorage.removeItem(key);
+  });
+  
+  console.log("결제 페이지 초기화 완료");
+}, []);
+
+
+
+
+  // 쿠폰 및 포인트 데이터 로드
   useEffect(() => {
     if (!salonId || !totalAmount) {
       setError("예약 정보가 올바르지 않습니다.");
@@ -444,7 +469,7 @@ function PaymentDetails() {
       return;
     }
 
-    const fetchCoupons = async () => {
+    const fetchCoupons = async (): Promise<void> => {
       try {
         const [couponsRes, pointsRes] = await Promise.allSettled([
           axios.get<Coupon[]>(`/api/salon/reservation/coupons`, {
@@ -481,21 +506,12 @@ function PaymentDetails() {
     fetchCoupons();
   }, [salonId, totalAmount]);
 
+  // 최종 금액 업데이트
   useEffect(() => {
     setEffectiveFinalAmount(finalAmount);
   }, [finalAmount]);
 
-  // 브라우저 타입 확인
-  useEffect(() => {
-    const isSafari = () => {
-      const userAgent = navigator.userAgent.toLowerCase();
-      return (
-        userAgent.indexOf("safari") !== -1 && userAgent.indexOf("chrome") === -1
-      );
-    };
-    setIsSafariBrowser(isSafari());
-  }, []);
-
+  // 약관 동의 상태 업데이트
   useEffect(() => {
     if (termsChecked && privacyChecked && refundPolicyChecked) {
       setAgreeAllChecked(true);
@@ -503,6 +519,21 @@ function PaymentDetails() {
       setAgreeAllChecked(false);
     }
   }, [termsChecked, privacyChecked, refundPolicyChecked]);
+
+  // 쿠폰/포인트 적용 시 최종 금액 업데이트
+  useEffect(() => {
+    const discountedAmount = selectedCoupon
+      ? selectedCoupon.discountType === "percentage"
+        ? totalAmount - (totalAmount * selectedCoupon.discountValue) / 100
+        : totalAmount - selectedCoupon.discountValue
+      : totalAmount;
+
+    setEffectiveFinalAmount(
+      pointApplied
+        ? Math.max(0, discountedAmount - usedPoints)
+        : discountedAmount
+    );
+  }, [selectedCoupon, totalAmount, pointApplied, usedPoints]);
 
   if (loading) {
     return (
@@ -534,7 +565,6 @@ function PaymentDetails() {
       </Box>
     );
   }
-
   return (
     <Box sx={{ maxWidth: 800, mx: "auto" }}>
       {/* 쿠폰 섹션 */}
@@ -548,8 +578,7 @@ function PaymentDetails() {
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            {/* 쿠폰 */}
-            Coupon
+            쿠폰
           </Typography>
           <Typography
             variant="caption"
@@ -703,12 +732,10 @@ function PaymentDetails() {
       </Box>
 
       <Divider sx={{ marginY: 5, borderColor: "grey.500", borderWidth: 2 }} />
-
       {/* 포인트 섹션 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: "bold" }} gutterBottom>
-          {/* 포인트 */}
-          Point
+          포인트
         </Typography>
         <Typography sx={{ mb: 2 }}>
           보유 포인트: {userPoint ? userPoint.toLocaleString() : 0}포인트
@@ -719,7 +746,7 @@ function PaymentDetails() {
             label="사용할 포인트"
             type="text"
             value={usedPoints === 0 ? "" : usedPoints}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const value = e.target.value.replace(/[^0-9]/g, "");
               if (value === "") {
                 setUsedPoints(0);
@@ -728,10 +755,16 @@ function PaymentDetails() {
                 return;
               }
               const numValue = parseInt(value, 10);
-              handlePointChange({ target: { value: numValue } });
+              handlePointChange({ 
+                target: { 
+                  value: numValue,
+                  name: '',
+                  checked: false
+                } 
+              } as React.ChangeEvent<HTMLInputElement>);
             }}
             error={Boolean(pointError)}
-            // helperText={pointError || "포인트는 10단위로만 사용 가능합니다."}
+            helperText={pointError || "포인트는 10단위로만 사용 가능합니다."}
             InputLabelProps={{
               shrink: true,
             }}
@@ -773,8 +806,7 @@ function PaymentDetails() {
         {pointApplied && usedPoints > 0 && (
           <Box sx={{ mt: 1, p: 1, bgcolor: "#e3f2fd", borderRadius: 1 }}>
             <Typography variant="body2" color="primary">
-              {/* {usedPoints.toLocaleString()}포인트가 성공적으로 적용되었습니다! */}
-              {usedPoints.toLocaleString()}Points have been successfully applied!
+              {usedPoints.toLocaleString()}포인트가 성공적으로 적용되었습니다!
             </Typography>
           </Box>
         )}
@@ -785,18 +817,17 @@ function PaymentDetails() {
       {/* 예약 정보 요약 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
-          {/* 예약 정보 */}
-          Reservation information
+          예약 정보
         </Typography>
         <Box sx={{ backgroundColor: "#FDF6F3", borderRadius: 5, p: 3 }}>
           {[
-            ["salonName", salonName],
-            ["stylistName", stylistName],
-            ["selectedDat", selectedDate],
-            ["selectedTime", selectedTime],
-            ["hairService", selectedType],
-            ["serviceName", selectedMenu?.serviceName],
-            ["price", `${selectedMenu?.price?.toLocaleString() || 0}원`],
+            ["미용실", salonName],
+            ["디자이너", stylistName],
+            ["예약 날짜", selectedDate],
+            ["예약 시간", selectedTime],
+            ["서비스 타입", selectedType],
+            ["서비스명", selectedMenu?.serviceName],
+            ["가격", `${selectedMenu?.price?.toLocaleString() || 0}원`],
           ].map(([label, value], idx) => (
             <Box
               key={idx}
@@ -810,20 +841,17 @@ function PaymentDetails() {
       </Box>
 
       <Divider sx={{ marginY: 5, borderColor: "grey.500", borderWidth: 2 }} />
-
       {/* 결제 내역 섹션 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
-          {/* 결제 내역 */}
-          Payment history
+          결제 내역
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
           <Typography>{selectedMenu?.serviceName}:</Typography>
           <Typography>{totalAmount.toLocaleString()}원</Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          {/* <Typography>쿠폰 할인:</Typography> */}
-          <Typography>Coupon Discount:</Typography>
+          <Typography>쿠폰 할인:</Typography>
           <Typography color="error">
             {selectedCoupon
               ? selectedCoupon.discountType === "percentage"
@@ -836,8 +864,7 @@ function PaymentDetails() {
           </Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          {/* <Typography>포인트 사용:</Typography> */}
-          <Typography>Points Used:</Typography>
+          <Typography>포인트 사용:</Typography>
           <Typography color="error">
             {pointApplied && usedPoints > 0
               ? `-${usedPoints.toLocaleString()}P`
@@ -846,7 +873,7 @@ function PaymentDetails() {
         </Box>
         <Divider sx={{ my: 1, borderWidth: 2 }} />
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="h6">{/*총 결제금액*/}Total Amoun:</Typography>
+          <Typography variant="h6">총 결제금액:</Typography>
           <Typography variant="h6" color="error">
             {Math.max(0, effectiveFinalAmount).toLocaleString()}원
           </Typography>
@@ -860,8 +887,7 @@ function PaymentDetails() {
             mt: 0.5,
           }}
         >
-          {/* *부가세 10% 포함 */}
-          *Including 10% VAT
+          *부가세 10% 포함
         </Typography>
       </Box>
 
@@ -869,19 +895,19 @@ function PaymentDetails() {
       {/* 결제 방법 선택 */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
-          {/*결제 수단*/}Payment Method 
+          결제 수단
         </Typography>
 
         <Grid container spacing={2} justifyContent="center">
           <Grid item>
             <Button
               variant="contained"
-              onClick={() => setSelectedPayment("google")}
+              onClick={() => setSelectedPaymentMethod("card")}
               sx={{
                 width: "200px",
                 height: "50px",
-                backgroundColor: selectedPayment === "google" ? "#333" : "#fff",
-                color: "#fff",
+                backgroundColor: selectedPaymentMethod === "card" ? "#3445FF" : "#fff",
+                color: selectedPaymentMethod === "card" ? "#fff" : "#3445FF",
                 fontSize: "16px",
                 fontWeight: "bold",
                 borderRadius: "4px",
@@ -889,84 +915,80 @@ function PaymentDetails() {
                 display: "flex",
                 justifyContent: "center",
                 boxShadow: "none", 
-                border: "1px solid #000",
+                border: "1px solid #3445FF",
                 alignItems: "center",
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "#333",
+                  backgroundColor: "#3445FF",
+                  color: "#fff",
                   boxShadow: "none", 
-                  "& img": {
-                    filter: "brightness(2)",
-                  },
                 },
               }}
             >
-              <img
-                src={GooglePay}
-                alt="Google Pay"
-                width="100%"
-                height="100%"
-                style={{
-                  filter: selectedPayment === "google" ? "brightness(2)" : "none",
-                }}
-              />
+              카드결제
             </Button>
           </Grid>
-
           <Grid item>
-          <Button
-            variant="contained"
-            disabled={!isSafariBrowser}
-            onClick={() => setSelectedPayment("apple")}
-            sx={{
-              width: "200px",
-              height: "50px",
-              backgroundColor: selectedPayment === "apple" ? "#333" : "#fff",
-              color: "#fff",
-              fontSize: "16px",
-              fontWeight: "bold",
-              borderRadius: "4px",
-              padding: "0px",
-              display: "flex",
-              justifyContent: "center",
-              boxShadow: "none", 
-              border: "1px solid #000",
-              alignItems: "center",
-              textTransform: "none",
-              "&:hover": {
-                backgroundColor: "#333",
+            <Button
+              variant="contained"
+              onClick={() => setSelectedPaymentMethod("transfer")}
+              sx={{
+                width: "200px",
+                height: "50px",
+                backgroundColor: selectedPaymentMethod === "transfer" ? "#3445FF" : "#fff",
+                color: selectedPaymentMethod === "transfer" ? "#fff" : "#3445FF",
+                fontSize: "16px",
+                fontWeight: "bold",
+                borderRadius: "4px",
+                padding: "0px",
+                display: "flex",
+                justifyContent: "center",
                 boxShadow: "none", 
-                "& img": {
-                  filter: "brightness(2)",
+                border: "1px solid #3445FF",
+                alignItems: "center",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "#3445FF",
+                  color: "#fff",
+                  boxShadow: "none", 
                 },
-              },
-            }}
-          >
-            <img
-              src={applePay}
-              alt="Apple Pay"
-              style={{
-                width: "auto",
-                height: "100%",
-                maxWidth: "100%",
-                filter: selectedPayment === "apple" ? "brightness(2)" : "none",
               }}
-            />
-          </Button>
-            {!isSafariBrowser && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block", mt: 0.5, textAlign: "center" }}
-              >
-                Safari 브라우저에서만 사용 가능합니다.
-              </Typography>
-            )}
+            >
+              계좌이체
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button
+              variant="contained"
+              onClick={() => setSelectedPaymentMethod("pay")}
+              sx={{
+                width: "200px",
+                height: "50px",
+                backgroundColor: selectedPaymentMethod === "pay" ? "#3445FF" : "#fff",
+                color: selectedPaymentMethod === "pay" ? "#fff" : "#3445FF",
+                fontSize: "16px",
+                fontWeight: "bold",
+                borderRadius: "4px",
+                padding: "0px",
+                display: "flex",
+                justifyContent: "center",
+                boxShadow: "none", 
+                border: "1px solid #3445FF",
+                alignItems: "center",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "#3445FF",
+                  color: "#fff",
+                  boxShadow: "none", 
+                },
+              }}
+            >
+              페이 결제
+            </Button>
           </Grid>
         </Grid>
 
         <Divider sx={{ marginY: 5, borderColor: "grey.500", borderWidth: 2 }} />
-
         {/* 요청사항 */}
         <Box sx={{ mb: 4 }}>
           <Typography
@@ -974,13 +996,11 @@ function PaymentDetails() {
             gutterBottom
             sx={{ fontWeight: "bold", mb: 5 }}
           >
-            {/* 요청사항 */}
-            Request Details
+            요청사항
           </Typography>
           <TextField
             multiline
-            // label="요청사항을 작성해주세요."
-            label="Please enter any special requests."
+            label="요청사항을 작성해주세요."
             fullWidth
             value={requirements}
             rows={4}
@@ -1018,9 +1038,8 @@ function PaymentDetails() {
                 onChange={(e) => handleCheckboxChange(e, "terms")}
               />
             }
-            // label="이용약관에 동의합니다."
-            label="I agree to the Terms and Conditions"
-            />
+            label="이용약관에 동의합니다."
+          />
           <FormControlLabel
             control={
               <Checkbox
@@ -1028,8 +1047,7 @@ function PaymentDetails() {
                 onChange={(e) => handleCheckboxChange(e, "privacy")}
               />
             }
-            // label="개인정보 처리방침에 동의합니다."
-            label="I have read and agree to the Privacy Policy"
+            label="개인정보 처리방침에 동의합니다."
           />
           <FormControlLabel
             control={
@@ -1038,8 +1056,7 @@ function PaymentDetails() {
                 onChange={(e) => handleCheckboxChange(e, "refundPolicy")}
               />
             }
-            // label="취소 및 환불 정책에 동의합니다."
-            label="I agree to the Cancellation and Refund Policy"
+            label="취소 및 환불 정책에 동의합니다."
           />
 
           <Box sx={{ mt: 1 }}>
@@ -1047,53 +1064,51 @@ function PaymentDetails() {
               control={
                 <Checkbox checked={agreeAll} onChange={handleAgreeAllChange} />
               }
-              // label="전체 동의"
-              label="I accept all terms"
+              label="전체 동의"
             />
           </Box>
         </Box>
-
         {/* 결제 버튼 영역 */}
-        {selectedPayment &&
+        {selectedPaymentMethod &&
           allChecked &&
           (pointApplied || usedPoints === 0) && (
             <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-              {selectedPayment === "google" && (
-                <GooglePayButton
-                  environment="TEST"
-                  paymentRequest={{
-                    ...googlePayRequest,
-                    transactionInfo: {
-                      ...googlePayRequest.transactionInfo,
-                      totalPrice: effectiveFinalAmount.toString(),
-                    },
-                  }}
-                  onLoadPaymentData={(paymentData) => {
-                    handlePaymentSuccess(paymentData);
-                  }}
-                  buttonType="pay"
-                  buttonSizeMode="fill"
-                  buttonColor="black"
-                  style={{ width: "300px", height: "50px" }}
-                />
-              )}
+              <Button
+                onClick={handleTossPayment}
+                variant="contained"
+                sx={{
+                  width: "300px",
+                  height: "50px",
+                  backgroundColor: "#3445FF",
+                  color: "#fff",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  boxShadow: "none",
+                  "&:hover": {
+                    backgroundColor: "#2338DF",
+                    boxShadow: "none",
+                  },
+                }}
+              >
+                {effectiveFinalAmount.toLocaleString()}원 결제하기
+              </Button>
             </Box>
           )}
 
         {!(
-          selectedPayment &&
+          selectedPaymentMethod &&
           allChecked &&
           (pointApplied || usedPoints === 0)
         ) && (
           <Box sx={{ mt: 3, textAlign: "center" }}>
-            <Typography variant="body2"  sx={{ color: 'error.main' }}>
-              {!selectedPayment
-                ? /*"결제 수단을 선택해주세요."*/"Please choose the payment method."
+            <Typography variant="body2" sx={{ color: 'error.main' }}>
+              {!selectedPaymentMethod
+                ? "결제 수단을 선택해주세요."
                 : !allChecked
-                ? /*"모든 약관에 동의해주세요."*/"Please agree to all the terms and conditions."
+                ? "모든 약관에 동의해주세요."
                 : usedPoints > 0 && !pointApplied
-                ? /*"포인트 적용하기 버튼을 눌러 포인트를 적용해주세요."*/"Press the Apply Point button to apply the point."
-                : /*"결제를 진행해주세요."*/"Please proceed with the payment."}
+                ? "포인트 적용하기 버튼을 눌러 포인트를 적용해주세요."
+                : "결제를 진행해주세요."}
             </Typography>
           </Box>
         )}
@@ -1123,7 +1138,6 @@ function PaymentDetails() {
               sx={{ textAlign: "center", fontSize: "14px", color: "#666" }}
             >
               예약 정보는 마이페이지에서 확인하실 수 있습니다.
-              {/* You can check the reservation information on my page. */}
             </DialogContentText>
           </DialogContent>
           <DialogActions sx={{ padding: 2, justifyContent: "center" }}>
@@ -1151,6 +1165,6 @@ function PaymentDetails() {
       </Box>
     </Box>
   );
-}
+};
 
 export default PaymentDetails;

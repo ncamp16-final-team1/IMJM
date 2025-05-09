@@ -73,6 +73,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     ORDER BY reservationCount DESC
     """)
     Page<Object[]> findPopularSalonsByReservationCount(Pageable pageable);
+
+    // 오더아이디 대신
+    @Query("SELECT r FROM Reservation r, Payment p WHERE p.reservation = r AND p.transactionId = :transactionId")
+    Optional<Reservation> findByPaymentTransactionId(@Param("transactionId") String transactionId);
 }
 
 

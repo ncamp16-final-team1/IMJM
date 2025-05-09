@@ -174,13 +174,24 @@ public class ReservationStylistService {
     @Transactional
     public Long completeReservation(ReservationRequestDto request, String userId) {
         log.info("예약 완료 처리 시작: {}", request);
+        // 추가: 포인트 사용 정보 디버깅 로그
+        log.info("포인트 정보 확인: paymentInfo={}, paymentRequest.pointUsage={}",
+                request.getPaymentInfo(), request.getPaymentRequest().getPointUsage());
 
         try {
             Users user = findUserById(userId);
             AdminStylist stylist = findStylistById(request.getPaymentRequest().getReservation().getStylistId());
             ServiceMenu serviceMenu = findServiceMenuById(request.getPaymentRequest().getReservation().getServiceMenuId());
 
-            int usedPoints = Optional.ofNullable(request.getPaymentInfo().getPointUsed()).orElse(0);
+            // 수정: 올바른 경로로 포인트 사용량 확인
+            int usedPoints = 0;
+            if (request.getPaymentRequest() != null &&
+                    request.getPaymentRequest().getPointUsage() != null &&
+                    request.getPaymentRequest().getPointUsage().getPrice() != null) {
+                usedPoints = request.getPaymentRequest().getPointUsage().getPrice().intValue();
+                log.info("사용할 포인트: {}", usedPoints);
+            }
+
             if (usedPoints > 0) {
                 processPointUsage(request, user, stylist, serviceMenu);
             }
@@ -262,15 +273,28 @@ public class ReservationStylistService {
             AdminStylist stylist,
             ServiceMenu serviceMenu
     ) {
-        int usedPoints = request.getPaymentInfo().getPointUsed();
+        // 수정: 올바른 경로로 포인트 사용 정보 체크
+        if (request.getPaymentRequest() == null ||
+                request.getPaymentRequest().getPointUsage() == null ||
+                request.getPaymentRequest().getPointUsage().getPrice() == null) {
+            log.warn("포인트 사용 정보가 없습니다.");
+            return;
+        }
+
+        // 올바른 경로에서 포인트 가져오기
+        int usedPoints = request.getPaymentRequest().getPointUsage().getPrice().intValue();
+        log.info("processPointUsage에서 사용할 포인트: {}", usedPoints);
 
         int currentPoints = user.getPoint();
+        log.info("현재 보유 포인트: {}", currentPoints);
+
         if (usedPoints > currentPoints) {
             throw new IllegalArgumentException("사용 가능한 포인트보다 많은 포인트를 사용할 수 없습니다.");
         }
 
         user.usePoint(usedPoints);
         userRepository.save(user);
+        log.info("포인트 차감 후 남은 포인트: {}", user.getPoint());
 
         PointUsage pointUsage = PointUsage.builder()
                 .user(user)
@@ -287,10 +311,13 @@ public class ReservationStylistService {
     }
 
     private void awardReservationPoint(Users user, AdminStylist stylist) {
-
         int reservationPoint = 100;
+        int beforePoint = user.getPoint(); // 추가: 적립 전 포인트
+
         user.savePoint(reservationPoint);
         userRepository.save(user);
+
+        log.info("포인트 적립: {} -> {} (+{})", beforePoint, user.getPoint(), reservationPoint); // 추가: 포인트 변화 로그
 
         PointUsage rewardLog = PointUsage.builder()
                 .user(user)
@@ -327,12 +354,16 @@ public class ReservationStylistService {
     }
 
     private Payment createPayment(ReservationRequestDto request, Reservation reservation) {
+        // orderId가 있으면 사용, 없으면 기존 방식으로 생성
+        String transactionId = (request.getOrderId() != null && !request.getOrderId().isEmpty()) ?
+                request.getOrderId() : "TRANS_" + System.currentTimeMillis();
+
         return Payment.builder()
                 .reservation(reservation)
                 .price(request.getPaymentRequest().getPrice().intValue())
                 .paymentMethod(request.getPaymentMethod())
                 .paymentStatus(request.getPaymentStatus())
-                .transactionId("TRANS_" + System.currentTimeMillis())
+                .transactionId(transactionId)
                 .paymentDate(LocalDateTime.now())
                 .isCanceled(false)
                 .isRefunded(false)
@@ -356,5 +387,48 @@ public class ReservationStylistService {
                 couponData.getCouponId(), couponData.getDiscountAmount());
     }
 
+
+    /**
+     * 주문 ID(transactionId)로 예약 정보 조회
+     * @param orderId 주문 ID (transactionId)
+     * @return 예약 정보를 포함한 Map
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> findReservationInfoByOrderId(String orderId) {
+        try {
+            // 1. 결제 정보 조회 (transactionId를 orderId로 사용)
+            Optional<Payment> paymentOpt = paymentRepository.findByTransactionId(orderId);
+
+            if (paymentOpt.isEmpty()) {
+                return null;
+            }
+
+            Payment payment = paymentOpt.get();
+
+            // 2. 결제와 연결된 예약 정보 조회
+            Reservation reservation = payment.getReservation();
+            if (reservation == null) {
+                return null;
+            }
+
+            // 3. 결과 맵 생성
+            Map<String, Object> result = new HashMap<>();
+            result.put("reservationId", reservation.getId());
+            result.put("status", reservation.isPaid() ? "PAID" : "PENDING");
+            result.put("reservationDate", reservation.getReservationDate().toString());
+            result.put("reservationTime", reservation.getReservationTime().toString());
+            result.put("serviceName", reservation.getReservationServiceName());
+            result.put("price", payment.getPrice());
+            result.put("paymentStatus", payment.getPaymentStatus());
+            result.put("transactionId", payment.getTransactionId()); // 원본 transactionId 포함
+            result.put("salonName", reservation.getStylist().getSalon().getName());
+            result.put("stylistName", reservation.getStylist().getName());
+
+            return result;
+        } catch (Exception e) {
+            log.error("주문 ID로 예약 조회 중 오류 발생: {}", orderId, e);
+            return null;
+        }
+    }
 
 }

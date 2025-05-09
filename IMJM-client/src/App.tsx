@@ -35,6 +35,10 @@ import MyArchive from "./pages/Archive/MyArchive.tsx";
 import { NotificationProvider, InAppNotificationReceiver } from './components/notification/InAppNotification';
 import './styles/global.css';
 
+// 추가된 Toss Payments 관련 페이지 임포트
+import PaymentSuccessPage from './pages/HairSalon/PaymentSuccessPage';
+import PaymentFailPage from './pages/HairSalon/PaymentFailPage';
+
 function App() {
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
     const [isMobileView, setIsMobileView] = useState(false);
@@ -105,6 +109,25 @@ function App() {
                             </ProtectedRoute>
                         }
                         />
+
+                        {/* 결제 성공/실패 페이지 추가 */}
+                        <Route path="/payment/success" element={
+                            <ProtectedRoute>
+                                <>
+                                    <ScrollToTop />
+                                    <PaymentSuccessPage />
+                                </>
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/payment/fail" element={
+                            <ProtectedRoute>
+                                <>
+                                    <ScrollToTop />
+                                    <PaymentFailPage />
+                                </>
+                            </ProtectedRoute>
+                        } />
+
                         <Route path="/chat/*" element={
                             <ProtectedRoute>
                                 <ChatMain />
@@ -165,7 +188,7 @@ function App() {
                                 <ArchiveEdit />
                             </ProtectedRoute>
                         } />
-                        <Route path="/my/acahive" element={
+                        <Route path="/my/archive" element={
                             <ProtectedRoute>
                                  <MyArchive />
                             </ProtectedRoute>

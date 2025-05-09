@@ -20,6 +20,7 @@
     "@portone/browser-sdk": "^0.0.17",
     "@reduxjs/toolkit": "^2.6.1",
     "@stomp/stompjs": "^7.1.1",
+    "@tosspayments/payment-sdk": "^1.9.1",
     "@types/react-redux": "^7.1.34",
     "axios": "^1.8.4",
     "date-fns": "^4.1.0",
