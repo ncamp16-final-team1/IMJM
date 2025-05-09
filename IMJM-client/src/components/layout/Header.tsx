@@ -245,11 +245,14 @@ function Header(): React.ReactElement {
         // 언어 변경 이벤트 발생
         window.dispatchEvent(new Event('languageChange'));
 
-        // 로그인된 경우 서버에도 저장
+        // 로그인된 경우 서버에도 저장 (서버 형식에 맞게 변환)
         if (isLoggedIn) {
             try {
+                // 서버에 전송할 때는 소문자로 변환 ('KR' -> 'ko', 'EN' -> 'en')
+                const serverLanguage = newLanguage === 'KR' ? 'ko' : 'en';
+
                 await axios.put('/api/user/language', null, {
-                    params: { language: newLanguage },
+                    params: { language: serverLanguage },
                     withCredentials: true
                 });
             } catch (error) {
