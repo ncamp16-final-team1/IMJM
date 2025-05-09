@@ -507,7 +507,7 @@ const AdminChatRoom: React.FC<{ roomId: number; userId: string }> = ({ roomId, u
     };
     const handleDeleteRoom = async () => {
         try {
-            await axios.delete(`/api/chat/room/${roomId}`);
+            await axios.delete(`/api/admin/chat/room/${roomId}`);
             navigate('/chat');
         } catch (error) {
             console.error('채팅방 삭제 실패:', error);

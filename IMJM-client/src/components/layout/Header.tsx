@@ -23,7 +23,7 @@ import NotificationList from '../notification/NotificationList';
 import NotificationService from '../../services/notification/NotificationService';
 import axios from 'axios';
 
-type Language = 'ko' | 'en';
+type Language = 'KR' | 'EN';
 
 // 스타일링된 컴포넌트들
 const StyledHeader = styled('header')(({ theme }) => ({
@@ -118,7 +118,7 @@ const StyledNotificationIcon = styled(NotificationsIcon)(({ theme }) => ({
 }));
 
 function Header(): React.ReactElement {
-    const [language, setLanguage] = useState<Language>('ko');
+    const [language, setLanguage] = useState<Language>('KR');
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
     const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -302,7 +302,7 @@ function Header(): React.ReactElement {
                         // 끝 부분에 화살표 아이콘 추가
                         endAdornment={<ArrowDropDownIcon sx={{ fontSize: 20, color: '#777', position: 'absolute', right: 8 }} />}
                     >
-                        <MenuItem value="ko" sx={{
+                        <MenuItem value="KR" sx={{
                             '&.Mui-selected': {
                                 backgroundColor: alpha('#FDC7BF', 0.1),
                                 '&:hover': {
@@ -315,7 +315,7 @@ function Header(): React.ReactElement {
                         }}>
                             한국어
                         </MenuItem>
-                        <MenuItem value="en" sx={{
+                        <MenuItem value="EN" sx={{
                             '&.Mui-selected': {
                                 backgroundColor: alpha('#FDC7BF', 0.1),
                                 '&:hover': {
