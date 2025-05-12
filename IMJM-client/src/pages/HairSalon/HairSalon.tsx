@@ -110,7 +110,7 @@ function HairSalon() {
 
         const mapOptions = {
             center: centerPoint,
-            zoom: 12,
+            zoom: 15,
             zoomControl: true,
             zoomControlOptions: {
                 position: window.naver.maps.Position.TOP_RIGHT
